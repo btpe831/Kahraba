@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg"
+    android:background="?attr/appBg"
     android:fillViewport="true">
 
     <LinearLayout
@@ -32,7 +32,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Ijit"
-                    android:textColor="@color/text"
+                    android:textColor="?attr/appText"
                     android:textSize="26sp"
                     android:textStyle="bold" />
 
@@ -40,7 +40,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Kahraba or moteur"
-                    android:textColor="@color/muted"
+                    android:textColor="?attr/appMuted"
                     android:textSize="14sp" />
             </LinearLayout>
 
@@ -51,7 +51,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Help"
                 android:src="@drawable/ic_help"
-                app:tint="@color/muted" />
+                app:tint="?attr/appMuted" />
 
             <ImageButton
                 android:id="@+id/settingsButton"
@@ -60,7 +60,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Settings"
                 android:src="@drawable/ic_settings"
-                app:tint="@color/muted" />
+                app:tint="?attr/appMuted" />
         </LinearLayout>
 
         <!-- Status orb with progress ring -->
@@ -77,9 +77,9 @@
                 android:layout_gravity="center"
                 android:max="1000"
                 android:visibility="invisible"
-                app:indicatorColor="@color/ring"
+                app:indicatorColor="?attr/appRing"
                 app:indicatorSize="272dp"
-                app:trackColor="@color/outline"
+                app:trackColor="?attr/appOutline"
                 app:trackCornerRadius="4dp"
                 app:trackThickness="8dp" />
 
@@ -130,7 +130,7 @@
             android:layout_marginTop="20dp"
             android:gravity="center"
             android:minLines="2"
-            android:textColor="@color/muted"
+            android:textColor="?attr/appMuted"
             android:textSize="15sp" />
 
         <com.google.android.material.button.MaterialButton
@@ -150,7 +150,7 @@
             android:gravity="center"
             android:lineSpacingExtra="2dp"
             android:text="Lay the phone face-up close to a halogen light.\n4 short beeps = kahraba  ·  1 long beep = moteur"
-            android:textColor="@color/muted"
+            android:textColor="?attr/appMuted"
             android:textSize="13sp" />
 
         <!-- Recent checks -->
@@ -208,7 +208,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Always-on monitor"
-                        android:textColor="@color/text"
+                        android:textColor="?attr/appText"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -217,7 +217,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:textColor="@color/muted"
+                        android:textColor="?attr/appMuted"
                         android:textSize="14sp" />
                 </LinearLayout>
 
@@ -226,7 +226,7 @@
                     android:layout_height="24dp"
                     android:importantForAccessibility="no"
                     android:src="@drawable/ic_chevron"
-                    app:tint="@color/muted" />
+                    app:tint="?attr/appMuted" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -238,7 +238,7 @@
             android:layout_marginEnd="4dp"
             android:lineSpacingExtra="2dp"
             android:text="Note: doesn't work with LED bulbs, or if your lights run through a solar inverter or UPS. Tap ? at the top for the full guide."
-            android:textColor="@color/muted"
+            android:textColor="?attr/appMuted"
             android:textSize="12sp" />
     </LinearLayout>
 </ScrollView>

@@ -2,6 +2,23 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory app:title="Look">
+        <ListPreference
+            app:key="color_theme"
+            app:defaultValue="graphite"
+            app:entries="@array/theme_names"
+            app:entryValues="@array/theme_values"
+            app:title="Colour theme"
+            app:useSimpleSummaryProvider="true" />
+        <ListPreference
+            app:key="appearance"
+            app:defaultValue="system"
+            app:entries="@array/appearance_names"
+            app:entryValues="@array/appearance_values"
+            app:title="Light or dark"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
     <PreferenceCategory app:title="Quick check">
         <SwitchPreferenceCompat
             app:key="auto_check"

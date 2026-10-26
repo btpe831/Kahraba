@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg">
+    android:background="?attr/appBg">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -90,7 +90,7 @@
                 android:fontFamily="monospace"
                 android:lineSpacingExtra="4dp"
                 android:padding="18dp"
-                android:textColor="@color/text"
+                android:textColor="?attr/appText"
                 android:textSize="13sp" />
         </com.google.android.material.card.MaterialCardView>
 
@@ -106,7 +106,7 @@
             android:layout_marginStart="4dp"
             android:layout_marginBottom="8dp"
             android:text="Only when you're sure (lamp post off = kahraba, green = moteur). Then leave the phone still under the halogen light for 2 minutes."
-            android:textColor="@color/muted"
+            android:textColor="?attr/appMuted"
             android:textSize="14sp" />
 
         <LinearLayout

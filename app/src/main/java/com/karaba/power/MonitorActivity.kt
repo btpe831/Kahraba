@@ -27,7 +27,7 @@ import com.karaba.power.Prefs.monitoring
 import java.io.File
 
 /** The secondary mode: always-on monitoring with the phone left under a light. */
-class MonitorActivity : AppCompatActivity() {
+class MonitorActivity : ThemedActivity() {
 
     private val ui = Handler(Looper.getMainLooper())
     private lateinit var stateBox: LinearLayout

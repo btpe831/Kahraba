@@ -7,7 +7,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
 /** How to use Ijit, which lights work, what breaks it, and the disclaimer. */
-class HelpActivity : AppCompatActivity() {
+class HelpActivity : ThemedActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

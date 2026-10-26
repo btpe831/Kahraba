@@ -15,7 +15,7 @@
             android:id="@+id/sectionTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/text"
+            android:textColor="?attr/appText"
             android:textSize="17sp"
             android:textStyle="bold" />
 
@@ -25,7 +25,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:lineSpacingExtra="4dp"
-            android:textColor="@color/text"
+            android:textColor="?attr/appText"
             android:textSize="15sp" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

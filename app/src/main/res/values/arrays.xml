@@ -10,4 +10,28 @@
         <item>medium</item>
         <item>full</item>
     </string-array>
+    <string-array name="theme_names">
+        <item>Graphite (neutral)</item>
+        <item>Ocean (calm blue)</item>
+        <item>Lavender (soft violet)</item>
+        <item>Rose (dusty pink)</item>
+        <item>Sand (warm beige)</item>
+    </string-array>
+    <string-array name="theme_values">
+        <item>graphite</item>
+        <item>ocean</item>
+        <item>lavender</item>
+        <item>rose</item>
+        <item>sand</item>
+    </string-array>
+    <string-array name="appearance_names">
+        <item>Same as phone</item>
+        <item>Light</item>
+        <item>Dark</item>
+    </string-array>
+    <string-array name="appearance_values">
+        <item>system</item>
+        <item>light</item>
+        <item>dark</item>
+    </string-array>
 </resources>

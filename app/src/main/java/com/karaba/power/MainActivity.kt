@@ -28,7 +28,7 @@ import java.util.Locale
  * The main screen: one-tap quick check. Tap, lay the phone under a halogen light, and it beeps
  * the answer (4 short beeps = kahraba, 1 long beep = moteur).
  */
-class MainActivity : AppCompatActivity(), SensorEventListener {
+class MainActivity : ThemedActivity(), SensorEventListener {
 
     private val ui = Handler(Looper.getMainLooper())
     private val beeper by lazy { Beeper(applicationContext) }

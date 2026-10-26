@@ -18,6 +18,8 @@ object Prefs {
     const val BEEP_VOLUME = "beep_volume"
     const val AUTO_CHECK = "auto_check"
     const val HELP_SEEN = "help_seen"
+    const val COLOR_THEME = "color_theme"
+    const val APPEARANCE = "appearance"
 
     private const val SOURCE = "state_source"
     private const val SINCE = "state_since"
@@ -45,6 +47,22 @@ object Prefs {
         "low" -> 0.3
         "medium" -> 0.6
         else -> 1.0
+    }
+
+    fun colorTheme(ctx: Context): String = sp(ctx).getString(COLOR_THEME, "graphite") ?: "graphite"
+
+    fun paletteStyle(ctx: Context): Int = when (colorTheme(ctx)) {
+        "ocean" -> R.style.Palette_Ocean
+        "lavender" -> R.style.Palette_Lavender
+        "rose" -> R.style.Palette_Rose
+        "sand" -> R.style.Palette_Sand
+        else -> R.style.Palette_Graphite
+    }
+
+    fun nightMode(ctx: Context): Int = when (sp(ctx).getString(APPEARANCE, "system")) {
+        "light" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+        "dark" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
+        else -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
     }
 
     fun autoCheck(ctx: Context) = sp(ctx).getBoolean(AUTO_CHECK, false)

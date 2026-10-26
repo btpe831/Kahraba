@@ -7,7 +7,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 
-class LogActivity : AppCompatActivity() {
+class LogActivity : ThemedActivity() {
     private lateinit var text: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
