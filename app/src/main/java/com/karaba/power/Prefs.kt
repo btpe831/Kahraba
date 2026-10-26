@@ -16,7 +16,6 @@ object Prefs {
     const val QUIET_START = "quiet_start"
     const val QUIET_END = "quiet_end"
     const val FORCE_VOLUME = "force_volume"
-    const val QUICK_SECONDS = "quick_seconds"
 
     private const val SOURCE = "state_source"
     private const val SINCE = "state_since"
@@ -38,8 +37,6 @@ object Prefs {
         requireFlickerBeforeKahraba = sp(ctx).getBoolean(REQUIRE_FLICKER, true),
         moteurOnFlickerAlone = sp(ctx).getBoolean(MOTEUR_ON_FLICKER, false),
     )
-
-    fun quickSeconds(ctx: Context): Int = num(ctx, QUICK_SECONDS, 10.0).toInt().coerceIn(5, 300)
 
     fun forceVolume(ctx: Context) = sp(ctx).getBoolean(FORCE_VOLUME, true)
 

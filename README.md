@@ -21,7 +21,8 @@ An Android app that tells you whether the house is on **kahraba** (EDL grid) or 
 ## Features
 
 - Always-on monitoring in the background (screen can be off).
-- Quick check: hold the phone under a halogen light for 10, 30 or 60 seconds for a one-off verdict.
+- Quick check: lay the phone under a halogen light for a one-off verdict. It stops as soon as it is
+  sure: moteur within a few seconds, kahraba after 25 seconds of steady light.
 - "It's kahraba" / "It's moteur" buttons: tell the app when you're sure (e.g. from the lamp post)
   and it learns what each source looks like over 2 minutes.
 - Switch log with how long each state lasted.

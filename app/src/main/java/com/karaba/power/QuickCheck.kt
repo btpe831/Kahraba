@@ -1,81 +1,78 @@
 package com.karaba.power
 
 /**
- * A one-off check: hold the phone under a halogen bulb for a few seconds and get a verdict.
+ * A one-off check under a halogen bulb that stops as soon as it is sure.
  *
- * Flicker seen  -> moteur (strong evidence).
- * No flicker    -> probably kahraba, but a moteur that only wobbles now and then can look steady
- *                  for a short time, so confidence depends on how long the check ran.
+ * - Any wobble above the limit -> moteur, straight away (usually within a few seconds).
+ * - Steady light for [STEADY_NEEDED_MS] -> kahraba. In the 26 Oct recording the moteur never
+ *   stayed steady for more than 20 s, so 25 s leaves a margin.
+ * - After [MAX_MS] with neither -> can't tell (too dark, or the phone was moved).
  */
 class QuickCheck(private val thresholdPct: Double, private val minLux: Double) {
 
     enum class Verdict { MOTEUR, KAHRABA, CANT_TELL }
 
-    data class Result(
-        val verdict: Verdict,
-        val confidence: String,
-        val maxFlickerPct: Double?,
-        val detail: String,
-    )
+    data class Result(val verdict: Verdict, val detail: String)
 
     private val samples = ArrayList<Pair<Long, Double>>()
+    private var startMs = -1L
+    private var steadySinceMs = -1L
+    private var maxSwing = 0.0
+    private var lastEvalMs = -1L
+    private var darkSeen = false
 
-    fun add(tMs: Long, lux: Double) {
+    /** Seconds of steady light so far, for the progress display. */
+    val steadySeconds: Int
+        get() = if (steadySinceMs < 0 || samples.isEmpty()) 0 else ((samples.last().first - steadySinceMs) / 1000).toInt()
+
+    /** Add a reading; returns a result once the check is sure (or out of time), else null. */
+    fun add(tMs: Long, lux: Double): Result? {
+        if (startMs < 0) startMs = tMs
         samples += tMs to lux
+        samples.removeAll { it.first <= tMs - PowerDetector.FLICKER_WINDOW_MS }
+
+        if (tMs - startMs >= PowerDetector.FLICKER_WINDOW_MS && tMs - lastEvalMs >= 1000) {
+            lastEvalMs = tMs
+            val w = samples.map { it.second }
+            val med = PowerDetector.median(w)
+            if (w.size >= 8 && med != null) {
+                if (med < minLux) {
+                    darkSeen = true
+                    steadySinceMs = -1
+                } else {
+                    val swing = (w.max() - w.min()) / med * 100
+                    maxSwing = maxOf(maxSwing, swing)
+                    if (swing > thresholdPct) {
+                        return Result(
+                            Verdict.MOTEUR,
+                            "Light wobbled ${"%.0f".format(swing)}% after ${(tMs - startMs) / 1000}s. " +
+                                "Kahraba doesn't do that.",
+                        )
+                    }
+                    if (steadySinceMs < 0) steadySinceMs = tMs - PowerDetector.FLICKER_WINDOW_MS
+                    if (tMs - steadySinceMs >= STEADY_NEEDED_MS) {
+                        return Result(
+                            Verdict.KAHRABA,
+                            "Light stayed steady for ${STEADY_NEEDED_MS / 1000}s " +
+                                "(max wobble ${"%.1f".format(maxSwing)}%). The moteur can't stay that steady.",
+                        )
+                    }
+                }
+            }
+        }
+
+        if (tMs - startMs >= MAX_MS) {
+            return Result(
+                Verdict.CANT_TELL,
+                if (darkSeen) "Too dark – put the phone closer to a halogen light and try again."
+                else "Not enough steady readings – keep the phone still and try again.",
+            )
+        }
+        return null
     }
 
-    fun result(): Result {
-        if (samples.size < 10) {
-            return Result(Verdict.CANT_TELL, "", null, "Not enough light readings.")
-        }
-        val start = samples.first().first
-        val end = samples.last().first
-        // Same measure as the monitor: max-to-min swing over each 4-second stretch.
-        val swings = ArrayList<Double>()
-        var dark = 0
-        var t = start + PowerDetector.FLICKER_WINDOW_MS
-        while (t <= end) {
-            val w = samples.filter { it.first > t - PowerDetector.FLICKER_WINDOW_MS && it.first <= t }.map { it.second }
-            val med = PowerDetector.median(w)
-            when {
-                w.size < 8 || med == null -> {}
-                med < minLux -> dark++
-                else -> swings += (w.max() - w.min()) / med * 100
-            }
-            t += 1000
-        }
-        if (swings.isEmpty()) {
-            val why = when {
-                dark > 0 -> "Too dark – hold the phone closer to a halogen light."
-                else -> "Not enough light readings."
-            }
-            return Result(Verdict.CANT_TELL, "", null, why)
-        }
-        val max = swings.max()
-        val seconds = (end - start) / 1000
-        val flickering = swings.count { it > thresholdPct }
-        return if (flickering > 0) {
-            Result(
-                Verdict.MOTEUR,
-                if (max > thresholdPct * 2) "High" else "Medium",
-                max,
-                "Light wobbled up to ${"%.1f".format(max)}% (limit ${"%.1f".format(thresholdPct)}%).",
-            )
-        } else {
-            // In the 26 Oct recording the moteur never stayed steady longer than 20 s, and a
-            // random 10 s stretch of moteur looked steady only about 1-2% of the time.
-            val confidence = when {
-                seconds >= 25 -> "High"
-                seconds >= 10 -> "Medium"
-                else -> "Low"
-            }
-            Result(
-                Verdict.KAHRABA,
-                confidence,
-                max,
-                "Light stayed steady for ${seconds}s (max wobble ${"%.1f".format(max)}%). " +
-                    "A 30-second check is more reliable.",
-            )
-        }
+    companion object {
+        const val STEADY_NEEDED_MS = 25_000L
+        const val MAX_MS = 40_000L
     }
 }

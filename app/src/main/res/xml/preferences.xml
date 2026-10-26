@@ -29,14 +29,6 @@
             app:summary="Beeps at full alarm volume, even when the phone is on silent." />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="Quick check">
-        <EditTextPreference
-            app:key="quick_seconds"
-            app:defaultValue="10"
-            app:title="Default length (seconds)"
-            app:useSimpleSummaryProvider="true" />
-    </PreferenceCategory>
-
     <PreferenceCategory app:title="Detection (advanced)">
         <EditTextPreference
             app:key="flicker_threshold"

@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity() {
             }
             ui.postDelayed({ render() }, 300)
         }
-        findViewById<Button>(R.id.quickCheck).setOnClickListener { chooseQuickCheckLength() }
+        findViewById<Button>(R.id.quickCheck).setOnClickListener { runQuickCheck() }
         findViewById<Button>(R.id.setKahraba).setOnClickListener { confirmSet(Source.KAHRABA) }
         findViewById<Button>(R.id.setMoteur).setOnClickListener { confirmSet(Source.MOTEUR) }
         findViewById<Button>(R.id.openLog).setOnClickListener { startActivity(Intent(this, LogActivity::class.java)) }
@@ -160,24 +160,7 @@ class MainActivity : AppCompatActivity() {
 
     // ---- Quick check ----
 
-    private fun chooseQuickCheckLength() {
-        val def = Prefs.quickSeconds(this)
-        val options = listOf(def, 30, 60).distinct()
-        val labels = options.map {
-            when {
-                it < 30 -> "$it seconds (fast, less sure)"
-                it < 60 -> "$it seconds"
-                else -> "$it seconds (most reliable)"
-            }
-        }.toTypedArray()
-        AlertDialog.Builder(this)
-            .setTitle("Quick check")
-            .setItems(labels) { _, i -> runQuickCheck(options[i]) }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun runQuickCheck(seconds: Int) {
+    private fun runQuickCheck() {
         val sm = getSystemService(SENSOR_SERVICE) as SensorManager
         val sensor = sm.getDefaultSensor(Sensor.TYPE_LIGHT)
         if (sensor == null) {
@@ -203,24 +186,29 @@ class MainActivity : AppCompatActivity() {
         val sampler = object : Runnable {
             override fun run() {
                 val now = System.currentTimeMillis()
-                lux?.let { check.add(now, it) }
-                val left = seconds - (now - start) / 1000
+                // Stops as soon as the check is sure: moteur in a few seconds, kahraba in 25.
+                val result = lux?.let { check.add(now, it) }
+                    ?: if (now - start >= QuickCheck.MAX_MS) {
+                        QuickCheck.Result(QuickCheck.Verdict.CANT_TELL, "No light readings – is a light on?")
+                    } else null
+                if (result != null) {
+                    finish(result)
+                    return
+                }
+                val steady = check.steadySeconds
                 dialog.setMessage(
                     "Lay the phone face-up under a halogen light and don't touch it.\n\n" +
-                        "${left.coerceAtLeast(0)} s left · ${lux?.toInt() ?: "–"} lx"
+                        "${(now - start) / 1000}s · ${lux?.toInt() ?: "–"} lx" +
+                        if (steady > 0) "\nSteady for ${steady}s of ${QuickCheck.STEADY_NEEDED_MS / 1000}s needed" else ""
                 )
-                if (now - start >= seconds * 1000L) {
-                    finish()
-                } else {
-                    ui.postDelayed(this, 200)
-                }
+                ui.postDelayed(this, 200)
             }
 
-            fun finish() {
+            fun finish(result: QuickCheck.Result) {
                 sm.unregisterListener(listener)
                 window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 dialog.dismiss()
-                showQuickResult(check.result())
+                showQuickResult(result)
             }
         }
         dialog.setOnShowListener {
@@ -239,15 +227,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun showQuickResult(r: QuickCheck.Result) {
         val title = when (r.verdict) {
-            QuickCheck.Verdict.MOTEUR -> "Looks like MOTEUR"
-            QuickCheck.Verdict.KAHRABA -> "Looks like KAHRABA"
+            QuickCheck.Verdict.MOTEUR -> "It's MOTEUR"
+            QuickCheck.Verdict.KAHRABA -> "It's KAHRABA"
             QuickCheck.Verdict.CANT_TELL -> "Can't tell"
         }
-        val body = buildString {
-            if (r.confidence.isNotEmpty()) append("Confidence: ${r.confidence}\n\n")
-            append(r.detail)
-        }
-        val b = AlertDialog.Builder(this).setTitle(title).setMessage(body).setNegativeButton("Close", null)
+        val b = AlertDialog.Builder(this).setTitle(title).setMessage(r.detail).setNegativeButton("Close", null)
         val src = when (r.verdict) {
             QuickCheck.Verdict.MOTEUR -> Source.MOTEUR
             QuickCheck.Verdict.KAHRABA -> Source.KAHRABA

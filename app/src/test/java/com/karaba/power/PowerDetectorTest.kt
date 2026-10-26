@@ -96,22 +96,21 @@ class PowerDetectorTest {
         assertEquals(Source.MOTEUR, r.d.source)
     }
 
-    @Test
-    fun quickCheckVerdicts() {
-        val steady = QuickCheck(1.5, 15.0)
-        val wobbly = QuickCheck(1.5, 15.0)
-        val dark = QuickCheck(1.5, 15.0)
-        var t = 0L
-        while (t <= 10_000) {
-            steady.add(t, kahraba(t))
-            wobbly.add(t, moteur(5_000)(t))
-            dark.add(t, 3.0)
+    /** Feeds readings every 200 ms until the quick check answers. Returns the verdict and seconds taken. */
+    private fun quick(fromMs: Long, lux: (Long) -> Double): Pair<QuickCheck.Verdict, Long> {
+        val q = QuickCheck(3.0, 15.0)
+        var t = fromMs
+        while (true) {
+            q.add(t, lux(t))?.let { return it.verdict to (t - fromMs) / 1000 }
             t += step
         }
-        assertEquals(QuickCheck.Verdict.KAHRABA, steady.result().verdict)
-        assertEquals("Medium", steady.result().confidence)
-        assertEquals(QuickCheck.Verdict.MOTEUR, wobbly.result().verdict)
-        assertEquals(QuickCheck.Verdict.CANT_TELL, dark.result().verdict)
+    }
+
+    @Test
+    fun quickCheckVerdicts() {
+        assertEquals(QuickCheck.Verdict.KAHRABA to 25L, quick(0) { kahraba(it) })
+        assertEquals(QuickCheck.Verdict.MOTEUR, quick(0, moteur(5_000)).first)
+        assertEquals(QuickCheck.Verdict.CANT_TELL to 40L, quick(0) { 3.0 })
     }
 
     // ---- Replay of the real recording from 26 Oct 2026 (17:24–18:26) ----
@@ -176,18 +175,19 @@ class PowerDetectorTest {
     @Test
     fun quickCheckOnRealData() {
         val rec = recording()
-        fun check(fromMs: Long, seconds: Int): QuickCheck.Verdict {
-            val q = QuickCheck(3.0, 15.0)
-            rec.filter { it.first in fromMs..(fromMs + seconds * 1000L) }.forEach { q.add(it.first, it.second) }
-            return q.result().verdict
+        // The recording at a given time, held between readings (like the sensor).
+        fun at(t: Long): Double {
+            var i = rec.binarySearch { it.first.compareTo(t) }
+            if (i < 0) i = -i - 2
+            return rec[i.coerceIn(0, rec.size - 1)].second
         }
-        // Every 30 s check on kahraba says kahraba; every 30 s check on moteur says moteur.
-        for (start in 60_000L until 1_900_000L step 60_000L) assertEquals(QuickCheck.Verdict.KAHRABA, check(start, 30))
-        for (start in 2_490_000L until 3_660_000L step 30_000L) assertEquals(QuickCheck.Verdict.MOTEUR, check(start, 30))
-        // 10 s checks on moteur: almost all should say moteur.
-        val tenSec = (2_490_000L until 3_680_000L step 10_000L).map { check(it, 10) }
-        val right = tenSec.count { it == QuickCheck.Verdict.MOTEUR }
-        println("10 s quick checks on moteur: $right / ${tenSec.size} correct")
-        assertTrue(right >= tenSec.size * 0.9)
+        // Start a check every 10 s through each part of the recording.
+        val onKahraba = (60_000L until 1_900_000L step 10_000L).map { quick(it, ::at) }
+        val onMoteur = (2_490_000L until 3_660_000L step 10_000L).map { quick(it, ::at) }
+        assertTrue(onKahraba.all { it.first == QuickCheck.Verdict.KAHRABA })
+        assertTrue(onMoteur.all { it.first == QuickCheck.Verdict.MOTEUR })
+        val times = onMoteur.map { it.second }.sorted()
+        println("Quick check on moteur: ${onMoteur.size} checks, all right; " +
+            "median ${times[times.size / 2]}s, slowest ${times.last()}s")
     }
 }
