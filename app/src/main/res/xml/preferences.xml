@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="Night silence">
+        <SwitchPreferenceCompat
+            app:key="quiet_enabled"
+            app:defaultValue="false"
+            app:title="No beeps at night"
+            app:summary="Switches are still logged and shown, just without sound." />
+        <EditTextPreference
+            app:key="quiet_start"
+            app:defaultValue="23:00"
+            app:dependency="quiet_enabled"
+            app:title="Quiet from (HH:MM)"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            app:key="quiet_end"
+            app:defaultValue="07:00"
+            app:dependency="quiet_enabled"
+            app:title="Quiet until (HH:MM)"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Sound">
+        <SwitchPreferenceCompat
+            app:key="force_volume"
+            app:defaultValue="true"
+            app:title="Full volume for alerts"
+            app:summary="Beeps at full alarm volume, even when the phone is on silent." />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Quick check">
+        <EditTextPreference
+            app:key="quick_seconds"
+            app:defaultValue="10"
+            app:title="Default length (seconds)"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Detection (advanced)">
+        <EditTextPreference
+            app:key="flicker_threshold"
+            app:defaultValue="1.5"
+            app:title="Flicker limit (%)"
+            app:summary="Light wobble above this counts as moteur. Set automatically by the 'It's kahraba / It's moteur' buttons." />
+        <EditTextPreference
+            app:key="steady_minutes"
+            app:defaultValue="10"
+            app:title="Minutes of steady light before calling kahraba"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            app:key="min_lux"
+            app:defaultValue="15"
+            app:title="Minimum light level (lux)"
+            app:useSimpleSummaryProvider="true" />
+        <SwitchPreferenceCompat
+            app:key="require_flicker"
+            app:defaultValue="true"
+            app:title="Careful kahraba detection"
+            app:summary="After a cut, wait until the moteur has flickered at least once (or 3x the steady time) before calling kahraba." />
+        <SwitchPreferenceCompat
+            app:key="moteur_on_flicker"
+            app:defaultValue="false"
+            app:title="Moteur from flicker alone"
+            app:summary="Switch to moteur when the light flickers even without a power cut. Off by default because kahraba can wobble too." />
+    </PreferenceCategory>
+</PreferenceScreen>
