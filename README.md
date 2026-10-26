@@ -9,7 +9,7 @@ An Android app that tells you whether the house is on **kahraba** (EDL grid) or 
   Lebanon a cut means the moteur took over.
 - **Silent switch back to kahraba:** halogen bulbs wobble slightly on the moteur and stay steady on
   kahraba. The light sensor watches for that. After the light has been steady for a while
-  (10 minutes by default), the app says kahraba is back.
+  (2 minutes by default), the app says kahraba is back.
 
 ## Alerts
 

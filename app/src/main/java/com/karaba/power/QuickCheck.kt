@@ -32,7 +32,6 @@ class QuickCheck(private val thresholdPct: Double, private val minLux: Double) {
         val end = samples.last().first
         // Same measure as the monitor: max-to-min swing over each 4-second stretch.
         val swings = ArrayList<Double>()
-        var disturbed = 0
         var dark = 0
         var t = start + PowerDetector.FLICKER_WINDOW_MS
         while (t <= end) {
@@ -41,7 +40,6 @@ class QuickCheck(private val thresholdPct: Double, private val minLux: Double) {
             when {
                 w.size < 8 || med == null -> {}
                 med < minLux -> dark++
-                (w.max() - w.min()) / med * 100 > PowerDetector.DISTURBANCE_PCT -> disturbed++
                 else -> swings += (w.max() - w.min()) / med * 100
             }
             t += 1000
@@ -49,7 +47,6 @@ class QuickCheck(private val thresholdPct: Double, private val minLux: Double) {
         if (swings.isEmpty()) {
             val why = when {
                 dark > 0 -> "Too dark – hold the phone closer to a halogen light."
-                disturbed > 0 -> "The light kept changing – keep the phone still and avoid shadows."
                 else -> "Not enough light readings."
             }
             return Result(Verdict.CANT_TELL, "", null, why)
@@ -65,8 +62,11 @@ class QuickCheck(private val thresholdPct: Double, private val minLux: Double) {
                 "Light wobbled up to ${"%.1f".format(max)}% (limit ${"%.1f".format(thresholdPct)}%).",
             )
         } else {
+            // In the 26 Oct recording the moteur never stayed steady longer than 20 s, and a
+            // random 10 s stretch of moteur looked steady only about 1-2% of the time.
             val confidence = when {
-                seconds >= 55 -> "Medium"
+                seconds >= 25 -> "High"
+                seconds >= 10 -> "Medium"
                 else -> "Low"
             }
             Result(
@@ -74,7 +74,7 @@ class QuickCheck(private val thresholdPct: Double, private val minLux: Double) {
                 confidence,
                 max,
                 "Light stayed steady for ${seconds}s (max wobble ${"%.1f".format(max)}%). " +
-                    "Moteur only wobbles now and then, so a longer check is more reliable.",
+                    "A 30-second check is more reliable.",
             )
         }
     }

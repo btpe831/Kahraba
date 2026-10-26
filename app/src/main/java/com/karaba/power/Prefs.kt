@@ -24,7 +24,7 @@ object Prefs {
     private const val CAL_KAHRABA = "cal_kahraba"
     private const val CAL_MOTEUR = "cal_moteur"
 
-    const val DEFAULT_THRESHOLD = 1.5
+    const val DEFAULT_THRESHOLD = 3.0
 
     fun sp(ctx: Context): SharedPreferences = PreferenceManager.getDefaultSharedPreferences(ctx)
 
@@ -33,7 +33,7 @@ object Prefs {
 
     fun config(ctx: Context) = DetectorConfig(
         flickerThresholdPct = num(ctx, FLICKER_THRESHOLD, DEFAULT_THRESHOLD),
-        steadyMinutes = num(ctx, STEADY_MINUTES, 10.0),
+        steadyMinutes = num(ctx, STEADY_MINUTES, 2.0),
         minLux = num(ctx, MIN_LUX, 15.0),
         requireFlickerBeforeKahraba = sp(ctx).getBoolean(REQUIRE_FLICKER, true),
         moteurOnFlickerAlone = sp(ctx).getBoolean(MOTEUR_ON_FLICKER, false),

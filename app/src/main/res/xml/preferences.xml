@@ -40,12 +40,12 @@
     <PreferenceCategory app:title="Detection (advanced)">
         <EditTextPreference
             app:key="flicker_threshold"
-            app:defaultValue="1.5"
+            app:defaultValue="3.0"
             app:title="Flicker limit (%)"
             app:summary="Light wobble above this counts as moteur. Set automatically by the 'It's kahraba / It's moteur' buttons." />
         <EditTextPreference
             app:key="steady_minutes"
-            app:defaultValue="10"
+            app:defaultValue="2"
             app:title="Minutes of steady light before calling kahraba"
             app:useSimpleSummaryProvider="true" />
         <EditTextPreference

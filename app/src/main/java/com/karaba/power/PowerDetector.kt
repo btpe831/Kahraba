@@ -7,9 +7,13 @@ enum class Source { UNKNOWN, KAHRABA, MOTEUR, NO_POWER }
 
 data class DetectorConfig(
     /** Light wobble (in %) above which a second counts as "flickering". */
-    val flickerThresholdPct: Double = 1.5,
-    /** Minutes of steady light needed to decide kahraba is back. */
-    val steadyMinutes: Double = 10.0,
+    val flickerThresholdPct: Double = 3.0,
+    /**
+     * Minutes of steady light needed to decide kahraba is back. In the first real recording
+     * (26 Oct) kahraba was perfectly steady while the moteur never stayed steady for more than
+     * 20 seconds, so 2 minutes leaves a wide margin.
+     */
+    val steadyMinutes: Double = 2.0,
     /** Minutes looked at when deciding the light is flickering (moteur). */
     val flickerMinutes: Double = 3.0,
     /** Below this the light is too weak to judge. */
@@ -23,7 +27,7 @@ data class DetectorConfig(
     /** Allow kahraba -> moteur from flicker alone, without seeing a cut. */
     val moteurOnFlickerAlone: Boolean = false,
     /** Charger off for longer than this means a real outage, not a switchover. */
-    val noPowerAfterSec: Double = 90.0,
+    val noPowerAfterSec: Double = 300.0,
 )
 
 data class Transition(
@@ -69,6 +73,8 @@ class PowerDetector(
     private val samples = ArrayDeque<Sample>()
     private val seconds = ArrayDeque<Second>()
     private var historyStartMs = -1L
+    /** Average light level while flickering (moteur), to report how much brighter kahraba is. */
+    private var flickerLevel: Double? = null
     private var sawFlicker = false
 
     private var plugged: Boolean? = null
@@ -170,14 +176,19 @@ class PowerDetector(
             record(now, null, "Too dark to judge – turn on a halogen light")
             return
         }
-        // Max-to-min swing over the last few seconds, as % of the level.
+        // Max-to-min swing over the last few seconds, as % of the level. The moteur swings a lot
+        // (typically 15-25%), so big swings count as flicker too; a shadow only delays a decision.
         val swing = (window.max() - window.min()) / med * 100.0
-        if (swing > DISTURBANCE_PCT) {
-            record(now, null, "Light disturbed (shadow or a light switched)")
-            return
+        val status = when {
+            swing > DISTURBANCE_PCT -> "Light jumping a lot"
+            swing > config.flickerThresholdPct -> "Light wobbling"
+            else -> "Light steady"
         }
-        record(now, swing, "OK")
-        if (source == Source.MOTEUR && swing > config.flickerThresholdPct) sawFlicker = true
+        record(now, swing, status)
+        if (swing > config.flickerThresholdPct) {
+            if (source == Source.MOTEUR) sawFlicker = true
+            flickerLevel = if (flickerLevel == null) med else flickerLevel!! * 0.98 + med * 0.02
+        }
         decide(now, out)
     }
 
@@ -201,10 +212,12 @@ class PowerDetector(
                     sawFlicker || longSteady
                 if (allowed) {
                     val steadySince = steadyRunStart(now, thr)
+                    val brighter = flickerLevel?.let { lvl -> lightLevel?.let { (it / lvl - 1) * 100 } }
+                    val extra = brighter?.takeIf { it >= 5 }?.let { ", ${it.toInt()}% brighter" } ?: ""
                     val reason = if (source == Source.UNKNOWN) {
                         "Light steady – looks like kahraba"
                     } else {
-                        "Light steady since ${formatClock(steadySince)} – kahraba is back"
+                        "Light steady since ${formatClock(steadySince)}$extra – kahraba is back"
                     }
                     out += change(now, Source.KAHRABA, reason)
                     return
@@ -266,7 +279,8 @@ class PowerDetector(
         const val FLICKER_WINDOW_MS = 4_000L
         const val SAMPLE_KEEP_MS = 30_000L
         const val DISTURBANCE_PCT = 25.0
-        const val LIGHT_CUT_MAX_MS = 60_000L
+        // The moteur took 75 s to come on during the 26 Oct cut.
+        const val LIGHT_CUT_MAX_MS = 5 * 60_000L
 
         fun median(values: List<Double>): Double? {
             if (values.isEmpty()) return null
