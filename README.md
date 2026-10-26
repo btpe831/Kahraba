@@ -1,6 +1,6 @@
-# Karaba
+# Ijit
 
-An Android app that tells you whether the house is on **kahraba** (EDL grid) or the **moteur**
+An Android app (repo: Karaba) that answers "ijit el kahraba?": is the house on **kahraba** (EDL grid) or the **moteur**
 (neighbourhood generator), and logs every switch.
 
 ## How it works

@@ -27,20 +27,20 @@ jobs:
           ./gradlew --no-daemon testDebugUnitTest assembleDebug
 
       - name: Name the APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk "Karaba-1.0.${{ github.run_number }}.apk"
+        run: cp app/build/outputs/apk/debug/app-debug.apk "Ijit-1.0.${{ github.run_number }}.apk"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Karaba-apk
-          path: Karaba-*.apk
+          name: Ijit-apk
+          path: Ijit-*.apk
 
       - name: Publish as a release (download this on the phone)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: Karaba 1.0.${{ github.run_number }}
+          name: Ijit 1.0.${{ github.run_number }}
           target_commitish: ${{ github.sha }}
           make_latest: true
-          files: Karaba-*.apk
+          files: Ijit-*.apk
           body: |
             Install on the Android phone: tap the .apk file below, then allow "Install unknown apps" if asked.

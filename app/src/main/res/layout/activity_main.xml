@@ -22,14 +22,27 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Karaba"
-                android:textColor="@color/text"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ijit"
+                    android:textColor="@color/text"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Kahraba or moteur"
+                    android:textColor="@color/muted"
+                    android:textSize="14sp" />
+            </LinearLayout>
 
             <ImageButton
                 android:id="@+id/settingsButton"

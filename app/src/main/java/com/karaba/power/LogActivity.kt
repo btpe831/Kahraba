@@ -17,7 +17,7 @@ class LogActivity : AppCompatActivity() {
         findViewById<Button>(R.id.shareLog).setOnClickListener {
             val send = Intent(Intent.ACTION_SEND)
                 .setType("text/plain")
-                .putExtra(Intent.EXTRA_SUBJECT, "Karaba switch log")
+                .putExtra(Intent.EXTRA_SUBJECT, "Ijit switch log")
                 .putExtra(Intent.EXTRA_TEXT, EventLog.formatted(this))
             startActivity(Intent.createChooser(send, "Share log"))
         }
