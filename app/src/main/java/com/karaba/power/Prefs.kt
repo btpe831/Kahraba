@@ -15,7 +15,7 @@ object Prefs {
     const val QUIET_ENABLED = "quiet_enabled"
     const val QUIET_START = "quiet_start"
     const val QUIET_END = "quiet_end"
-    const val FORCE_VOLUME = "force_volume"
+    const val BEEP_VOLUME = "beep_volume"
     const val AUTO_CHECK = "auto_check"
     const val HELP_SEEN = "help_seen"
 
@@ -40,7 +40,12 @@ object Prefs {
         moteurOnFlickerAlone = sp(ctx).getBoolean(MOTEUR_ON_FLICKER, false),
     )
 
-    fun forceVolume(ctx: Context) = sp(ctx).getBoolean(FORCE_VOLUME, true)
+    /** Beep loudness as a share of the alarm channel's maximum: low, medium or full. */
+    fun beepVolume(ctx: Context): Double = when (sp(ctx).getString(BEEP_VOLUME, "full")) {
+        "low" -> 0.3
+        "medium" -> 0.6
+        else -> 1.0
+    }
 
     fun autoCheck(ctx: Context) = sp(ctx).getBoolean(AUTO_CHECK, false)
 

@@ -103,14 +103,31 @@ class MonitorActivity : AppCompatActivity() {
 
     private fun render() {
         val running = MonitorState.running
-        val s = if (running) MonitorState.source else Prefs.savedSource(this)
-        stateText.text = EventLog.label(s)
-        (stateBox.background.mutate() as android.graphics.drawable.GradientDrawable).setColor(MonitorService.colorFor(s))
-        val since = if (running) MonitorState.sinceMs else Prefs.savedSince(this)
-        sinceText.text = if (s == Source.UNKNOWN) {
-            "Tap \"It's kahraba\" or \"It's moteur\" below if you know"
-        } else {
-            "since ${PowerDetector.formatClock(since)} (${PowerDetector.formatDuration(System.currentTimeMillis() - since)})"
+        val s = MonitorState.source
+        val box = stateBox.background.mutate() as android.graphics.drawable.GradientDrawable
+        val label = findViewById<TextView>(R.id.stateLabel)
+        when {
+            // Off: show no source at all; an old one could be hours out of date.
+            !running -> {
+                label.text = "Always-on monitor"
+                stateText.text = "Off"
+                sinceText.text = "Tap Start to track kahraba and moteur"
+                box.setColor(ContextCompat.getColor(this, R.color.no_power))
+            }
+            s == Source.UNKNOWN -> {
+                label.text = "Currently on"
+                stateText.text = "Not sure yet"
+                sinceText.text = "Give it a few minutes under a halogen light,\nor tap \"It's kahraba\" / \"It's moteur\" below"
+                box.setColor(MonitorService.colorFor(s))
+            }
+            else -> {
+                label.text = "Currently on"
+                stateText.text = EventLog.label(s)
+                val since = MonitorState.sinceMs
+                sinceText.text = "since ${PowerDetector.formatClock(since)} " +
+                    "(${PowerDetector.formatDuration(System.currentTimeMillis() - since)})"
+                box.setColor(MonitorService.colorFor(s))
+            }
         }
         startStop.text = if (running) "Stop monitoring" else "Start monitoring"
 

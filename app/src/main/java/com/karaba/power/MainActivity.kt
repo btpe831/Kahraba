@@ -281,8 +281,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         if (MonitorState.running) {
             val s = MonitorState.source
             dot.setColor(MonitorService.colorFor(s))
-            monitorSub.text = "On  ·  ${EventLog.label(s).lowercase().replaceFirstChar { it.uppercase() }} " +
-                "since ${PowerDetector.formatClock(MonitorState.sinceMs)}"
+            monitorSub.text = if (s == Source.UNKNOWN) {
+                "On  ·  not sure yet"
+            } else {
+                "On  ·  ${EventLog.label(s).lowercase().replaceFirstChar { it.uppercase() }} " +
+                    "since ${PowerDetector.formatClock(MonitorState.sinceMs)}"
+            }
         } else {
             dot.setColor(ContextCompat.getColor(this, R.color.outline))
             monitorSub.text = "Off  ·  for a phone left under a light"

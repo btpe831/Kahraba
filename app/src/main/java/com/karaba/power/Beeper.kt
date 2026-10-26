@@ -83,10 +83,11 @@ class Beeper(private val ctx: Context) {
         if (respectQuiet && Prefs.isQuietNow(ctx)) return
         val stream = AudioManager.STREAM_ALARM
         val oldVolume = audio.getStreamVolume(stream)
-        val force = Prefs.forceVolume(ctx)
+        val max = audio.getStreamMaxVolume(stream)
+        val target = Math.round(max * Prefs.beepVolume(ctx)).toInt().coerceIn(1, max)
         var track: AudioTrack? = null
         try {
-            if (force) runCatching { audio.setStreamVolume(stream, audio.getStreamMaxVolume(stream), 0) }
+            runCatching { audio.setStreamVolume(stream, target, 0) }
             track = AudioTrack.Builder()
                 .setAudioAttributes(
                     AudioAttributes.Builder()
@@ -113,7 +114,7 @@ class Beeper(private val ctx: Context) {
         } finally {
             runCatching { track?.stop() }
             runCatching { track?.release() }
-            if (force) runCatching { audio.setStreamVolume(stream, oldVolume, 0) }
+            runCatching { audio.setStreamVolume(stream, oldVolume, 0) }
         }
     }
 

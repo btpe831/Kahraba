@@ -101,6 +101,11 @@ class MonitorService : Service(), SensorEventListener {
         when (intent?.action) {
             ACTION_STOP -> {
                 monitoring = false
+                // Forget the source: once off, it can't know what happens next.
+                val now = System.currentTimeMillis()
+                EventLog.append(this, Transition(now, MonitorState.source, Source.UNKNOWN, "Monitoring stopped"))
+                Prefs.saveSource(this, Source.UNKNOWN, now)
+                MonitorState.source = Source.UNKNOWN
                 stopSelf()
                 return START_NOT_STICKY
             }
@@ -247,7 +252,7 @@ class MonitorService : Service(), SensorEventListener {
         }
         return NotificationCompat.Builder(this, CHANNEL_STATUS)
             .setSmallIcon(R.drawable.ic_bolt)
-            .setContentTitle("Now: ${EventLog.label(s)}")
+            .setContentTitle(if (s == Source.UNKNOWN) "Not sure yet" else "Now: ${EventLog.label(s)}")
             .setContentText(text)
             .setOngoing(true)
             .setOnlyAlertOnce(true)

@@ -100,7 +100,8 @@ class HelpActivity : AppCompatActivity() {
                 • Plug the phone into a <b>wall socket</b> (not a UPS) and leave it face-up under a halogen light. The screen can be off.
                 • A power cut is seen through the charger and means the moteur took over.
                 • When the light has been steady for 2 minutes, it says Kahraba is back.
-                • Every switch is logged with its time, and it beeps on each change. Night silence is in Settings.
+                • Every switch is logged with its time, and it beeps on each change. Night silence and beep volume are in Settings.
+                • When the monitor is off it shows “Off”. After you start it, it shows “Not sure yet” until it can tell (a few minutes), or until you tap “It's kahraba” / “It's moteur”.
                 • Tap “It's kahraba” or “It's moteur” when you're sure, so it learns your setup.
                 • Unplugging the phone yourself looks like a power cut.
             """,

@@ -31,11 +31,17 @@
     </PreferenceCategory>
 
     <PreferenceCategory app:title="Sound">
-        <SwitchPreferenceCompat
-            app:key="force_volume"
-            app:defaultValue="true"
-            app:title="Full volume for alerts"
-            app:summary="Beeps at full alarm volume, even when the phone is on silent." />
+        <Preference
+            app:key="sound_note"
+            app:selectable="false"
+            app:summary="Beeps play on the alarm channel, so they sound even when the phone is on silent." />
+        <ListPreference
+            app:key="beep_volume"
+            app:defaultValue="full"
+            app:entries="@array/volume_names"
+            app:entryValues="@array/volume_values"
+            app:title="Beep volume"
+            app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
 
     <PreferenceCategory app:title="Always-on monitor: detection (advanced)">
