@@ -64,4 +64,22 @@
             app:title="Moteur from flicker alone"
             app:summary="Switch to moteur when the light flickers even without a power cut. Off by default because kahraba can wobble too." />
     </PreferenceCategory>
+
+    <PreferenceCategory app:title="About">
+        <Preference
+            app:key="about_how"
+            app:selectable="false"
+            app:title="How it works"
+            app:summary="Halogen bulbs flicker on the moteur and stay steady on kahraba. The phone's light sensor watches for that flicker. Use a halogen or old-style filament bulb; most LED and energy-saving bulbs hide it." />
+        <Preference
+            app:key="about_solar"
+            app:selectable="false"
+            app:title="Solar inverters and UPS"
+            app:summary="Doesn't work if your lights run through a solar inverter or UPS. They produce smooth power whatever feeds them, so every check would say kahraba. An inverter's own screen or app (input voltage and frequency) is the better guide there." />
+        <Preference
+            app:key="about_privacy"
+            app:selectable="false"
+            app:title="Privacy"
+            app:summary="Everything stays on this phone. The app has no internet access; data only leaves if you tap Share." />
+    </PreferenceCategory>
 </PreferenceScreen>

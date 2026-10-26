@@ -207,5 +207,16 @@
                     app:tint="@color/muted" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="4dp"
+            android:lineSpacingExtra="2dp"
+            android:text="Note: doesn't work if your lights run through a solar inverter or UPS. They smooth out the moteur's flicker, so every check would say kahraba."
+            android:textColor="@color/muted"
+            android:textSize="12sp" />
     </LinearLayout>
 </ScrollView>

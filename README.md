@@ -34,6 +34,12 @@ Alerts:
 - Switch log with how long each state lasted.
 - Per-second light recordings (last 7 days) that can be shared for tuning.
 
+## Limits
+
+- Needs a halogen or old-style filament bulb. Most LED and energy-saving bulbs hide the flicker.
+- Doesn't work if the lights run through a solar inverter or UPS: they output smooth power whatever
+  feeds them, so every check would say kahraba.
+
 ## Setup
 
 1. Install the APK from the latest release on GitHub.
