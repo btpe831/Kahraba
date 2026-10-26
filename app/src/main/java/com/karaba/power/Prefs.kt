@@ -16,6 +16,7 @@ object Prefs {
     const val QUIET_START = "quiet_start"
     const val QUIET_END = "quiet_end"
     const val FORCE_VOLUME = "force_volume"
+    const val AUTO_CHECK = "auto_check"
 
     private const val SOURCE = "state_source"
     private const val SINCE = "state_since"
@@ -39,6 +40,8 @@ object Prefs {
     )
 
     fun forceVolume(ctx: Context) = sp(ctx).getBoolean(FORCE_VOLUME, true)
+
+    fun autoCheck(ctx: Context) = sp(ctx).getBoolean(AUTO_CHECK, false)
 
     var Context.monitoring: Boolean
         get() = sp(this).getBoolean(MONITORING, false)

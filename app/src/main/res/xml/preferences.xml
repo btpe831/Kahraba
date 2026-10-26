@@ -1,12 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory app:title="Night silence">
+    <PreferenceCategory app:title="Quick check">
+        <SwitchPreferenceCompat
+            app:key="auto_check"
+            app:defaultValue="false"
+            app:title="Check when the app opens"
+            app:summary="Starts a check straight away, so you only need to open the app and put the phone down." />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Always-on monitor: night silence">
         <SwitchPreferenceCompat
             app:key="quiet_enabled"
             app:defaultValue="false"
-            app:title="No beeps at night"
-            app:summary="Switches are still logged and shown, just without sound." />
+            app:title="No monitor beeps at night"
+            app:summary="Switches are still logged and shown, just without sound. Quick checks always beep." />
         <EditTextPreference
             app:key="quiet_start"
             app:defaultValue="23:00"
@@ -29,7 +37,7 @@
             app:summary="Beeps at full alarm volume, even when the phone is on silent." />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="Detection (advanced)">
+    <PreferenceCategory app:title="Always-on monitor: detection (advanced)">
         <EditTextPreference
             app:key="flicker_threshold"
             app:defaultValue="3.0"

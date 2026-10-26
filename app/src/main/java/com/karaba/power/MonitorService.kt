@@ -235,7 +235,7 @@ class MonitorService : Service(), SensorEventListener {
     private fun notifications() = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
     private fun openApp() = PendingIntent.getActivity(
-        this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE,
+        this, 0, Intent(this, MonitorActivity::class.java), PendingIntent.FLAG_IMMUTABLE,
     )
 
     private fun statusNotification(): Notification {

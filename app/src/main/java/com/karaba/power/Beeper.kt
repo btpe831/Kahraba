@@ -40,6 +40,19 @@ class Beeper(private val ctx: Context) {
 
     private val moteurSound: ShortArray by lazy { tone(3000, 950.0) }
 
+    private val quickKahrabaSound: ShortArray by lazy {
+        concat((1..4).flatMap { listOf(tone(140, 2200.0), silence(110)) })
+    }
+    private val quickMoteurSound: ShortArray by lazy { tone(1500, 950.0) }
+
+    /** Quick check result: 4 short beeps for kahraba, one long beep for moteur. Plays right away. */
+    @Synchronized
+    fun quickResult(kahraba: Boolean) {
+        cancel()
+        val pcm = if (kahraba) quickKahrabaSound else quickMoteurSound
+        pending += exec.schedule(Runnable { play(pcm, respectQuiet = false) }, 0, TimeUnit.MILLISECONDS)
+    }
+
     @Synchronized
     fun kahraba(respectQuiet: Boolean = true) {
         cancel()

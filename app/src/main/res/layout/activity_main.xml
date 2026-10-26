@@ -10,159 +10,83 @@
         android:padding="16dp">
 
         <LinearLayout
-            android:id="@+id/stateBox"
+            android:id="@+id/resultBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#546E7A"
             android:gravity="center"
+            android:minHeight="200dp"
             android:orientation="vertical"
-            android:paddingTop="28dp"
-            android:paddingBottom="24dp">
+            android:padding="20dp">
 
             <TextView
+                android:id="@+id/resultLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Currently on"
+                android:text="Last check"
                 android:textColor="#E0FFFFFF"
                 android:textSize="16sp" />
 
             <TextView
-                android:id="@+id/stateText"
+                android:id="@+id/resultText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="UNKNOWN"
+                android:gravity="center"
+                android:text="—"
                 android:textColor="#FFFFFF"
                 android:textSize="48sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/sinceText"
+                android:id="@+id/resultSub"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:gravity="center"
                 android:textColor="#E0FFFFFF"
                 android:textSize="16sp" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/messageText"
+        <Button
+            android:id="@+id/checkButton"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="#FFF3E0"
-            android:padding="12dp"
-            android:textColor="#4E342E"
-            android:textSize="15sp"
-            android:visibility="gone" />
+            android:layout_height="96dp"
+            android:layout_marginTop="16dp"
+            android:text="CHECK NOW"
+            android:textSize="24sp"
+            android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/detailText"
+            android:id="@+id/tipText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
+            android:text="Tap Check, then lay the phone face-up under a halogen light and don't touch it until it beeps.\n4 short beeps = kahraba · 1 long beep = moteur"
+            android:textSize="15sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Recent checks"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/historyText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:fontFamily="monospace"
             android:textSize="14sp" />
 
         <Button
-            android:id="@+id/startStop"
+            android:id="@+id/monitorButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Start monitoring" />
+            android:layout_marginTop="24dp"
+            android:text="Always-on monitor" />
 
         <Button
-            android:id="@+id/quickCheck"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Quick check" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="Tell the app what it is (and teach it)"
-            android:textSize="17sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Only when you're sure, e.g. from the lamp post (off = kahraba, green = moteur). Then leave the phone still under the halogen light for 2 minutes."
-            android:textSize="14sp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/setKahraba"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="It's kahraba" />
-
-            <Button
-                android:id="@+id/setMoteur"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="It's moteur" />
-        </LinearLayout>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="More"
-            android:textSize="17sp"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/openLog"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Switch log" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/testKahraba"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Test kahraba beep" />
-
-            <Button
-                android:id="@+id/testMoteur"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Test moteur beep" />
-        </LinearLayout>
-
-        <Button
-            android:id="@+id/silence"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Stop beeping" />
-
-        <Button
-            android:id="@+id/shareData"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Share recordings (for tuning)" />
-
-        <Button
-            android:id="@+id/battery"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Allow running in background" />
-
-        <Button
-            android:id="@+id/settings"
+            android:id="@+id/settingsButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Settings" />
