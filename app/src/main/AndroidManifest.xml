@@ -35,6 +35,11 @@
             android:parentActivityName=".MainActivity" />
 
         <activity
+            android:name=".HelpActivity"
+            android:label="How to use Ijit"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
             android:name=".LogActivity"
             android:label="Switch log" />
 

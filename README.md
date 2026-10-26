@@ -34,6 +34,12 @@ Alerts:
 - Switch log with how long each state lasted.
 - Per-second light recordings (last 7 days) that can be shared for tuning.
 
+## Help
+
+The app has a full guide (the ? button, also shown on first launch): quick start, how it works,
+which bulbs work, distance and light level, when it won't work (solar, UPS, stabilisers),
+privacy, and a disclaimer.
+
 ## Limits
 
 - Needs a halogen or old-style filament bulb. Most LED and energy-saving bulbs hide the flicker.

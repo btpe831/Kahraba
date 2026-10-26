@@ -75,6 +75,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         findViewById<View>(R.id.monitorCard).setOnClickListener {
             startActivity(Intent(this, MonitorActivity::class.java))
         }
+        findViewById<View>(R.id.helpButton).setOnClickListener {
+            startActivity(Intent(this, HelpActivity::class.java))
+        }
         findViewById<View>(R.id.settingsButton).setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
@@ -82,7 +85,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         // Keep the always-on monitor running if it was on (e.g. after an update).
         if (monitoring && !MonitorState.running) MonitorService.send(this, MonitorService.ACTION_START)
 
-        if (savedInstanceState == null && Prefs.autoCheck(this)) startCheck()
+        // First launch: show the guide before anything else.
+        if (savedInstanceState == null && !Prefs.sp(this).getBoolean(Prefs.HELP_SEEN, false)) {
+            startActivity(Intent(this, HelpActivity::class.java))
+        } else if (savedInstanceState == null && Prefs.autoCheck(this)) {
+            startCheck()
+        }
     }
 
     override fun onResume() {

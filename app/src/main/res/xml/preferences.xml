@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory app:title="Quick check">
         <SwitchPreferenceCompat
@@ -66,6 +67,14 @@
     </PreferenceCategory>
 
     <PreferenceCategory app:title="About">
+        <Preference
+            app:key="open_help"
+            app:title="How to use Ijit"
+            app:summary="Full guide: which lights work, distance, solar and UPS, and the disclaimer.">
+            <intent
+                android:targetClass="com.karaba.power.HelpActivity"
+                android:targetPackage="com.karaba.power" />
+        </Preference>
         <Preference
             app:key="about_how"
             app:selectable="false"

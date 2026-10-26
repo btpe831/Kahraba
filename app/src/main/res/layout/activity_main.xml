@@ -45,6 +45,15 @@
             </LinearLayout>
 
             <ImageButton
+                android:id="@+id/helpButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Help"
+                android:src="@drawable/ic_help"
+                app:tint="@color/muted" />
+
+            <ImageButton
                 android:id="@+id/settingsButton"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
@@ -140,7 +149,7 @@
             android:layout_marginTop="12dp"
             android:gravity="center"
             android:lineSpacingExtra="2dp"
-            android:text="Lay the phone face-up under a halogen light.\n4 short beeps = kahraba  ·  1 long beep = moteur"
+            android:text="Lay the phone face-up close to a halogen light.\n4 short beeps = kahraba  ·  1 long beep = moteur"
             android:textColor="@color/muted"
             android:textSize="13sp" />
 
@@ -228,7 +237,7 @@
             android:layout_marginTop="20dp"
             android:layout_marginEnd="4dp"
             android:lineSpacingExtra="2dp"
-            android:text="Note: doesn't work if your lights run through a solar inverter or UPS. They smooth out the moteur's flicker, so every check would say kahraba."
+            android:text="Note: doesn't work with LED bulbs, or if your lights run through a solar inverter or UPS. Tap ? at the top for the full guide."
             android:textColor="@color/muted"
             android:textSize="12sp" />
     </LinearLayout>

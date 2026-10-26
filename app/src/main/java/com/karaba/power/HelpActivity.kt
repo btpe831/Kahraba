@@ -1,0 +1,122 @@
+package com.karaba.power
+
+import android.os.Bundle
+import android.text.Html
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+
+/** How to use Ijit, which lights work, what breaks it, and the disclaimer. */
+class HelpActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_help)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        val container = findViewById<LinearLayout>(R.id.helpContainer)
+        for ((title, body) in SECTIONS) {
+            val card = layoutInflater.inflate(R.layout.item_help_section, container, false)
+            card.findViewById<TextView>(R.id.sectionTitle).text = title
+            card.findViewById<TextView>(R.id.sectionBody).text =
+                Html.fromHtml(body.trimIndent().replace("\n", "<br>"), Html.FROM_HTML_MODE_COMPACT)
+            container.addView(card)
+        }
+        Prefs.sp(this).edit().putBoolean(Prefs.HELP_SEEN, true).apply()
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        finish()
+        return true
+    }
+
+    companion object {
+        private val SECTIONS = listOf(
+            "Quick start" to """
+                1. Turn on a <b>halogen</b> or old-style <b>filament</b> bulb.
+                2. Tap <b>Check now</b>.
+                3. Within 3 seconds, lay the phone <b>face-up</b> right under the light and let go.
+                4. Wait for the beep:
+                &nbsp;&nbsp;• <b>4 short beeps = Kahraba</b> (after about 25 seconds)
+                &nbsp;&nbsp;• <b>1 long beep = Moteur</b> (usually within a few seconds)
+                Don't touch the phone or lean over it until it beeps.
+            """,
+
+            "How it works" to """
+                The moteur's voltage is never quite steady; it rises and falls as neighbours switch things on and off. A halogen bulb's brightness follows the voltage, so on the moteur the light <b>wobbles</b> slightly, often too little for your eyes to notice.
+                Kahraba is much steadier, so the light stays <b>flat</b>.
+                Your phone's light sensor watches for that wobble:
+                &nbsp;&nbsp;• Any wobble → <b>Moteur</b>
+                &nbsp;&nbsp;• 25 seconds with no wobble → <b>Kahraba</b>
+                In testing, the moteur never stayed steady for more than 20 seconds, which is why the check waits 25.
+            """,
+
+            "Which lights work" to """
+                <b>✓ Halogen</b> – best. Spotlights, desk lamps, capsule bulbs (G4, G9, GU10, MR16), halogen floodlights.
+                <b>✓ Old filament (incandescent) bulbs</b> – work just as well.
+                <b>✗ LED bulbs</b> – most have a circuit inside that keeps the light steady, which hides the wobble. The app will wrongly say Kahraba. Some cheap LEDs do wobble, but don't rely on it.
+                <b>✗ Bulbs marked “100W equivalent”</b> – these are LEDs, not 100W bulbs.
+                <b>✗ Energy-saving bulbs (CFL, the twisted “neon” type)</b> – have electronics inside like LEDs; usually hide the wobble.
+                <b>? Fluorescent tubes (“neon”)</b> – old tubes that flicker or hum when switching on may work; modern ones usually don't.
+                <b>✗ Dimmed lights</b> – dimmer switches add their own flicker. Use full brightness.
+                <b>Not sure about a light?</b> Test it once while you know you're on the moteur (e.g. your neighbourhood's indicator light is on). If the check says <b>Moteur</b>, that light works. If it says Kahraba, don't use it.
+            """,
+
+            "Distance and light level" to """
+                During a check the screen shows the light level in <b>lux</b>. That number matters more than the distance:
+                &nbsp;&nbsp;• <b>300 lux or more</b> – best
+                &nbsp;&nbsp;• <b>100–300 lux</b> – usually OK
+                &nbsp;&nbsp;• <b>Under 100 lux</b> – too dim; the app stops and says “Too dim”
+                As a rough guide:
+                &nbsp;&nbsp;• Halogen desk lamp or spotlight: <b>30 cm to 1 m</b> away
+                &nbsp;&nbsp;• 100W halogen bulb: within about <b>1–1.5 m</b>
+                &nbsp;&nbsp;• Ceiling light or chandelier 3 m up: usually <b>too far</b>
+                Halogen bulbs get very hot. Keep the phone at least <b>30 cm</b> from the bulb.
+            """,
+
+            "Tips for a reliable check" to """
+                • The light sensor is at the <b>top of the screen</b>, near the camera. Point that part at the bulb.
+                • Lay the phone <b>flat and still</b>; don't hold it.
+                • Keep shadows away: no hands, heads or people walking past.
+                • Use <b>one light source</b>. Daylight from a window, a TV or LED lamps mixed in will dilute the wobble. Checks work best in the evening or with curtains closed.
+                • Any phone case is fine as long as it doesn't cover the top of the screen.
+                • If you get “Can't tell”, move closer to the bulb and try again.
+            """,
+
+            "When Ijit won't work" to """
+                <b>Solar inverters and battery systems.</b> If your lights run through an inverter (Deye, Growatt, etc.), the inverter makes its own smooth power whatever feeds it. Every check would say Kahraba. Use your inverter's screen or app instead: kahraba usually shows a steadier frequency (close to 50.0 Hz) and often a higher voltage than the moteur.
+                <b>UPS.</b> Same problem: a light plugged into a UPS gets smoothed power. Use a light on the normal house wiring.
+                <b>Voltage stabilisers.</b> A whole-house stabiliser (regulator) may smooth out the wobble. If checks always say Kahraba even when you know it's the moteur, this may be why.
+                <b>The wrong bulbs.</b> See “Which lights work”.
+            """,
+
+            "Your results" to """
+                <b>Recent</b> shows your last checks. <b>Tap one to fix it</b> if you know it was wrong, or to delete it. Fixed checks are marked “corrected”.
+                <b>Can't tell</b> means the light was too dim, the phone was moved, or there was no light reading. Nothing is guessed.
+                Tip: a wrong <b>Moteur</b> result is rare (kahraba doesn't wobble), but a shadow or moving the phone can cause one. A wrong <b>Kahraba</b> result almost always means the light can't show the wobble (LED, too dim, inverter, UPS).
+            """,
+
+            "Always-on monitor (optional)" to """
+                For a spare phone that stays in one place. Open it from the card at the bottom of the main screen.
+                • Plug the phone into a <b>wall socket</b> (not a UPS) and leave it face-up under a halogen light. The screen can be off.
+                • A power cut is seen through the charger and means the moteur took over.
+                • When the light has been steady for 2 minutes, it says Kahraba is back.
+                • Every switch is logged with its time, and it beeps on each change. Night silence is in Settings.
+                • Tap “It's kahraba” or “It's moteur” when you're sure, so it learns your setup.
+                • Unplugging the phone yourself looks like a power cut.
+            """,
+
+            "Privacy" to """
+                Everything stays on this phone. Ijit has <b>no internet access</b>. Nothing is sent anywhere unless you tap Share yourself. Uninstalling the app deletes all its data.
+            """,
+
+            "Disclaimer" to """
+                Ijit gives an <b>estimate</b> based on how a light bulb behaves. It can be wrong, and results depend on your bulbs, wiring, generator and phone. It is provided as-is, without any guarantee of accuracy.
+                • <b>Never use Ijit for safety decisions.</b> It cannot tell you whether wires are live or safe to touch. Always treat wiring as live, and leave electrical work to a qualified electrician.
+                • Don't rely on it for medical equipment or anything where a wrong answer could cause harm or damage.
+                • Halogen bulbs get very hot. Keep the phone and your hands away from them.
+                • Ijit is not affiliated with Électricité du Liban (EDL) or any generator provider.
+                Use at your own risk.
+            """,
+        )
+    }
+}

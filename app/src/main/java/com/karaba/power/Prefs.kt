@@ -17,6 +17,7 @@ object Prefs {
     const val QUIET_END = "quiet_end"
     const val FORCE_VOLUME = "force_volume"
     const val AUTO_CHECK = "auto_check"
+    const val HELP_SEEN = "help_seen"
 
     private const val SOURCE = "state_source"
     private const val SINCE = "state_since"
