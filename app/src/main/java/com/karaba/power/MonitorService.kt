@@ -47,6 +47,7 @@ class MonitorService : Service(), SensorEventListener {
     private var lastDataSecond = 0L
     private var lastCalEval = 0L
     private var calibration: MutableList<Double>? = null
+    private val calibrationLevels = mutableListOf<Double>()
 
     private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
         handler.post { detector.config = Prefs.config(this) }
@@ -138,6 +139,7 @@ class MonitorService : Service(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent) {
         latestLux = event.values[0].toDouble()
+        detector.addReading(System.currentTimeMillis(), event.values[0].toDouble())
         sensorEvents.addLast(System.currentTimeMillis())
     }
 
@@ -153,7 +155,10 @@ class MonitorService : Service(), SensorEventListener {
         if (detector.lastEvalMs != lastDataSecond) {
             lastDataSecond = detector.lastEvalMs
             data.write(now, detector.lightLevel, detector.flickerPct, plugged, detector.source, detector.lightStatus)
-            calibration?.let { cal -> detector.flickerPct?.let { cal += it } }
+            calibration?.let { cal ->
+                detector.flickerPct?.let { cal += it }
+                detector.lightLevel?.takeIf { detector.flickerPct != null }?.let { calibrationLevels += it }
+            }
         }
         if (calibration != null && now >= MonitorState.calibrationEndsMs) finishCalibration()
 
@@ -209,6 +214,7 @@ class MonitorService : Service(), SensorEventListener {
         beeper.cancel()
         if (calibrate && (s == Source.KAHRABA || s == Source.MOTEUR)) {
             calibration = mutableListOf()
+            calibrationLevels.clear()
             MonitorState.calibrationSource = s
             MonitorState.calibrationEndsMs = System.currentTimeMillis() + CALIBRATION_MS
             MonitorState.message = null
@@ -230,9 +236,12 @@ class MonitorService : Service(), SensorEventListener {
         val pct = if (s == Source.KAHRABA) 0.99 else 0.90
         val noise = sorted[minOf(sorted.size - 1, ceil(sorted.size * pct).toInt() - 1)]
         val thr = Prefs.saveCalibration(this, s, noise)
+        val level = PowerDetector.median(calibrationLevels)
+        if (level != null) Prefs.saveLevel(this, s, level)
         detector.config = Prefs.config(this)
-        MonitorState.message = "Calibrated on ${EventLog.label(s)}: wobble ${"%.2f".format(noise)}%. " +
-            "Flicker limit is now ${"%.2f".format(thr)}%."
+        MonitorState.message = "Learned ${EventLog.label(s).lowercase()} at this spot: " +
+            "${level?.toInt() ?: "–"} lux, wobble ${"%.1f".format(noise)}%. " +
+            "Keep the phone in this exact spot so the levels stay comparable."
     }
 
     // ---- Notifications ----

@@ -36,18 +36,18 @@ class HelpActivity : ThemedActivity() {
                 2. Tap <b>Check now</b>.
                 3. Within 3 seconds, lay the phone <b>face-up</b> right under the light and let go.
                 4. Wait for the beep:
-                &nbsp;&nbsp;• <b>4 short beeps = Kahraba</b> (after about 25 seconds)
                 &nbsp;&nbsp;• <b>1 long beep = Moteur</b> (usually within a few seconds)
+                &nbsp;&nbsp;• <b>2 short beeps = No flicker</b> (after 25 seconds) – probably kahraba, but not certain
                 Don't touch the phone or lean over it until it beeps.
             """,
 
             "How it works" to """
                 The moteur's voltage is never quite steady; it rises and falls as neighbours switch things on and off. A halogen bulb's brightness follows the voltage, so on the moteur the light <b>wobbles</b> slightly, often too little for your eyes to notice.
-                Kahraba is much steadier, so the light stays <b>flat</b>.
+                Kahraba is much steadier, so the light stays <b>flat</b>. Kahraba's voltage is usually higher too, so the same bulb shines about <b>25% brighter</b>.
                 Your phone's light sensor watches for that wobble:
                 &nbsp;&nbsp;• Any wobble → <b>Moteur</b>
-                &nbsp;&nbsp;• 25 seconds with no wobble → <b>Kahraba</b>
-                In testing, the moteur never stayed steady for more than 20 seconds, which is why the check waits 25.
+                &nbsp;&nbsp;• 25 seconds with no wobble → <b>No flicker</b> (probably kahraba)
+                <b>Why “No flicker” isn't a sure Kahraba:</b> when few people are using it (often at night), the moteur can stay perfectly steady for many minutes. The phone's light sensor also only notices changes bigger than about 8%. So a wobble proves moteur, but a steady light can be either. To be sure, check the lamp post or your voltage meter (kahraba usually reads higher, e.g. 234 V vs 213 V).
             """,
 
             "Which lights work" to """
@@ -92,16 +92,18 @@ class HelpActivity : ThemedActivity() {
             "Your results" to """
                 <b>Recent</b> shows your last checks. <b>Tap one to fix it</b> if you know it was wrong, or to delete it. Fixed checks are marked “corrected”.
                 <b>Can't tell</b> means the light was too dim, the phone was moved, or there was no light reading. Nothing is guessed.
-                Tip: a wrong <b>Moteur</b> result is rare (kahraba doesn't wobble), but a shadow or moving the phone can cause one. A wrong <b>Kahraba</b> result almost always means the light can't show the wobble (LED, too dim, inverter, UPS).
+                Tip: a wrong <b>Moteur</b> result is rare (kahraba doesn't wobble), but a shadow or moving the phone can cause one. “No flicker” on the moteur happens when the moteur is calm, or the light can't show the wobble (LED, too dim, inverter, UPS).
             """,
 
             "Always-on monitor (optional)" to """
                 For a spare phone that stays in one place. Open it from the card at the bottom of the main screen.
                 • Plug the phone into a <b>wall socket</b> (not a UPS) and leave it face-up under a halogen light. The screen can be off.
                 • A power cut is seen through the charger and means the moteur took over.
-                • When the light has been steady for 2 minutes, it says Kahraba is back.
+                • It says Kahraba is back when the light gets clearly <b>brighter</b> (no blackout) and stays steady for 2 minutes – kahraba's higher voltage makes the bulb brighter. Steady light alone is not enough, because a calm moteur is steady too.
+                • Tap “It's kahraba” and “It's moteur” once each (when you're sure) so it learns how bright this spot is on each. Then it can tell even without seeing the change. Keep the phone in the exact same spot.
+                • Keep other lights the same: switching a lamp on can look like the brightness change.
                 • Every switch is logged with its time, and it beeps on each change. Night silence and beep volume are in Settings.
-                • When the monitor is off it shows “Off”. After you start it, it shows “Not sure yet” until it can tell (a few minutes), or until you tap “It's kahraba” / “It's moteur”.
+                • When the monitor is off it shows “Off”. After you start it, it shows “Not sure yet” until it sees a wobble or a power cut (moteur), matches a learned level, or you tap “It's kahraba” / “It's moteur”.
                 • Tap “It's kahraba” or “It's moteur” when you're sure, so it learns your setup.
                 • Unplugging the phone yourself looks like a power cut.
             """,

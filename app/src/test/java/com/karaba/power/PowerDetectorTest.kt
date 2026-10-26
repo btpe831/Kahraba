@@ -13,8 +13,11 @@ class PowerDetectorTest {
     /** Kahraba: steady light with tiny sensor noise (like the 862–868 lx reading). */
     private fun kahraba(t: Long) = 865.0 + 1.5 * sin(t / 3000.0)
 
-    /** Moteur: steady most of the time, with a 4% dim lasting ~1.5s every [every] ms. */
-    private fun moteur(every: Long) = { t: Long -> if (t % every < 1500) 830.0 else 865.0 }
+    /** Moteur: dimmer than kahraba (~680 lx, like 213 V vs 234 V) with a 10% dip every [every] ms. */
+    private fun moteur(every: Long) = { t: Long -> if (t % every < 1500) 612.0 else 680.0 }
+
+    /** A calm moteur: perfectly steady, just dimmer (like the 21:55–22:13 stretch on 26 Oct). */
+    private fun calmMoteur(@Suppress("UNUSED_PARAMETER") t: Long) = 697.0
 
     private class Run(val d: PowerDetector) {
         var t = 0L
@@ -29,10 +32,41 @@ class PowerDetectorTest {
     }
 
     @Test
-    fun steadyLightFromUnknownBecomesKahraba() {
+    fun steadyLightAloneProvesNothing() {
+        // Steady could be kahraba or a calm moteur, so from "not sure" it stays not sure.
         val r = Run(PowerDetector())
-        r.run(3 * min) { kahraba(it) }
-        assertEquals(Source.KAHRABA, r.d.source)
+        r.run(20 * min) { kahraba(it) }
+        assertEquals(Source.UNKNOWN, r.d.source)
+    }
+
+    @Test
+    fun calmMoteurSetByUserStaysMoteur() {
+        // The bug: user tapped "It's moteur", the light stayed steady, and it switched to kahraba.
+        val r = Run(PowerDetector())
+        r.d.setManual(0, Source.MOTEUR)
+        r.run(60 * min) { calmMoteur(it) }
+        assertEquals(Source.MOTEUR, r.d.source)
+        assertTrue(r.transitions.isEmpty())
+    }
+
+    @Test
+    fun learnedLevelsDecideFromUnknown() {
+        val cfg = DetectorConfig(kahrabaLevel = 862.0, moteurLevel = 680.0)
+        val k = Run(PowerDetector(cfg))
+        k.run(3 * min) { kahraba(it) }
+        assertEquals(Source.KAHRABA, k.d.source)
+        val m = Run(PowerDetector(cfg))
+        m.run(3 * min) { calmMoteur(it) }
+        assertEquals(Source.MOTEUR, m.d.source)
+    }
+
+    @Test
+    fun anotherLampSwitchedOnIsNotKahraba() {
+        val r = Run(PowerDetector())
+        r.d.setManual(0, Source.MOTEUR)
+        r.run(10 * min) { calmMoteur(it) }
+        r.run(10 * min) { 1400.0 }                       // +100%: another light, not the voltage
+        assertEquals(Source.MOTEUR, r.d.source)
     }
 
     @Test
@@ -57,14 +91,14 @@ class PowerDetectorTest {
     }
 
     @Test
-    fun calmMoteurAfterCutNeedsLongSteadyStretch() {
+    fun calmMoteurThenSilentSwitch() {
         val r = Run(PowerDetector(initialSource = Source.KAHRABA))
         r.run(1 * min) { kahraba(it) }
         r.run(3_000, plugged = false) { 0.0 }
-        r.run(4 * min) { kahraba(it) }
-        assertEquals(Source.MOTEUR, r.d.source)           // no flicker seen yet, so wait
-        r.run(3 * min) { kahraba(it) }
-        assertEquals(Source.KAHRABA, r.d.source)          // steady for 3x the steady time
+        r.run(30 * min) { calmMoteur(it) }
+        assertEquals(Source.MOTEUR, r.d.source)           // steady, but no brighter: still moteur
+        r.run(3 * min) { kahraba(it) }                    // +24% brighter and steady
+        assertEquals(Source.KAHRABA, r.d.source)
     }
 
     @Test
@@ -108,7 +142,7 @@ class PowerDetectorTest {
 
     @Test
     fun quickCheckVerdicts() {
-        assertEquals(QuickCheck.Verdict.KAHRABA to 25L, quick(0) { kahraba(it) })
+        assertEquals(QuickCheck.Verdict.NO_FLICKER to 25L, quick(0) { kahraba(it) })
         assertEquals(QuickCheck.Verdict.MOTEUR, quick(0, moteur(5_000)).first)
         // Too dim (like the 26 lux check on moteur that wrongly said kahraba): give up fast.
         val dim = quick(0) { 26.0 }
@@ -156,7 +190,7 @@ class PowerDetectorTest {
     fun realRecordingFromUnknown() {
         val d = PowerDetector()
         val ts = replay(d, useCharger = true)
-        assertEquals(listOf(Source.KAHRABA, Source.MOTEUR), ts.map { it.to })
+        assertEquals(listOf(Source.MOTEUR), ts.map { it.to })
     }
 
     @Test
@@ -187,10 +221,54 @@ class PowerDetectorTest {
         // Start a check every 10 s through each part of the recording.
         val onKahraba = (60_000L until 1_900_000L step 10_000L).map { quick(it, ::at) }
         val onMoteur = (2_490_000L until 3_660_000L step 10_000L).map { quick(it, ::at) }
-        assertTrue(onKahraba.all { it.first == QuickCheck.Verdict.KAHRABA })
+        assertTrue(onKahraba.all { it.first == QuickCheck.Verdict.NO_FLICKER })
         assertTrue(onMoteur.all { it.first == QuickCheck.Verdict.MOTEUR })
         val times = onMoteur.map { it.second }.sorted()
         println("Quick check on moteur: ${onMoteur.size} checks, all right; " +
             "median ${times[times.size / 2]}s, slowest ${times.last()}s")
+    }
+
+    // ---- Replay of the calm moteur recording from 26 Oct 2026 (21:54–22:30, lamp post green) ----
+
+    private fun calmRecording(): List<Pair<Long, Double>> =
+        javaClass.classLoader!!.getResourceAsStream("calm-moteur-2026-10-26.csv")!!.bufferedReader()
+            .readLines().filter { it.isNotEmpty() && it[0].isDigit() }
+            .map { line -> line.split(",").let { (it[0].toDouble() * 1000).toLong() to it[1].toDouble() } }
+
+    @Test
+    fun realCalmMoteurStaysMoteur() {
+        // Feed every reading plus 5-per-second samples, the way the app does.
+        val d = PowerDetector()
+        d.setManual(0, Source.MOTEUR)
+        val rec = calmRecording()
+        val ts = mutableListOf<Transition>()
+        var i = 0
+        var t = 0L
+        var last = rec[0].second
+        while (t <= rec.last().first) {
+            while (i < rec.size && rec[i].first <= t) {
+                last = rec[i].second
+                d.addReading(rec[i].first, last)
+                i++
+            }
+            ts += d.tick(t, last, true)
+            t += step
+        }
+        assertTrue("switched: ${ts.map { it.reason }}", ts.isEmpty())
+        assertEquals(Source.MOTEUR, d.source)
+    }
+
+    @Test
+    fun quickCheckOnCalmMoteurNeverSaysKahraba() {
+        val rec = calmRecording()
+        fun at(t: Long): Double {
+            var i = rec.binarySearch { it.first.compareTo(t) }
+            if (i < 0) i = -i - 2
+            return rec[i.coerceIn(0, rec.size - 1)].second
+        }
+        val results = (10_000L until 2_140_000L step 30_000L).map { quick(it, ::at).first }
+        assertTrue(results.none { it == QuickCheck.Verdict.KAHRABA })
+        println("Quick checks on calm moteur: ${results.count { it == QuickCheck.Verdict.MOTEUR }} moteur, " +
+            "${results.count { it == QuickCheck.Verdict.NO_FLICKER }} no flicker, of ${results.size}")
     }
 }

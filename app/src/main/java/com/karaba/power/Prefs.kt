@@ -10,7 +10,8 @@ object Prefs {
     const val FLICKER_THRESHOLD = "flicker_threshold"
     const val STEADY_MINUTES = "steady_minutes"
     const val MIN_LUX = "min_lux"
-    const val REQUIRE_FLICKER = "require_flicker"
+    private const val LEVEL_KAHRABA = "level_kahraba"
+    private const val LEVEL_MOTEUR = "level_moteur"
     const val MOTEUR_ON_FLICKER = "moteur_on_flicker"
     const val QUIET_ENABLED = "quiet_enabled"
     const val QUIET_START = "quiet_start"
@@ -38,7 +39,8 @@ object Prefs {
         flickerThresholdPct = num(ctx, FLICKER_THRESHOLD, DEFAULT_THRESHOLD),
         steadyMinutes = num(ctx, STEADY_MINUTES, 2.0),
         minLux = num(ctx, MIN_LUX, 100.0),
-        requireFlickerBeforeKahraba = sp(ctx).getBoolean(REQUIRE_FLICKER, true),
+        kahrabaLevel = sp(ctx).getFloat(LEVEL_KAHRABA, -1f).takeIf { it > 0 }?.toDouble(),
+        moteurLevel = sp(ctx).getFloat(LEVEL_MOTEUR, -1f).takeIf { it > 0 }?.toDouble(),
         moteurOnFlickerAlone = sp(ctx).getBoolean(MOTEUR_ON_FLICKER, false),
     )
 
@@ -97,6 +99,12 @@ object Prefs {
         val m = p[1].toIntOrNull() ?: return null
         if (h !in 0..23 || m !in 0..59) return null
         return h * 60 + m
+    }
+
+    /** Remembers the light level at the monitor's spot for a source the user confirmed. */
+    fun saveLevel(ctx: Context, source: Source, lux: Double) {
+        val key = if (source == Source.KAHRABA) LEVEL_KAHRABA else LEVEL_MOTEUR
+        sp(ctx).edit().putFloat(key, lux.toFloat()).apply()
     }
 
     fun calibration(ctx: Context): Pair<Double?, Double?> {

@@ -49,6 +49,7 @@ object CheckHistory {
     fun label(v: QuickCheck.Verdict) = when (v) {
         QuickCheck.Verdict.KAHRABA -> "Kahraba"
         QuickCheck.Verdict.MOTEUR -> "Moteur"
+        QuickCheck.Verdict.NO_FLICKER -> "No flicker"
         QuickCheck.Verdict.CANT_TELL -> "Can't tell"
     }
 }

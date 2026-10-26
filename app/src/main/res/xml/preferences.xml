@@ -70,18 +70,13 @@
         <EditTextPreference
             app:key="steady_minutes"
             app:defaultValue="2"
-            app:title="Minutes of steady light before calling kahraba"
+            app:title="Minutes the light must stay brighter before calling kahraba"
             app:useSimpleSummaryProvider="true" />
         <EditTextPreference
             app:key="min_lux"
             app:defaultValue="100"
             app:title="Minimum light level (lux)"
             app:useSimpleSummaryProvider="true" />
-        <SwitchPreferenceCompat
-            app:key="require_flicker"
-            app:defaultValue="true"
-            app:title="Careful kahraba detection"
-            app:summary="After a cut, wait until the moteur has flickered at least once (or 3x the steady time) before calling kahraba." />
         <SwitchPreferenceCompat
             app:key="moteur_on_flicker"
             app:defaultValue="false"

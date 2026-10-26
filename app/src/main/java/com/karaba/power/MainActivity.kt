@@ -177,6 +177,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         when (result.verdict) {
             QuickCheck.Verdict.KAHRABA -> beeper.quickResult(kahraba = true)
             QuickCheck.Verdict.MOTEUR -> beeper.quickResult(kahraba = false)
+            QuickCheck.Verdict.NO_FLICKER -> beeper.quickNoFlicker()
             QuickCheck.Verdict.CANT_TELL -> {}
         }
         CheckHistory.add(this, result.verdict, result.lux)
@@ -185,6 +186,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent) {
         lux = event.values[0].toDouble()
+        if (System.currentTimeMillis() >= measureFromMs) check?.addRaw(System.currentTimeMillis(), event.values[0].toDouble())
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
@@ -207,12 +209,13 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         when (v) {
             QuickCheck.Verdict.KAHRABA -> showOrb(R.color.kahraba, R.drawable.ic_bolt, "Kahraba", if (corrected) "Corrected by you" else "Grid power")
             QuickCheck.Verdict.MOTEUR -> showOrb(R.color.moteur, R.drawable.ic_moteur, "Moteur", if (corrected) "Corrected by you" else "Generator")
+            QuickCheck.Verdict.NO_FLICKER -> showOrb(R.color.idle, R.drawable.ic_bolt, "No flicker", "Probably kahraba")
             QuickCheck.Verdict.CANT_TELL -> showOrb(R.color.idle, R.drawable.ic_bolt, "Can't tell", "Try again")
         }
         val ago = System.currentTimeMillis() - timeMs
         val agoText = if (ago < 60_000) "just now" else "${PowerDetector.formatDuration(ago)} ago"
         statusLine.text = "Checked $agoText  ·  ${PowerDetector.formatClock(timeMs)}" +
-            (detail?.takeIf { v == QuickCheck.Verdict.CANT_TELL }?.let { "\n$it" } ?: "")
+            (detail?.takeIf { v == QuickCheck.Verdict.CANT_TELL || v == QuickCheck.Verdict.NO_FLICKER }?.let { "\n$it" } ?: "")
     }
 
     private fun showOrb(colorRes: Int, iconRes: Int, title: String, sub: String) {
@@ -235,6 +238,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             val color = when (e.verdict) {
                 QuickCheck.Verdict.KAHRABA -> R.color.kahraba
                 QuickCheck.Verdict.MOTEUR -> R.color.moteur
+                QuickCheck.Verdict.NO_FLICKER -> R.color.idle
                 QuickCheck.Verdict.CANT_TELL -> R.color.idle
             }
             val label = CheckHistory.label(e.verdict) + if (e.corrected) "  (corrected)" else ""

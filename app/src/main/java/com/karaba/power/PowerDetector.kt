@@ -1,6 +1,7 @@
 package com.karaba.power
 
 import kotlin.math.roundToLong
+import kotlin.math.sqrt
 
 /** Where the house's electricity is coming from. */
 enum class Source { UNKNOWN, KAHRABA, MOTEUR, NO_POWER }
@@ -8,11 +9,7 @@ enum class Source { UNKNOWN, KAHRABA, MOTEUR, NO_POWER }
 data class DetectorConfig(
     /** Light wobble (in %) above which a second counts as "flickering". */
     val flickerThresholdPct: Double = 3.0,
-    /**
-     * Minutes of steady light needed to decide kahraba is back. In the first real recording
-     * (26 Oct) kahraba was perfectly steady while the moteur never stayed steady for more than
-     * 20 seconds, so 2 minutes leaves a wide margin.
-     */
+    /** Minutes the light must stay steady at a new, brighter level before calling kahraba. */
     val steadyMinutes: Double = 2.0,
     /** Minutes looked at when deciding the light is flickering (moteur). */
     val flickerMinutes: Double = 3.0,
@@ -22,11 +19,17 @@ data class DetectorConfig(
      */
     val minLux: Double = 100.0,
     /**
-     * After a cut, only call kahraba once the moteur has been seen flickering at least once
-     * (or the light has been steady for 3x [steadyMinutes]). Stops a calm moteur being mistaken
-     * for kahraba straight after the cut.
+     * How much brighter (in %) the light must get, without a blackout, to count as kahraba coming
+     * back. Kahraba's higher voltage (234 V vs 213 V) made the halogen ~25-30% brighter
+     * (862 vs 650-700 lux). Steadiness alone is NOT enough: on 26 Oct at night a calm moteur
+     * stayed perfectly steady for 19 minutes.
      */
-    val requireFlickerBeforeKahraba: Boolean = true,
+    val levelRisePct: Double = 12.0,
+    /** Brightness rises above this are more likely another lamp being switched on. */
+    val levelRiseMaxPct: Double = 60.0,
+    /** Light levels learned with "It's kahraba" / "It's moteur" at this spot, if any. */
+    val kahrabaLevel: Double? = null,
+    val moteurLevel: Double? = null,
     /** Allow kahraba -> moteur from flicker alone, without seeing a cut. */
     val moteurOnFlickerAlone: Boolean = false,
     /** Charger off for longer than this means a real outage, not a switchover. */
@@ -44,8 +47,10 @@ data class Transition(
 /**
  * Works out the power source from two signals:
  *  - the charger: a short loss of charging is a power cut, and a cut means moteur took over;
- *  - the light: halogen bulbs wobble on moteur and stay steady on kahraba, so a long steady
- *    stretch after a cut means kahraba came back silently.
+ *  - the light: halogen bulbs wobble on the moteur (any wobble -> moteur), and get brighter on
+ *    kahraba's higher voltage. Kahraba is only called on positive evidence: the light got
+ *    clearly brighter without a blackout, or it matches a level learned for this spot.
+ *    A steady light on its own proves nothing, because a calm moteur can be steady too.
  *
  * Pure Kotlin with no Android code, so it can be unit tested. Call [tick] about 5 times a second.
  */
@@ -55,7 +60,7 @@ class PowerDetector(
     initialSinceMs: Long = 0L,
 ) {
     private data class Sample(val t: Long, val lux: Double)
-    private data class Second(val t: Long, val flicker: Double?)
+    private data class Second(val t: Long, val flicker: Double?, val level: Double?)
 
     var source: Source = initialSource
         private set
@@ -76,9 +81,6 @@ class PowerDetector(
     private val samples = ArrayDeque<Sample>()
     private val seconds = ArrayDeque<Second>()
     private var historyStartMs = -1L
-    /** Average light level while flickering (moteur), to report how much brighter kahraba is. */
-    private var flickerLevel: Double? = null
-    private var sawFlicker = false
 
     private var plugged: Boolean? = null
     private var everPlugged = false
@@ -104,6 +106,14 @@ class PowerDetector(
             evaluate(nowMs, out)
         }
         return out
+    }
+
+    /**
+     * Every raw sensor reading. [tick] samples the latest value 5 times a second; this also keeps
+     * short dips that fall between ticks, so they count as wobble.
+     */
+    fun addReading(nowMs: Long, lux: Double) {
+        samples.addLast(Sample(nowMs, lux))
     }
 
     /** The user says which source it is (e.g. from the lamp post). */
@@ -172,11 +182,11 @@ class PowerDetector(
         val med = median(window)
         lightLevel = med
         if (window.size < 8 || med == null) {
-            record(now, null, "Waiting for light readings…")
+            record(now, null, null, "Waiting for light readings…")
             return
         }
         if (med < config.minLux) {
-            record(now, null, "Too dim to judge – needs a halogen light nearby")
+            record(now, null, null, "Too dim to judge – needs a halogen light nearby")
             return
         }
         // Max-to-min swing over the last few seconds, as % of the level. The moteur swings a lot
@@ -187,59 +197,78 @@ class PowerDetector(
             swing > config.flickerThresholdPct -> "Light wobbling"
             else -> "Light steady"
         }
-        record(now, swing, status)
-        if (swing > config.flickerThresholdPct) {
-            if (source == Source.MOTEUR) sawFlicker = true
-            flickerLevel = if (flickerLevel == null) med else flickerLevel!! * 0.98 + med * 0.02
-        }
+        record(now, swing, med, status)
         decide(now, out)
     }
 
-    private fun record(now: Long, flicker: Double?, status: String) {
+    private fun record(now: Long, flicker: Double?, level: Double?, status: String) {
         flickerPct = flicker
         lightStatus = status
-        seconds.addLast(Second(now, flicker))
-        val keepMs = (maxOf(config.steadyMinutes * 3, config.flickerMinutes) * 60_000).roundToLong() + 10_000
+        seconds.addLast(Second(now, flicker, level))
+        val keepMs = (maxOf(config.steadyMinutes + REFERENCE_MINUTES, config.flickerMinutes) * 60_000).roundToLong() + 10_000
         while (seconds.isNotEmpty() && seconds.first().t < now - keepMs) seconds.removeFirst()
     }
 
     private fun decide(now: Long, out: MutableList<Transition>) {
         val thr = config.flickerThresholdPct
         val historyMin = (now - historyStartMs) / 60_000.0
+        val need = config.steadyMinutes
 
-        if (source == Source.MOTEUR || source == Source.UNKNOWN) {
-            val need = config.steadyMinutes
-            if (historyMin >= need && isSteady(now, need, thr)) {
-                val longSteady = historyMin >= need * 3 && isSteady(now, need * 3, thr)
-                val allowed = source == Source.UNKNOWN || !config.requireFlickerBeforeKahraba ||
-                    sawFlicker || longSteady
-                if (allowed) {
-                    val steadySince = steadyRunStart(now, thr)
-                    val brighter = flickerLevel?.let { lvl -> lightLevel?.let { (it / lvl - 1) * 100 } }
-                    val extra = brighter?.takeIf { it >= 5 }?.let { ", ${it.toInt()}% brighter" } ?: ""
-                    val reason = if (source == Source.UNKNOWN) {
-                        "Light steady – looks like kahraba"
-                    } else {
-                        "Light steady since ${formatClock(steadySince)}$extra – kahraba is back"
+        if ((source == Source.MOTEUR || source == Source.UNKNOWN) && historyMin >= need && isSteady(now, need, thr)) {
+            val recent = levelBetween(now - minutesMs(need), now)
+
+            // 1) The light got clearly brighter (no blackout) and has stayed steady since.
+            if (source == Source.MOTEUR && recent != null) {
+                val refEnd = now - minutesMs(need)
+                val ref = levelBetween(refEnd - minutesMs(REFERENCE_MINUTES), refEnd)
+                // The "before" level must hold right up to the change, so a window that mixes the
+                // old and new levels can't fake a moderate rise.
+                val tail = levelBetween(refEnd - 30_000, refEnd, minCount = 20)
+                if (ref != null && tail != null && kotlin.math.abs(tail / ref - 1) < 0.10) {
+                    val rise = (recent / ref - 1) * 100
+                    if (rise >= config.levelRisePct && rise <= config.levelRiseMaxPct) {
+                        out += change(now, Source.KAHRABA, "Light got ${rise.toInt()}% brighter and stayed steady – kahraba is back")
+                        return
                     }
-                    out += change(now, Source.KAHRABA, reason)
+                }
+            }
+
+            // 2) The steady level matches what was learned for this spot.
+            val k = config.kahrabaLevel
+            val m = config.moteurLevel
+            if (recent != null && k != null && m != null && k > m * 1.08) {
+                val mid = sqrt(k * m)
+                if (recent >= mid && recent <= k * 1.25) {
+                    out += change(now, Source.KAHRABA, "Light matches your kahraba level (${recent.toInt()} lux)")
+                    return
+                }
+                if (source == Source.UNKNOWN && recent < mid && recent >= m * 0.75) {
+                    out += change(now, Source.MOTEUR, "Light matches your moteur level (${recent.toInt()} lux)")
                     return
                 }
             }
+            if (source == Source.UNKNOWN) lightStatus = "Steady – a calm moteur looks the same, so not sure yet"
         }
 
         if (source == Source.UNKNOWN || (source == Source.KAHRABA && config.moteurOnFlickerAlone)) {
-            val need = config.flickerMinutes
-            if (historyMin >= need) {
-                val w = window(now, need)
+            val fNeed = config.flickerMinutes
+            if (historyMin >= fNeed) {
+                val w = window(now, fNeed)
                 val valid = w.count { it.flicker != null }
                 val flicks = w.count { (it.flicker ?: 0.0) > thr }
-                if (valid >= 0.5 * need * 60 && flicks >= maxOf(3.0, 0.05 * valid)) {
+                if (valid >= 0.5 * fNeed * 60 && flicks >= maxOf(3.0, 0.05 * valid)) {
                     out += change(now, Source.MOTEUR, "Light flickering – looks like moteur")
-                    sawFlicker = true
                 }
             }
         }
+    }
+
+    private fun minutesMs(minutes: Double) = (minutes * 60_000).roundToLong()
+
+    /** Median light level over a time span, or null if too few readable seconds in it. */
+    private fun levelBetween(from: Long, to: Long, minCount: Int = 30): Double? {
+        val levels = seconds.filter { it.t > from && it.t <= to }.mapNotNull { it.level }
+        return if (levels.size >= minCount) median(levels) else null
     }
 
     private fun window(now: Long, minutes: Double): List<Second> {
@@ -254,15 +283,6 @@ class PowerDetector(
         return valid >= 0.7 * minutes * 60 && w.none { (it.flicker ?: 0.0) > thr }
     }
 
-    private fun steadyRunStart(now: Long, thr: Double): Long {
-        var start = now
-        for (s in seconds.reversed()) {
-            if ((s.flicker ?: 0.0) > thr) break
-            start = s.t
-        }
-        return start
-    }
-
     private fun change(at: Long, to: Source, reason: String): Transition {
         val t = Transition(at, source, to, reason)
         source = to
@@ -274,12 +294,13 @@ class PowerDetector(
         samples.clear()
         seconds.clear()
         historyStartMs = now
-        sawFlicker = false
         darkStartMs = null
     }
 
     companion object {
         const val FLICKER_WINDOW_MS = 4_000L
+        /** Minutes before the steady stretch used as the "before" brightness. */
+        const val REFERENCE_MINUTES = 3.0
         const val SAMPLE_KEEP_MS = 30_000L
         const val DISTURBANCE_PCT = 25.0
         // The moteur took 75 s to come on during the 26 Oct cut.

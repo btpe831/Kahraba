@@ -149,7 +149,7 @@
             android:layout_marginTop="12dp"
             android:gravity="center"
             android:lineSpacingExtra="2dp"
-            android:text="Lay the phone face-up close to a halogen light.\n4 short beeps = kahraba  ·  1 long beep = moteur"
+            android:text="Lay the phone face-up close to a halogen light.\n1 long beep = moteur  ·  2 short beeps = no flicker (probably kahraba)"
             android:textColor="?attr/appMuted"
             android:textSize="13sp" />
 

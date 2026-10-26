@@ -44,6 +44,16 @@ class Beeper(private val ctx: Context) {
         concat((1..4).flatMap { listOf(tone(140, 2200.0), silence(110)) })
     }
     private val quickMoteurSound: ShortArray by lazy { tone(1500, 950.0) }
+    private val quickNoFlickerSound: ShortArray by lazy {
+        concat((1..2).flatMap { listOf(tone(140, 1500.0), silence(160)) })
+    }
+
+    /** Quick check "no flicker": 2 short, lower beeps. */
+    @Synchronized
+    fun quickNoFlicker() {
+        cancel()
+        pending += exec.schedule(Runnable { play(quickNoFlickerSound, respectQuiet = false) }, 0, TimeUnit.MILLISECONDS)
+    }
 
     /** Quick check result: 4 short beeps for kahraba, one long beep for moteur. Plays right away. */
     @Synchronized

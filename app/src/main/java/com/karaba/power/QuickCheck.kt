@@ -4,13 +4,15 @@ package com.karaba.power
  * A one-off check under a halogen bulb that stops as soon as it is sure.
  *
  * - Any wobble above the limit -> moteur, straight away (usually within a few seconds).
- * - Steady light for [STEADY_NEEDED_MS] -> kahraba. In the 26 Oct recording the moteur never
- *   stayed steady for more than 20 s, so 25 s leaves a margin.
+ * - Steady light for [STEADY_NEEDED_MS] -> "no flicker": probably kahraba, but not proof. A busy
+ *   moteur wobbles within seconds, but at night a calm moteur stayed steady for 19 minutes, and
+ *   the Pixel's sensor only reports changes of about 8% or more.
  * - After [MAX_MS] with neither -> can't tell (too dark, or the phone was moved).
  */
 class QuickCheck(private val thresholdPct: Double, private val minLux: Double) {
 
-    enum class Verdict { MOTEUR, KAHRABA, CANT_TELL }
+    /** KAHRABA is kept for older saved results and user corrections; a check itself never claims it. */
+    enum class Verdict { MOTEUR, KAHRABA, NO_FLICKER, CANT_TELL }
 
     /** [lux] is the typical light level during the check, kept with the result for tuning. */
     data class Result(val verdict: Verdict, val detail: String, val lux: Double? = null)
@@ -27,6 +29,11 @@ class QuickCheck(private val thresholdPct: Double, private val minLux: Double) {
     /** Seconds of steady light so far, for the progress display. */
     val steadySeconds: Int
         get() = if (steadySinceMs < 0 || samples.isEmpty()) 0 else ((samples.last().first - steadySinceMs) / 1000).toInt()
+
+    /** A raw sensor reading between samples, so short dips still count as wobble. */
+    fun addRaw(tMs: Long, lux: Double) {
+        if (startMs >= 0) samples += tMs to lux
+    }
 
     /** Add a reading; returns a result once the check is sure (or out of time), else null. */
     fun add(tMs: Long, lux: Double): Result? {
@@ -67,9 +74,9 @@ class QuickCheck(private val thresholdPct: Double, private val minLux: Double) {
                     if (steadySinceMs < 0) steadySinceMs = tMs - PowerDetector.FLICKER_WINDOW_MS
                     if (tMs - steadySinceMs >= STEADY_NEEDED_MS) {
                         return Result(
-                            Verdict.KAHRABA,
-                            "Light stayed steady for ${STEADY_NEEDED_MS / 1000}s " +
-                                "(max wobble ${"%.1f".format(maxSwing)}%). The moteur can't stay that steady.",
+                            Verdict.NO_FLICKER,
+                            "No wobble in ${STEADY_NEEDED_MS / 1000}s. Probably kahraba – but a calm moteur " +
+                                "(often at night) can look the same. Check the lamp post or your voltage meter to be sure.",
                             med,
                         )
                     }
