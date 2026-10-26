@@ -16,8 +16,11 @@ data class DetectorConfig(
     val steadyMinutes: Double = 2.0,
     /** Minutes looked at when deciding the light is flickering (moteur). */
     val flickerMinutes: Double = 3.0,
-    /** Below this the light is too weak to judge. */
-    val minLux: Double = 15.0,
+    /**
+     * Below this the light is too weak to judge: at 26 lux a check stayed perfectly steady on the
+     * moteur. The halogen in the 26 Oct recording gave 570-860 lux.
+     */
+    val minLux: Double = 100.0,
     /**
      * After a cut, only call kahraba once the moteur has been seen flickering at least once
      * (or the light has been steady for 3x [steadyMinutes]). Stops a calm moteur being mistaken
@@ -173,7 +176,7 @@ class PowerDetector(
             return
         }
         if (med < config.minLux) {
-            record(now, null, "Too dark to judge – turn on a halogen light")
+            record(now, null, "Too dim to judge – needs a halogen light nearby")
             return
         }
         // Max-to-min swing over the last few seconds, as % of the level. The moteur swings a lot

@@ -50,7 +50,7 @@
             app:useSimpleSummaryProvider="true" />
         <EditTextPreference
             app:key="min_lux"
-            app:defaultValue="15"
+            app:defaultValue="100"
             app:title="Minimum light level (lux)"
             app:useSimpleSummaryProvider="true" />
         <SwitchPreferenceCompat

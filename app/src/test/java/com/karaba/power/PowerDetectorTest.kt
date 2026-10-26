@@ -98,7 +98,7 @@ class PowerDetectorTest {
 
     /** Feeds readings every 200 ms until the quick check answers. Returns the verdict and seconds taken. */
     private fun quick(fromMs: Long, lux: (Long) -> Double): Pair<QuickCheck.Verdict, Long> {
-        val q = QuickCheck(3.0, 15.0)
+        val q = QuickCheck(3.0, 100.0)
         var t = fromMs
         while (true) {
             q.add(t, lux(t))?.let { return it.verdict to (t - fromMs) / 1000 }
@@ -110,7 +110,10 @@ class PowerDetectorTest {
     fun quickCheckVerdicts() {
         assertEquals(QuickCheck.Verdict.KAHRABA to 25L, quick(0) { kahraba(it) })
         assertEquals(QuickCheck.Verdict.MOTEUR, quick(0, moteur(5_000)).first)
-        assertEquals(QuickCheck.Verdict.CANT_TELL to 40L, quick(0) { 3.0 })
+        // Too dim (like the 26 lux check on moteur that wrongly said kahraba): give up fast.
+        val dim = quick(0) { 26.0 }
+        assertEquals(QuickCheck.Verdict.CANT_TELL, dim.first)
+        assertTrue(dim.second <= 8)
     }
 
     // ---- Replay of the real recording from 26 Oct 2026 (17:24–18:26) ----

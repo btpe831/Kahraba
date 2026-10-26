@@ -17,6 +17,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.karaba.power.Prefs.monitoring
 import java.text.SimpleDateFormat
@@ -170,7 +171,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             QuickCheck.Verdict.MOTEUR -> beeper.quickResult(kahraba = false)
             QuickCheck.Verdict.CANT_TELL -> {}
         }
-        CheckHistory.add(this, result.verdict)
+        CheckHistory.add(this, result.verdict, result.lux)
         showResult(result.verdict, System.currentTimeMillis(), result.detail)
     }
 
@@ -189,15 +190,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             showOrb(R.color.idle, R.drawable.ic_bolt, "Tap to check", "")
             statusLine.text = "No checks yet"
         } else {
-            showResult(last.verdict, last.timeMs, null)
+            showResult(last.verdict, last.timeMs, null, last.corrected)
         }
     }
 
-    private fun showResult(v: QuickCheck.Verdict, timeMs: Long, detail: String?) {
+    private fun showResult(v: QuickCheck.Verdict, timeMs: Long, detail: String?, corrected: Boolean = false) {
         renderHistory()
         when (v) {
-            QuickCheck.Verdict.KAHRABA -> showOrb(R.color.kahraba, R.drawable.ic_bolt, "Kahraba", "Grid power")
-            QuickCheck.Verdict.MOTEUR -> showOrb(R.color.moteur, R.drawable.ic_moteur, "Moteur", "Generator")
+            QuickCheck.Verdict.KAHRABA -> showOrb(R.color.kahraba, R.drawable.ic_bolt, "Kahraba", if (corrected) "Corrected by you" else "Grid power")
+            QuickCheck.Verdict.MOTEUR -> showOrb(R.color.moteur, R.drawable.ic_moteur, "Moteur", if (corrected) "Corrected by you" else "Generator")
             QuickCheck.Verdict.CANT_TELL -> showOrb(R.color.idle, R.drawable.ic_bolt, "Can't tell", "Try again")
         }
         val ago = System.currentTimeMillis() - timeMs
@@ -228,17 +229,38 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 QuickCheck.Verdict.MOTEUR -> R.color.moteur
                 QuickCheck.Verdict.CANT_TELL -> R.color.idle
             }
-            val label = when (e.verdict) {
-                QuickCheck.Verdict.KAHRABA -> "Kahraba"
-                QuickCheck.Verdict.MOTEUR -> "Moteur"
-                QuickCheck.Verdict.CANT_TELL -> "Can't tell"
-            }
-            addHistoryRow(color, label, fmt.format(Date(e.timeMs)))
+            val label = CheckHistory.label(e.verdict) + if (e.corrected) "  (corrected)" else ""
+            addHistoryRow(color, label, fmt.format(Date(e.timeMs))) { editEntry(e) }
         }
     }
 
-    private fun addHistoryRow(colorRes: Int, label: String, time: String) {
+    /** Tap a recent check to fix it (e.g. it said kahraba but the lamp post was green) or delete it. */
+    private fun editEntry(e: CheckHistory.Entry) {
+        val when_ = SimpleDateFormat("EEE HH:mm", Locale.US).format(Date(e.timeMs))
+        val options = arrayOf("It was kahraba", "It was moteur", "Delete")
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Check at $when_")
+            .setItems(options) { _, i ->
+                when (i) {
+                    0 -> CheckHistory.correct(this, e.timeMs, QuickCheck.Verdict.KAHRABA)
+                    1 -> CheckHistory.correct(this, e.timeMs, QuickCheck.Verdict.MOTEUR)
+                    2 -> CheckHistory.delete(this, e.timeMs)
+                }
+                showLastResult()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun addHistoryRow(colorRes: Int, label: String, time: String, onClick: (() -> Unit)? = null) {
         val row = layoutInflater.inflate(R.layout.item_check, historyList, false)
+        if (onClick != null) {
+            row.setOnClickListener { onClick() }
+            row.isClickable = true
+            val ripple = android.util.TypedValue()
+            theme.resolveAttribute(android.R.attr.selectableItemBackground, ripple, true)
+            row.setBackgroundResource(ripple.resourceId)
+        }
         (row.findViewById<View>(R.id.dot).background.mutate() as GradientDrawable)
             .setColor(ContextCompat.getColor(this, colorRes))
         row.findViewById<TextView>(R.id.label).text = label

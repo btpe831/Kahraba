@@ -34,7 +34,7 @@ object Prefs {
     fun config(ctx: Context) = DetectorConfig(
         flickerThresholdPct = num(ctx, FLICKER_THRESHOLD, DEFAULT_THRESHOLD),
         steadyMinutes = num(ctx, STEADY_MINUTES, 2.0),
-        minLux = num(ctx, MIN_LUX, 15.0),
+        minLux = num(ctx, MIN_LUX, 100.0),
         requireFlickerBeforeKahraba = sp(ctx).getBoolean(REQUIRE_FLICKER, true),
         moteurOnFlickerAlone = sp(ctx).getBoolean(MOTEUR_ON_FLICKER, false),
     )

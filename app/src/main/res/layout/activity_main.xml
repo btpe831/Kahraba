@@ -136,7 +136,7 @@
             style="@style/SectionLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Recent" />
+            android:text="Recent  ·  tap to fix" />
 
         <com.google.android.material.card.MaterialCardView
             style="@style/Card"
