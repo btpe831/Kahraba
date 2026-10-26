@@ -289,10 +289,11 @@ class MonitorService : Service(), SensorEventListener {
         const val CALIBRATION_MS = 120_000L
 
         fun colorFor(s: Source): Int = when (s) {
-            Source.KAHRABA -> 0xFF2E7D32.toInt()
-            Source.MOTEUR -> 0xFFE65100.toInt()
-            Source.NO_POWER -> 0xFF424242.toInt()
-            Source.UNKNOWN -> 0xFF546E7A.toInt()
+            // Same as R.color.kahraba / moteur / no_power / idle.
+            Source.KAHRABA -> 0xFF059669.toInt()
+            Source.MOTEUR -> 0xFFD97706.toInt()
+            Source.NO_POWER -> 0xFF475569.toInt()
+            Source.UNKNOWN -> 0xFF64748B.toInt()
         }
 
         fun send(ctx: Context, action: String, extras: (Intent) -> Unit = {}) {

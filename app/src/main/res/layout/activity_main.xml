@@ -1,94 +1,211 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/bg"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingStart="20dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="24dp">
 
+        <!-- Header -->
         <LinearLayout
-            android:id="@+id/resultBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#546E7A"
-            android:gravity="center"
-            android:minHeight="200dp"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/resultLabel"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Last check"
-                android:textColor="#E0FFFFFF"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/resultText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="—"
-                android:textColor="#FFFFFF"
-                android:textSize="48sp"
+                android:layout_weight="1"
+                android:text="Karaba"
+                android:textColor="@color/text"
+                android:textSize="24sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/resultSub"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:textColor="#E0FFFFFF"
-                android:textSize="16sp" />
+            <ImageButton
+                android:id="@+id/settingsButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Settings"
+                android:src="@drawable/ic_settings"
+                app:tint="@color/muted" />
         </LinearLayout>
 
-        <Button
-            android:id="@+id/checkButton"
-            android:layout_width="match_parent"
-            android:layout_height="96dp"
-            android:layout_marginTop="16dp"
-            android:text="CHECK NOW"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+        <!-- Status orb with progress ring -->
+        <FrameLayout
+            android:layout_width="272dp"
+            android:layout_height="272dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="28dp">
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/ring"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:max="1000"
+                android:visibility="invisible"
+                app:indicatorColor="@color/ring"
+                app:indicatorSize="272dp"
+                app:trackColor="@color/outline"
+                app:trackCornerRadius="4dp"
+                app:trackThickness="8dp" />
+
+            <LinearLayout
+                android:id="@+id/orb"
+                android:layout_width="236dp"
+                android:layout_height="236dp"
+                android:layout_gravity="center"
+                android:background="@drawable/orb"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <ImageView
+                    android:id="@+id/orbIcon"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_bolt"
+                    app:tint="#FFFFFF" />
+
+                <TextView
+                    android:id="@+id/orbTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:textColor="#FFFFFF"
+                    android:textSize="30sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/orbSub"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:alpha="0.85"
+                    android:gravity="center"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </FrameLayout>
 
         <TextView
-            android:id="@+id/tipText"
+            android:id="@+id/statusLine"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Tap Check, then lay the phone face-up under a halogen light and don't touch it until it beeps.\n4 short beeps = kahraba · 1 long beep = moteur"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:minLines="2"
+            android:textColor="@color/muted"
             android:textSize="15sp" />
 
-        <TextView
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/checkButton"
+            style="@style/PrimaryButton"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Recent checks"
-            android:textSize="17sp"
-            android:textStyle="bold" />
+            android:layout_height="64dp"
+            android:layout_marginTop="16dp"
+            android:text="Check now"
+            android:textSize="18sp"
+            app:cornerRadius="32dp" />
 
         <TextView
-            android:id="@+id/historyText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fontFamily="monospace"
-            android:textSize="14sp" />
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:lineSpacingExtra="2dp"
+            android:text="Lay the phone face-up under a halogen light.\n4 short beeps = kahraba  ·  1 long beep = moteur"
+            android:textColor="@color/muted"
+            android:textSize="13sp" />
 
-        <Button
-            android:id="@+id/monitorButton"
-            android:layout_width="match_parent"
+        <!-- Recent checks -->
+        <TextView
+            style="@style/SectionLabel"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Always-on monitor" />
+            android:text="Recent" />
 
-        <Button
-            android:id="@+id/settingsButton"
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/historyList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Always-on monitor -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/monitorCard"
+            style="@style/Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Settings" />
+            android:layout_marginTop="12dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="18dp">
+
+                <View
+                    android:id="@+id/monitorDot"
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:background="@drawable/dot" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Always-on monitor"
+                        android:textColor="@color/text"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/monitorSub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:textColor="@color/muted"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_chevron"
+                    app:tint="@color/muted" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 </ScrollView>

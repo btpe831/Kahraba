@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Neutrals -->
+    <color name="bg">#F5F6F8</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_alt">#ECEEF2</color>
+    <color name="ink">#111827</color>
+    <color name="on_ink">#FFFFFF</color>
+    <color name="text">#111827</color>
+    <color name="muted">#6B7280</color>
+    <color name="outline">#E2E5EA</color>
+
+    <!-- Power sources (same in light and dark) -->
+    <color name="kahraba">#059669</color>
+    <color name="moteur">#D97706</color>
+    <color name="no_power">#475569</color>
+    <color name="idle">#64748B</color>
+    <color name="checking">#334155</color>
+    <color name="ring">#FACC15</color>
+    <color name="ring_track">#33FFFFFF</color>
+
+    <color name="note_bg">#FEF3C7</color>
+    <color name="note_text">#78350F</color>
+</resources>

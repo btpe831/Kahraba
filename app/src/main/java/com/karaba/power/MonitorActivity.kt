@@ -105,7 +105,7 @@ class MonitorActivity : AppCompatActivity() {
         val running = MonitorState.running
         val s = if (running) MonitorState.source else Prefs.savedSource(this)
         stateText.text = EventLog.label(s)
-        stateBox.setBackgroundColor(MonitorService.colorFor(s))
+        (stateBox.background.mutate() as android.graphics.drawable.GradientDrawable).setColor(MonitorService.colorFor(s))
         val since = if (running) MonitorState.sinceMs else Prefs.savedSince(this)
         sinceText.text = if (s == Source.UNKNOWN) {
             "Tap \"It's kahraba\" or \"It's moteur\" below if you know"

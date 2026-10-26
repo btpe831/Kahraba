@@ -1,6 +1,7 @@
 package com.karaba.power
 
 import android.content.Intent
+import android.graphics.drawable.GradientDrawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -8,12 +9,19 @@ import android.hardware.SensorManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.View
 import android.view.WindowManager
-import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.karaba.power.Prefs.monitoring
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * The main screen: one-tap quick check. Tap, lay the phone under a halogen light, and it beeps
@@ -26,13 +34,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var sensors: SensorManager
     private var lightSensor: Sensor? = null
 
-    private lateinit var resultBox: LinearLayout
-    private lateinit var resultLabel: TextView
-    private lateinit var resultText: TextView
-    private lateinit var resultSub: TextView
-    private lateinit var checkButton: Button
-    private lateinit var historyText: TextView
-    private lateinit var monitorButton: Button
+    private lateinit var orb: LinearLayout
+    private lateinit var orbIcon: ImageView
+    private lateinit var orbTitle: TextView
+    private lateinit var orbSub: TextView
+    private lateinit var ring: CircularProgressIndicator
+    private lateinit var statusLine: TextView
+    private lateinit var checkButton: MaterialButton
+    private lateinit var historyList: LinearLayout
+    private lateinit var monitorDot: View
+    private lateinit var monitorSub: TextView
 
     // Running check state (null when idle).
     private var check: QuickCheck? = null
@@ -47,17 +58,23 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         sensors = getSystemService(SENSOR_SERVICE) as SensorManager
         lightSensor = sensors.getDefaultSensor(Sensor.TYPE_LIGHT)
 
-        resultBox = findViewById(R.id.resultBox)
-        resultLabel = findViewById(R.id.resultLabel)
-        resultText = findViewById(R.id.resultText)
-        resultSub = findViewById(R.id.resultSub)
+        orb = findViewById(R.id.orb)
+        orbIcon = findViewById(R.id.orbIcon)
+        orbTitle = findViewById(R.id.orbTitle)
+        orbSub = findViewById(R.id.orbSub)
+        ring = findViewById(R.id.ring)
+        statusLine = findViewById(R.id.statusLine)
         checkButton = findViewById(R.id.checkButton)
-        historyText = findViewById(R.id.historyText)
-        monitorButton = findViewById(R.id.monitorButton)
+        historyList = findViewById(R.id.historyList)
+        monitorDot = findViewById(R.id.monitorDot)
+        monitorSub = findViewById(R.id.monitorSub)
 
         checkButton.setOnClickListener { if (check == null) startCheck() else stopCheck(null) }
-        monitorButton.setOnClickListener { startActivity(Intent(this, MonitorActivity::class.java)) }
-        findViewById<Button>(R.id.settingsButton).setOnClickListener {
+        orb.setOnClickListener { if (check == null) startCheck() }
+        findViewById<View>(R.id.monitorCard).setOnClickListener {
+            startActivity(Intent(this, MonitorActivity::class.java))
+        }
+        findViewById<View>(R.id.settingsButton).setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
@@ -70,11 +87,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     override fun onResume() {
         super.onResume()
         if (check == null) showLastResult()
-        monitorButton.text = if (MonitorState.running) {
-            "Always-on monitor: ON (${EventLog.label(MonitorState.source)})"
-        } else {
-            "Always-on monitor: OFF"
-        }
+        renderMonitorCard()
     }
 
     override fun onStop() {
@@ -92,7 +105,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private fun startCheck() {
         val sensor = lightSensor
         if (sensor == null) {
-            show("No light sensor", "This phone has no light sensor.", Source.UNKNOWN)
+            showOrb(R.color.idle, R.drawable.ic_bolt, "No sensor", "")
+            statusLine.text = "This phone has no light sensor."
             return
         }
         beeper.cancel()
@@ -104,7 +118,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         measureFromMs = checkStartMs + SETTLE_MS
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         sensors.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST)
-        checkButton.text = "CANCEL"
+        checkButton.text = "Cancel"
+        ring.setProgressCompat(0, false)
+        ring.visibility = View.VISIBLE
         ui.post(sampler)
     }
 
@@ -115,7 +131,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             val now = System.currentTimeMillis()
             if (now < measureFromMs) {
                 val left = (measureFromMs - now + 999) / 1000
-                show("Put the phone down", "Starting in $left…", Source.UNKNOWN, label = "Get ready")
+                showOrb(R.color.checking, R.drawable.ic_bolt, "$left", "Put the phone down")
+                statusLine.text = "Face-up, under a halogen light"
+                ring.setProgressCompat(((now - checkStartMs) * 1000 / SETTLE_MS).toInt(), true)
                 ui.postDelayed(this, 200)
                 return
             }
@@ -128,13 +146,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 return
             }
             val steady = q.steadySeconds
-            show(
-                "Checking…",
-                "${lux?.toInt() ?: "–"} lx" +
-                    if (steady > 0) " · steady ${steady}s of ${QuickCheck.STEADY_NEEDED_MS / 1000}s" else "",
-                Source.UNKNOWN,
-                label = "Don't touch the phone",
-            )
+            showOrb(R.color.checking, R.drawable.ic_bolt, "Checking", "Don't touch the phone")
+            statusLine.text = "${lux?.toInt() ?: "–"} lux" +
+                if (steady > 0) "  ·  steady ${steady}s of ${QuickCheck.STEADY_NEEDED_MS / 1000}s" else ""
+            ring.setProgressCompat((steady * 1000L / (QuickCheck.STEADY_NEEDED_MS / 1000)).toInt(), true)
             ui.postDelayed(this, 200)
         }
     }
@@ -144,7 +159,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         sensors.unregisterListener(this)
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         check = null
-        checkButton.text = "CHECK NOW"
+        checkButton.text = "Check now"
+        ring.visibility = View.INVISIBLE
         if (result == null) {
             showLastResult()
             return
@@ -167,32 +183,80 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     // ---- Display ----
 
     private fun showLastResult() {
-        historyText.text = CheckHistory.formatted(this)
+        renderHistory()
         val last = CheckHistory.read(this).firstOrNull()
         if (last == null) {
-            show("—", "Tap Check now to find out", Source.UNKNOWN)
+            showOrb(R.color.idle, R.drawable.ic_bolt, "Tap to check", "")
+            statusLine.text = "No checks yet"
         } else {
             showResult(last.verdict, last.timeMs, null)
         }
     }
 
     private fun showResult(v: QuickCheck.Verdict, timeMs: Long, detail: String?) {
-        historyText.text = CheckHistory.formatted(this)
-        val src = when (v) {
-            QuickCheck.Verdict.KAHRABA -> Source.KAHRABA
-            QuickCheck.Verdict.MOTEUR -> Source.MOTEUR
-            QuickCheck.Verdict.CANT_TELL -> Source.UNKNOWN
+        renderHistory()
+        when (v) {
+            QuickCheck.Verdict.KAHRABA -> showOrb(R.color.kahraba, R.drawable.ic_bolt, "Kahraba", "Grid power")
+            QuickCheck.Verdict.MOTEUR -> showOrb(R.color.moteur, R.drawable.ic_moteur, "Moteur", "Generator")
+            QuickCheck.Verdict.CANT_TELL -> showOrb(R.color.idle, R.drawable.ic_bolt, "Can't tell", "Try again")
         }
-        val ago = PowerDetector.formatDuration(System.currentTimeMillis() - timeMs)
-        val sub = "Checked at ${PowerDetector.formatClock(timeMs)} ($ago ago)" + (detail?.let { "\n$it" } ?: "")
-        show(CheckHistory.label(v), sub, src)
+        val ago = System.currentTimeMillis() - timeMs
+        val agoText = if (ago < 60_000) "just now" else "${PowerDetector.formatDuration(ago)} ago"
+        statusLine.text = "Checked $agoText  ·  ${PowerDetector.formatClock(timeMs)}" +
+            (detail?.takeIf { v == QuickCheck.Verdict.CANT_TELL }?.let { "\n$it" } ?: "")
     }
 
-    private fun show(big: String, small: String, color: Source, label: String = "Last check") {
-        resultLabel.text = label
-        resultText.text = big
-        resultSub.text = small
-        resultBox.setBackgroundColor(MonitorService.colorFor(color))
+    private fun showOrb(colorRes: Int, iconRes: Int, title: String, sub: String) {
+        (orb.background.mutate() as GradientDrawable).setColor(ContextCompat.getColor(this, colorRes))
+        orbIcon.setImageResource(iconRes)
+        orbTitle.text = title
+        orbSub.text = sub
+        orbSub.visibility = if (sub.isEmpty()) View.GONE else View.VISIBLE
+    }
+
+    private fun renderHistory() {
+        historyList.removeAllViews()
+        val entries = CheckHistory.read(this).take(5)
+        val fmt = SimpleDateFormat("EEE  HH:mm", Locale.US)
+        if (entries.isEmpty()) {
+            addHistoryRow(R.color.outline, "No checks yet", "")
+            return
+        }
+        for (e in entries) {
+            val color = when (e.verdict) {
+                QuickCheck.Verdict.KAHRABA -> R.color.kahraba
+                QuickCheck.Verdict.MOTEUR -> R.color.moteur
+                QuickCheck.Verdict.CANT_TELL -> R.color.idle
+            }
+            val label = when (e.verdict) {
+                QuickCheck.Verdict.KAHRABA -> "Kahraba"
+                QuickCheck.Verdict.MOTEUR -> "Moteur"
+                QuickCheck.Verdict.CANT_TELL -> "Can't tell"
+            }
+            addHistoryRow(color, label, fmt.format(Date(e.timeMs)))
+        }
+    }
+
+    private fun addHistoryRow(colorRes: Int, label: String, time: String) {
+        val row = layoutInflater.inflate(R.layout.item_check, historyList, false)
+        (row.findViewById<View>(R.id.dot).background.mutate() as GradientDrawable)
+            .setColor(ContextCompat.getColor(this, colorRes))
+        row.findViewById<TextView>(R.id.label).text = label
+        row.findViewById<TextView>(R.id.time).text = time
+        historyList.addView(row)
+    }
+
+    private fun renderMonitorCard() {
+        val dot = monitorDot.background.mutate() as GradientDrawable
+        if (MonitorState.running) {
+            val s = MonitorState.source
+            dot.setColor(MonitorService.colorFor(s))
+            monitorSub.text = "On  ·  ${EventLog.label(s).lowercase().replaceFirstChar { it.uppercase() }} " +
+                "since ${PowerDetector.formatClock(MonitorState.sinceMs)}"
+        } else {
+            dot.setColor(ContextCompat.getColor(this, R.color.outline))
+            monitorSub.text = "Off  ·  for a phone left under a light"
+        }
     }
 
     companion object {
