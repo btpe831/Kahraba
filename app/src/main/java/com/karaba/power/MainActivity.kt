@@ -292,8 +292,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         spotButton.text = room.ifEmpty { "None" }
         spotInfo.text = RoomPicker.describe(
             this, room,
-            "Pick or add a room (e.g. Kitchen) and always check from the same place in it, under the " +
-                "same light. After one confirmed check of each source there, it can say kahraba for sure.",
+            "Optional. Choose the room you're checking in, and always put the phone in the same place under " +
+                "the same light. Once the app has learned that room, it can tell kahraba and moteur apart, " +
+                "even when the moteur is steady.",
         )
     }
 

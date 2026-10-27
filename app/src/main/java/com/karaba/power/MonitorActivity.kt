@@ -168,8 +168,8 @@ class MonitorActivity : ThemedActivity() {
         findViewById<Button>(R.id.monitorRoomButton).text = room.ifEmpty { "None" }
         findViewById<TextView>(R.id.monitorRoomInfo).text = RoomPicker.describe(
             this, room,
-            "Optional. Pick the room this phone sits in to share what it learned with quick checks there. " +
-                "With learned levels, the monitor can tell kahraba from moteur straight away, even a calm moteur.",
+            "Optional. Choose the room where this phone is placed. Once the app has learned that room, " +
+                "it can tell kahraba and moteur apart right from the start, even when the moteur is steady.",
         )
     }
 

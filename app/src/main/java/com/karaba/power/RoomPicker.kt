@@ -89,13 +89,15 @@ object RoomPicker {
         val (k, m) = CheckHistory.spotLevels(activity, room)
         return when {
             k != null && m != null && k > m * QuickCheck.LEVEL_GAP ->
-                "Learned: kahraba ≈ ${k.toInt()} lux, moteur ≈ ${m.toInt()} lux. It can now tell them apart here."
+                "This room is learned (kahraba ≈ ${k.toInt()} lux, moteur ≈ ${m.toInt()} lux). " +
+                    "The app can now tell kahraba and moteur apart here."
             k != null && m != null ->
-                "Kahraba (${k.toInt()} lux) and moteur (${m.toInt()} lux) look too alike here. Try closer to a halogen."
+                "Kahraba and moteur look almost the same here (${k.toInt()} and ${m.toInt()} lux). " +
+                    "Try a place closer to a halogen light."
             k == null && m == null ->
-                "Not learned yet: confirm one check here on kahraba and one on moteur."
-            k == null -> "Moteur ≈ ${m!!.toInt()} lux. Still needs one confirmed kahraba."
-            else -> "Kahraba ≈ ${k.toInt()} lux. Still needs one moteur."
+                "This room isn't learned yet. Confirm it once when you know it's kahraba, and once when you know it's moteur."
+            k == null -> "Almost there (moteur ≈ ${m!!.toInt()} lux). Now confirm it once when you know it's kahraba."
+            else -> "Almost there (kahraba ≈ ${k.toInt()} lux). Now confirm it once when you know it's moteur."
         }
     }
 }
