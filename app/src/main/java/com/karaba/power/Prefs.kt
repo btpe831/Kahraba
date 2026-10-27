@@ -19,6 +19,8 @@ object Prefs {
     const val BEEP_VOLUME = "beep_volume"
     const val AUTO_CHECK = "auto_check"
     const val HELP_SEEN = "help_seen"
+    private const val SPOTS = "spots"
+    private const val CURRENT_SPOT = "current_spot"
     const val COLOR_THEME = "color_theme"
     const val APPEARANCE = "appearance"
 
@@ -65,6 +67,37 @@ object Prefs {
         "light" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
         "dark" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
         else -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+    }
+
+    /** Saved spot names, e.g. "Kitchen", "Bathroom". */
+    fun spots(ctx: Context): List<String> =
+        sp(ctx).getString(SPOTS, "")!!.lines().filter { it.isNotBlank() }
+
+    private fun saveSpots(ctx: Context, list: List<String>) {
+        sp(ctx).edit().putString(SPOTS, list.distinct().joinToString("\n")).apply()
+    }
+
+    /** The spot checks are being done at, or "" for none. */
+    fun currentSpot(ctx: Context): String =
+        (sp(ctx).getString(CURRENT_SPOT, "") ?: "").takeIf { it in spots(ctx) } ?: ""
+
+    fun setCurrentSpot(ctx: Context, name: String) {
+        sp(ctx).edit().putString(CURRENT_SPOT, name).apply()
+    }
+
+    /** Spot names can't contain the characters used to store them. */
+    fun cleanSpotName(raw: String) = raw.replace(";", " ").replace("\n", " ").trim().take(30)
+
+    fun addSpot(ctx: Context, name: String) = saveSpots(ctx, spots(ctx) + name)
+
+    fun removeSpot(ctx: Context, name: String) {
+        saveSpots(ctx, spots(ctx) - name)
+        if (currentSpot(ctx) == name) setCurrentSpot(ctx, "")
+    }
+
+    fun renameSpot(ctx: Context, from: String, to: String) {
+        saveSpots(ctx, spots(ctx).map { if (it == from) to else it })
+        if (sp(ctx).getString(CURRENT_SPOT, "") == from) setCurrentSpot(ctx, to)
     }
 
     fun autoCheck(ctx: Context) = sp(ctx).getBoolean(AUTO_CHECK, false)

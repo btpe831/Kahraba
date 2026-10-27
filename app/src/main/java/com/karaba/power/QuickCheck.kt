@@ -7,15 +7,29 @@ package com.karaba.power
  * - Steady light for [STEADY_NEEDED_MS] -> "no flicker": probably kahraba, but not proof. A busy
  *   moteur wobbles within seconds, but at night a calm moteur stayed steady for 19 minutes, and
  *   the Pixel's sensor only reports changes of about 8% or more.
+ * - At the user's spot, once its brightness on each source is learned ([kahrabaLevel],
+ *   [moteurLevel]): 10 s of steady light at the kahraba level -> kahraba, at the moteur level ->
+ *   moteur (a calm moteur is dimmer, ~213 V vs 234 V).
  * - After [MAX_MS] with neither -> can't tell (too dark, or the phone was moved).
  */
-class QuickCheck(private val thresholdPct: Double, private val minLux: Double) {
+class QuickCheck(
+    private val thresholdPct: Double,
+    private val minLux: Double,
+    private val kahrabaLevel: Double? = null,
+    private val moteurLevel: Double? = null,
+) {
+    /** The learned levels are usable only if the two sources are clearly apart. */
+    private val useLevels = kahrabaLevel != null && moteurLevel != null && kahrabaLevel > moteurLevel * LEVEL_GAP
+
+    /** How long the light must be steady before a verdict. */
+    val steadyNeededMs: Long get() = if (useLevels) STEADY_LEVEL_MS else STEADY_NEEDED_MS
 
     /** KAHRABA is kept for older saved results and user corrections; a check itself never claims it. */
     enum class Verdict { MOTEUR, KAHRABA, NO_FLICKER, CANT_TELL }
 
     /** [lux] is the typical light level during the check, kept with the result for tuning. */
-    data class Result(val verdict: Verdict, val detail: String, val lux: Double? = null)
+    /** [byLevel]: decided by comparing brightness with the spot's learned levels. */
+    data class Result(val verdict: Verdict, val detail: String, val lux: Double? = null, val byLevel: Boolean = false)
 
     private val samples = ArrayList<Pair<Long, Double>>()
     private var startMs = -1L
@@ -72,11 +86,32 @@ class QuickCheck(private val thresholdPct: Double, private val minLux: Double) {
                         )
                     }
                     if (steadySinceMs < 0) steadySinceMs = tMs - PowerDetector.FLICKER_WINDOW_MS
+                    if (useLevels && tMs - steadySinceMs >= STEADY_LEVEL_MS) {
+                        val k = kahrabaLevel!!
+                        val m = moteurLevel!!
+                        val mid = kotlin.math.sqrt(k * m)
+                        val levels = "${med.toInt()} lux; your spot: kahraba ${k.toInt()}, moteur ${m.toInt()}"
+                        if (med >= mid && med <= k * 1.25) {
+                            return Result(Verdict.KAHRABA, "Steady and as bright as kahraba at your spot ($levels).", med, byLevel = true)
+                        }
+                        if (med < mid && med >= m * 0.75) {
+                            return Result(
+                                Verdict.MOTEUR,
+                                "Steady but dimmer, like the moteur at your spot ($levels). A calm moteur.",
+                                med,
+                                byLevel = true,
+                            )
+                        }
+                        // Doesn't match either level: probably not at the spot. Fall back to waiting.
+                    }
                     if (tMs - steadySinceMs >= STEADY_NEEDED_MS) {
+                        val offSpot = if (useLevels) {
+                            " The brightness (${med.toInt()} lux) doesn't match your spot – is the phone in the same place?"
+                        } else ""
                         return Result(
                             Verdict.NO_FLICKER,
                             "No wobble in ${STEADY_NEEDED_MS / 1000}s. Probably kahraba – but a calm moteur " +
-                                "(often at night) can look the same. Check the lamp post or your voltage meter to be sure.",
+                                "(often at night) can look the same. Check the lamp post or your voltage meter to be sure.$offSpot",
                             med,
                         )
                     }
@@ -97,6 +132,10 @@ class QuickCheck(private val thresholdPct: Double, private val minLux: Double) {
 
     companion object {
         const val STEADY_NEEDED_MS = 25_000L
+        /** Steady time needed when the spot's levels are known. */
+        const val STEADY_LEVEL_MS = 10_000L
+        /** Kahraba must be at least this much brighter than moteur at the spot to use levels. */
+        const val LEVEL_GAP = 1.08
         const val MAX_MS = 40_000L
         /** Seconds of too-dim light before giving up. */
         const val DIM_GIVE_UP = 3

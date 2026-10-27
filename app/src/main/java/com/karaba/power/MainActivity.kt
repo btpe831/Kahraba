@@ -45,6 +45,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     private lateinit var historyList: LinearLayout
     private lateinit var monitorDot: View
     private lateinit var monitorSub: TextView
+    private lateinit var spotButton: MaterialButton
+    private lateinit var spotInfo: TextView
+    private lateinit var confirmRow: View
 
     // Running check state (null when idle).
     private var check: QuickCheck? = null
@@ -69,6 +72,13 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         historyList = findViewById(R.id.historyList)
         monitorDot = findViewById(R.id.monitorDot)
         monitorSub = findViewById(R.id.monitorSub)
+        spotButton = findViewById(R.id.spotButton)
+        spotInfo = findViewById(R.id.spotInfo)
+        confirmRow = findViewById(R.id.confirmRow)
+
+        spotButton.setOnClickListener { if (check == null) pickSpot() }
+        findViewById<View>(R.id.confirmKahraba).setOnClickListener { confirmLatest(QuickCheck.Verdict.KAHRABA) }
+        findViewById<View>(R.id.confirmMoteur).setOnClickListener { confirmLatest(QuickCheck.Verdict.MOTEUR) }
 
         checkButton.setOnClickListener { if (check == null) startCheck() else stopCheck(null) }
         orb.setOnClickListener { if (check == null) startCheck() }
@@ -97,6 +107,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         super.onResume()
         if (check == null) showLastResult()
         renderMonitorCard()
+        renderSpot()
     }
 
     override fun onStop() {
@@ -120,7 +131,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         }
         beeper.cancel()
         val cfg = Prefs.config(this)
-        check = QuickCheck(cfg.flickerThresholdPct, cfg.minLux)
+        val (k, m) = CheckHistory.spotLevels(this, Prefs.currentSpot(this))
+        check = QuickCheck(cfg.flickerThresholdPct, cfg.minLux, k, m)
+        confirmRow.visibility = View.GONE
         lux = null
         checkStartMs = System.currentTimeMillis()
         // A short pause first, so the hand putting the phone down isn't read as a wobble.
@@ -155,10 +168,11 @@ class MainActivity : ThemedActivity(), SensorEventListener {
                 return
             }
             val steady = q.steadySeconds
+            val needS = q.steadyNeededMs / 1000
             showOrb(R.color.checking, R.drawable.ic_bolt, "Checking", "Don't touch the phone")
             statusLine.text = "${lux?.toInt() ?: "–"} lux" +
-                if (steady > 0) "  ·  steady ${steady}s of ${QuickCheck.STEADY_NEEDED_MS / 1000}s" else ""
-            ring.setProgressCompat((steady * 1000L / (QuickCheck.STEADY_NEEDED_MS / 1000)).toInt(), true)
+                if (steady > 0) "  ·  steady ${steady}s of ${needS}s" else ""
+            ring.setProgressCompat((steady * 1000L / needS).toInt().coerceAtMost(1000), true)
             ui.postDelayed(this, 200)
         }
     }
@@ -180,8 +194,17 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             QuickCheck.Verdict.NO_FLICKER -> beeper.quickNoFlicker()
             QuickCheck.Verdict.CANT_TELL -> {}
         }
-        CheckHistory.add(this, result.verdict, result.lux)
+        CheckHistory.add(this, result.verdict, result.lux, spot = Prefs.currentSpot(this), byLevel = result.byLevel)
         showResult(result.verdict, System.currentTimeMillis(), result.detail)
+        // Ask to confirm, so the spot can be learned (not for "can't tell": no usable reading).
+        confirmRow.visibility = if (result.verdict != QuickCheck.Verdict.CANT_TELL) View.VISIBLE else View.GONE
+        val spotName = Prefs.currentSpot(this)
+        findViewById<TextView>(R.id.confirmPrompt).text = if (spotName.isEmpty()) {
+            "Know for sure? Confirm it:"
+        } else {
+            "Know for sure? Confirm it so the app learns “$spotName”:"
+        }
+        renderSpot()
     }
 
     override fun onSensorChanged(event: SensorEvent) {
@@ -207,15 +230,15 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     private fun showResult(v: QuickCheck.Verdict, timeMs: Long, detail: String?, corrected: Boolean = false) {
         renderHistory()
         when (v) {
-            QuickCheck.Verdict.KAHRABA -> showOrb(R.color.kahraba, R.drawable.ic_bolt, "Kahraba", if (corrected) "Corrected by you" else "Grid power")
-            QuickCheck.Verdict.MOTEUR -> showOrb(R.color.moteur, R.drawable.ic_moteur, "Moteur", if (corrected) "Corrected by you" else "Generator")
+            QuickCheck.Verdict.KAHRABA -> showOrb(R.color.kahraba, R.drawable.ic_bolt, "Kahraba", if (corrected) "Confirmed by you" else "Grid power")
+            QuickCheck.Verdict.MOTEUR -> showOrb(R.color.moteur, R.drawable.ic_moteur, "Moteur", if (corrected) "Confirmed by you" else "Generator")
             QuickCheck.Verdict.NO_FLICKER -> showOrb(R.color.idle, R.drawable.ic_bolt, "No flicker", "Probably kahraba")
             QuickCheck.Verdict.CANT_TELL -> showOrb(R.color.idle, R.drawable.ic_bolt, "Can't tell", "Try again")
         }
         val ago = System.currentTimeMillis() - timeMs
         val agoText = if (ago < 60_000) "just now" else "${PowerDetector.formatDuration(ago)} ago"
         statusLine.text = "Checked $agoText  ·  ${PowerDetector.formatClock(timeMs)}" +
-            (detail?.takeIf { v == QuickCheck.Verdict.CANT_TELL || v == QuickCheck.Verdict.NO_FLICKER }?.let { "\n$it" } ?: "")
+            (detail?.let { "\n$it" } ?: "")
     }
 
     private fun showOrb(colorRes: Int, iconRes: Int, title: String, sub: String) {
@@ -241,9 +264,119 @@ class MainActivity : ThemedActivity(), SensorEventListener {
                 QuickCheck.Verdict.NO_FLICKER -> R.color.idle
                 QuickCheck.Verdict.CANT_TELL -> R.color.idle
             }
-            val label = CheckHistory.label(e.verdict) + if (e.corrected) "  (corrected)" else ""
+            val label = CheckHistory.label(e.verdict) + (if (e.corrected) "  ✓" else "") + if (e.spot.isNotEmpty()) "  · ${e.spot}" else ""
             addHistoryRow(color, label, fmt.format(Date(e.timeMs))) { editEntry(e) }
         }
+    }
+
+    /** "It was kahraba / moteur" under the latest result. */
+    private fun confirmLatest(v: QuickCheck.Verdict) {
+        val last = CheckHistory.read(this).firstOrNull() ?: return
+        CheckHistory.correct(this, last.timeMs, v)
+        confirmRow.visibility = View.GONE
+        showLastResult()
+        renderSpot()
+    }
+
+    /** What the app has learned about the current spot, and what to do next. */
+    private fun renderSpot() {
+        val spot = Prefs.currentSpot(this)
+        spotButton.text = spot.ifEmpty { "None" }
+        if (spot.isEmpty()) {
+            spotInfo.text = "Pick or add a spot (e.g. Kitchen) when checking in a fixed place: same light, " +
+                "same position. After one confirmed check of each source there, it can say kahraba for sure."
+            return
+        }
+        val (k, m) = CheckHistory.spotLevels(this, spot)
+        spotInfo.text = when {
+            k != null && m != null && k > m * QuickCheck.LEVEL_GAP ->
+                "Learned: kahraba ≈ ${k.toInt()} lux, moteur ≈ ${m.toInt()} lux. Checks here can now say kahraba."
+            k != null && m != null ->
+                "Kahraba (${k.toInt()} lux) and moteur (${m.toInt()} lux) look too alike here. Try a spot closer to a halogen."
+            k == null && m == null ->
+                "Not learned yet. Do a check here and confirm it, once on kahraba and once on moteur."
+            k == null -> "Moteur ≈ ${m!!.toInt()} lux. Still needs one confirmed check on kahraba."
+            else -> "Kahraba ≈ ${k.toInt()} lux. Still needs one check on moteur."
+        }
+    }
+
+    // ---- Spots ----
+
+    private fun pickSpot() {
+        val spots = Prefs.spots(this)
+        val current = Prefs.currentSpot(this)
+        val items = listOf("No spot") + spots.map { if (it == current) "$it  ✓" else it } +
+            listOf("+ Add a spot…") + if (spots.isNotEmpty()) listOf("Rename or delete…") else emptyList()
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Where are you checking?")
+            .setItems(items.toTypedArray()) { _, i ->
+                when {
+                    i == 0 -> Prefs.setCurrentSpot(this, "")
+                    i <= spots.size -> Prefs.setCurrentSpot(this, spots[i - 1])
+                    i == spots.size + 1 -> askSpotName("New spot", "") { name ->
+                        Prefs.addSpot(this, name)
+                        Prefs.setCurrentSpot(this, name)
+                    }
+                    else -> manageSpots()
+                }
+                renderSpot()
+                renderHistory()
+            }
+            .show()
+    }
+
+    private fun manageSpots() {
+        val spots = Prefs.spots(this)
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Rename or delete")
+            .setItems(spots.toTypedArray()) { _, i ->
+                val name = spots[i]
+                MaterialAlertDialogBuilder(this)
+                    .setTitle(name)
+                    .setItems(arrayOf("Rename", "Delete (forget what it learned)")) { _, j ->
+                        if (j == 0) {
+                            askSpotName("Rename spot", name) { to ->
+                                Prefs.renameSpot(this, name, to)
+                                CheckHistory.renameSpot(this, name, to)
+                            }
+                        } else {
+                            Prefs.removeSpot(this, name)
+                            CheckHistory.forgetSpot(this, name)
+                        }
+                        renderSpot()
+                        renderHistory()
+                    }
+                    .show()
+            }
+            .setNegativeButton("Close", null)
+            .show()
+    }
+
+    private fun askSpotName(title: String, initial: String, onDone: (String) -> Unit) {
+        val input = android.widget.EditText(this).apply {
+            setText(initial)
+            hint = "e.g. Kitchen"
+            setSingleLine()
+            setSelection(text.length)
+        }
+        val box = android.widget.FrameLayout(this).apply {
+            val pad = (20 * resources.displayMetrics.density).toInt()
+            setPadding(pad, pad / 2, pad, 0)
+            addView(input)
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(title)
+            .setView(box)
+            .setPositiveButton("Save") { _, _ ->
+                val name = Prefs.cleanSpotName(input.text.toString())
+                if (name.isNotEmpty() && (name == initial || name !in Prefs.spots(this))) {
+                    onDone(name)
+                    renderSpot()
+                    renderHistory()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     /** Tap a recent check to fix it (e.g. it said kahraba but the lamp post was green) or delete it. */
@@ -259,6 +392,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
                     2 -> CheckHistory.delete(this, e.timeMs)
                 }
                 showLastResult()
+                renderSpot()
             }
             .setNegativeButton("Cancel", null)
             .show()

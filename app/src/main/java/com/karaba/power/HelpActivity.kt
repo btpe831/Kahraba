@@ -37,8 +37,24 @@ class HelpActivity : ThemedActivity() {
                 3. Within 3 seconds, lay the phone <b>face-up</b> right under the light and let go.
                 4. Wait for the beep:
                 &nbsp;&nbsp;• <b>1 long beep = Moteur</b> (usually within a few seconds)
+                &nbsp;&nbsp;• <b>4 short beeps = Kahraba</b> – only at a learned spot (see “Spots”)
                 &nbsp;&nbsp;• <b>2 short beeps = No flicker</b> (after 25 seconds) – probably kahraba, but not certain
                 Don't touch the phone or lean over it until it beeps.
+            """,
+
+            "Spots: how to get a sure “Kahraba”" to """
+                On its own, a check can prove <b>Moteur</b> (wobble) but not Kahraba, because a calm moteur can be steady too. A spot fixes that.
+                A <b>spot</b> is a fixed place you always check from, e.g. <b>Kitchen</b>: the same halogen, the phone in the same position (a bit of tape helps). Kahraba's higher voltage makes the bulb about 25% brighter, so once the app knows how bright your spot is on each source, it can tell them apart even when the light is steady.
+                <b>Set one up:</b>
+                1. Tap <b>Spot</b> → <b>Add a spot</b> and name it (Kitchen, Bathroom…).
+                2. Do a check there when you <b>know</b> it's kahraba (e.g. the neighbourhood indicator light is off) and tap <b>It was kahraba</b>.
+                3. Do one when you know it's moteur and tap <b>It was moteur</b>. (A check that sees a wobble at the spot counts too.)
+                After that, checks at that spot can say <b>Kahraba</b> (4 short beeps) or catch a calm <b>Moteur</b>, usually within about 15 seconds.
+                <b>Tips:</b>
+                • Each spot learns on its own. Make one per room you use.
+                • Pick the right spot before each check. If the brightness doesn't match the spot, you'll get “No flicker” rather than a guess.
+                • Keep other lights in the room the same as when you set it up, and avoid daylight.
+                • Moved the lamp or changed the bulb? Tap Spot → Rename or delete, delete it, and set it up again.
             """,
 
             "How it works" to """

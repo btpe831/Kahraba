@@ -133,6 +133,50 @@
             android:textColor="?attr/appMuted"
             android:textSize="15sp" />
 
+        <!-- Shown after a check, to confirm what it really was (teaches the spot). -->
+        <LinearLayout
+            android:id="@+id/confirmRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/confirmPrompt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Know for sure? Confirm it so the app learns your spot:"
+                android:textColor="?attr/appMuted"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/confirmKahraba"
+                    style="@style/TonalButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:text="It was kahraba" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/confirmMoteur"
+                    style="@style/TonalButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:text="It was moteur" />
+            </LinearLayout>
+        </LinearLayout>
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/checkButton"
             style="@style/PrimaryButton"
@@ -149,9 +193,59 @@
             android:layout_marginTop="12dp"
             android:gravity="center"
             android:lineSpacingExtra="2dp"
-            android:text="Lay the phone face-up close to a halogen light.\n1 long beep = moteur  ·  2 short beeps = no flicker (probably kahraba)"
+            android:text="Lay the phone face-up close to a halogen light.\n1 long beep = moteur  ·  4 short = kahraba  ·  2 short = no flicker"
             android:textColor="?attr/appMuted"
             android:textSize="13sp" />
+
+        <!-- My spot -->
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="18dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Spot"
+                        android:textColor="?attr/appText"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/spotButton"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="None" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/spotInfo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:lineSpacingExtra="2dp"
+                    android:textColor="?attr/appMuted"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Recent checks -->
         <TextView

@@ -271,4 +271,52 @@ class PowerDetectorTest {
         println("Quick checks on calm moteur: ${results.count { it == QuickCheck.Verdict.MOTEUR }} moteur, " +
             "${results.count { it == QuickCheck.Verdict.NO_FLICKER }} no flicker, of ${results.size}")
     }
+
+    // ---- Quick check at a learned spot ----
+
+    private fun quickAt(k: Double?, m: Double?, fromMs: Long, lux: (Long) -> Double): Pair<QuickCheck.Verdict, Long> {
+        val q = QuickCheck(3.0, 100.0, k, m)
+        var t = fromMs
+        while (true) {
+            q.add(t, lux(t))?.let { return it.verdict to (t - fromMs) / 1000 }
+            t += step
+        }
+    }
+
+    @Test
+    fun spotLevelsGiveSureAnswers() {
+        // Kitchen learned: kahraba 862, moteur 680.
+        val kahrabaHere = quickAt(862.0, 680.0, 0) { kahraba(it) }
+        assertEquals(QuickCheck.Verdict.KAHRABA, kahrabaHere.first)
+        assertTrue(kahrabaHere.second <= 15)
+        assertEquals(QuickCheck.Verdict.MOTEUR, quickAt(862.0, 680.0, 0) { calmMoteur(it) }.first)
+        // Brightness that matches neither (phone not at the spot): no sure answer.
+        assertEquals(QuickCheck.Verdict.NO_FLICKER, quickAt(862.0, 680.0, 0) { 1500.0 }.first)
+        // Levels too close together aren't used.
+        assertEquals(QuickCheck.Verdict.NO_FLICKER, quickAt(700.0, 680.0, 0) { 700.0 }.first)
+        // Only one level learned: not used yet.
+        assertEquals(QuickCheck.Verdict.NO_FLICKER, quickAt(862.0, null, 0) { kahraba(it) }.first)
+    }
+
+    @Test
+    fun spotLevelsOnRealRecordings() {
+        // Levels as if learned from the 26 Oct recordings at the same spot.
+        val k = 862.0
+        val m = 680.0
+        fun atOf(rec: List<Pair<Long, Double>>) = { t: Long ->
+            var i = rec.binarySearch { it.first.compareTo(t) }
+            if (i < 0) i = -i - 2
+            rec[i.coerceIn(0, rec.size - 1)].second
+        }
+        val busy = recording()
+        val calm = calmRecording()
+        val onKahraba = (60_000L until 1_900_000L step 30_000L).map { quickAt(k, m, it, atOf(busy)).first }
+        val onBusyMoteur = (2_490_000L until 3_660_000L step 30_000L).map { quickAt(k, m, it, atOf(busy)).first }
+        val onCalmMoteur = (10_000L until 2_140_000L step 30_000L).map { quickAt(k, m, it, atOf(calm)).first }
+        assertTrue(onKahraba.all { it == QuickCheck.Verdict.KAHRABA })
+        assertTrue(onBusyMoteur.all { it == QuickCheck.Verdict.MOTEUR })
+        assertTrue(onCalmMoteur.all { it == QuickCheck.Verdict.MOTEUR })
+        println("At a learned spot: kahraba ${onKahraba.size}/${onKahraba.size}, busy moteur " +
+            "${onBusyMoteur.size}/${onBusyMoteur.size}, calm moteur ${onCalmMoteur.size}/${onCalmMoteur.size} right")
+    }
 }
