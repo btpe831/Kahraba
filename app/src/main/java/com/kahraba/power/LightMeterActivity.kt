@@ -48,6 +48,9 @@ class LightMeterActivity : ThemedActivity(), SensorEventListener {
     private val recT = ArrayList<Long>()
     private val recV = ArrayList<Double>()
     private var recording = false
+    /** Paused: the readout, chart and recording all hold still until resumed. */
+    private var paused = false
+    private lateinit var pauseButton: MaterialButton
     private var recStartMs = 0L
     private var recEndMs = 0L
 
@@ -89,6 +92,9 @@ class LightMeterActivity : ThemedActivity(), SensorEventListener {
             if (recT.isEmpty()) toast("Record something first") else createCsv.launch(fileName())
         }
         findViewById<MaterialButton>(R.id.shareButton).setOnClickListener { share() }
+        pauseButton = findViewById(R.id.pauseButton)
+        pauseButton.setOnClickListener { setPaused(!paused) }
+        findViewById<MaterialButton>(R.id.restartButton).setOnClickListener { restart() }
         renderRecording()
         ui.post(sampler)
     }
@@ -122,6 +128,7 @@ class LightMeterActivity : ThemedActivity(), SensorEventListener {
     }
 
     private fun add(t: Long, v: Double) {
+        if (paused) return
         if (liveN == liveT.size) {
             // Drop the oldest half once full (keeps ~10+ minutes at 10 readings a second).
             val half = liveN / 2
@@ -142,7 +149,7 @@ class LightMeterActivity : ThemedActivity(), SensorEventListener {
 
     private fun render() {
         val now = System.currentTimeMillis()
-        if (now - lastRender < 250) return
+        if (paused || now - lastRender < 250) return
         lastRender = now
         chart.setData(liveT, liveV, liveN)
         val v = latest
@@ -167,7 +174,27 @@ class LightMeterActivity : ThemedActivity(), SensorEventListener {
 
     // ---- Recording ----
 
+    private fun setPaused(p: Boolean) {
+        paused = p
+        pauseButton.text = if (p) "Resume" else "Pause"
+        if (p) luxStats.text = "Paused. Tap Resume to carry on" + if (recording) " recording." else "."
+        renderRecording()
+    }
+
+    /** Clears the chart and, if recording, starts the recording again from zero. */
+    private fun restart() {
+        liveN = 0
+        recT.clear(); recV.clear()
+        recStartMs = System.currentTimeMillis()
+        recEndMs = recStartMs
+        chart.setData(liveT, liveV, 0)
+        setPaused(false)
+        lastRender = 0
+        render()
+    }
+
     private fun startRecording() {
+        setPaused(false)
         recT.clear(); recV.clear()
         recStartMs = System.currentTimeMillis()
         recording = true
@@ -184,6 +211,7 @@ class LightMeterActivity : ThemedActivity(), SensorEventListener {
 
     private fun renderRecording() {
         recStatus.text = when {
+            recording && paused -> "Paused · ${recT.size} readings so far"
             recording -> "Recording ${PowerDetector.formatDuration(System.currentTimeMillis() - recStartMs)} · ${recT.size} readings"
             recT.isNotEmpty() -> "Recorded ${PowerDetector.formatDuration(recEndMs - recStartMs)} " +
                 "(${recT.size} readings). Save or share it."

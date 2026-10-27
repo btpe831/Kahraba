@@ -125,6 +125,31 @@
                     android:orientation="horizontal">
 
                     <com.google.android.material.button.MaterialButton
+                        android:id="@+id/pauseButton"
+                        style="@style/OutlinePill"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:text="Pause" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/restartButton"
+                        style="@style/OutlinePill"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:text="Restart" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/saveButton"
                         style="@style/OutlinePill"
                         android:layout_width="0dp"
