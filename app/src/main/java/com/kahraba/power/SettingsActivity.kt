@@ -118,6 +118,16 @@ class SettingsActivity : ThemedActivity() {
                 Prefs.AUTO_CHECK, false))
         })
 
+        // CARDS
+        section("Cards")
+        body.addView(card {
+            addView(text("Choose which cards show on the main screen.", 14f, R.attr.appMuted))
+            for ((i, card) in Prefs.CARDS.withIndex()) {
+                if (i > 0) addView(divider())
+                addView(simpleToggle(card.second, card.first, true))
+            }
+        })
+
         // ROOMS
         section("Rooms")
         body.addView(card {
@@ -300,7 +310,17 @@ class SettingsActivity : ThemedActivity() {
         return row
     }
 
-    private fun link(title: String, sub: String, onClick: () -> Unit): View {
+    private fun simpleToggle(title: String, key: String, def: Boolean): View {
+        val row = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL; setPadding(0, px(4), 0, px(4)) }
+        row.addView(text(title, 17f, R.attr.appText), LinearLayout.LayoutParams(0, -2, 1f))
+        row.addView(MaterialSwitch(this).apply {
+            isChecked = Prefs.sp(this@SettingsActivity).getBoolean(key, def)
+            setOnCheckedChangeListener { _, on -> Prefs.sp(this@SettingsActivity).edit().putBoolean(key, on).apply() }
+        })
+        return row
+    }
+
+        private fun link(title: String, sub: String, onClick: () -> Unit): View {
         val row = LinearLayout(this).apply {
             gravity = Gravity.CENTER_VERTICAL
             setPadding(0, px(6), 0, px(6))

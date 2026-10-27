@@ -100,6 +100,22 @@ object Prefs {
         if (sp(ctx).getString(MONITOR_ROOM, "") == from) setMonitorRoom(ctx, to)
     }
 
+    /** Main-screen cards that can be turned on or off (key to name). */
+    val CARDS = listOf(
+        "card_timeline" to "Last 12 hours",
+        "card_today" to "Today (calendar)",
+        "card_week" to "7 days",
+        "card_stats" to "Kahraba today",
+        "card_wobble" to "Light wobble",
+        "card_advice" to "What to run",
+        "card_room" to "Room",
+        "card_recent" to "Recent checks",
+        "card_monitor" to "Always-on monitor",
+        "card_meter" to "Light meter",
+    )
+
+    fun cardOn(ctx: Context, key: String) = sp(ctx).getBoolean(key, true)
+
     fun autoCheck(ctx: Context) = sp(ctx).getBoolean(AUTO_CHECK, false)
 
     var Context.monitoring: Boolean

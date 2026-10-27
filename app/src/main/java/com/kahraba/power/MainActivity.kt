@@ -148,6 +148,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     override fun onResume() {
         super.onResume()
+        // The light sensor runs while the screen is open: for checks and the Light wobble card.
+        lightSensor?.let { sensors.registerListener(this, it, SensorManager.SENSOR_DELAY_FASTEST) }
         refreshAll()
         ui.post(ticker)
     }
@@ -155,6 +157,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     override fun onPause() {
         super.onPause()
         ui.removeCallbacks(ticker)
+        sensors.unregisterListener(this)
     }
 
     override fun onStop() {
@@ -167,12 +170,15 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         super.onDestroy()
     }
 
-    /** Clock, sticky bar and monitor card refresh every second. */
+    /** Clock, sticky bar, monitor and wobble cards refresh every second; history cards every 30 s. */
+    private var ticks = 0
     private val ticker = object : Runnable {
         override fun run() {
             renderClock()
             renderBar()
             renderMonitorCard()
+            renderWobble()
+            if (++ticks % 30 == 0) renderHistoryCards()
             ui.postDelayed(this, 1000)
         }
     }
@@ -185,6 +191,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         renderCalendar()
         renderBar()
         renderMonitorCard()
+        renderHistoryCards()
+        renderWobble()
+        applyCardSettings()
     }
 
     // ---- The check ----
@@ -199,7 +208,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         val cfg = Prefs.config(this)
         val (k, m) = CheckHistory.spotLevels(this, Prefs.currentSpot(this))
         check = QuickCheck(cfg.flickerThresholdPct, cfg.minLux, k, m)
-        lux = null
+        // Keep the last reading: the sensor is already running and only reports changes.
         checkStartMs = System.currentTimeMillis()
         // A short pause first, so the hand putting the phone down isn't read as a wobble or a move.
         measureFromMs = checkStartMs + SETTLE_MS
@@ -208,7 +217,6 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         // Fixed screen brightness: the light sensor sits under the screen, so auto-brightness
         // changing it mid-check could nudge the reading.
         window.attributes = window.attributes.apply { screenBrightness = LightMeterActivity.LOCKED_BRIGHTNESS }
-        sensors.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST)
         motion.start()
         checkButton.text = "Cancel"
         heroProgress.setProgressCompat(0, false)
@@ -257,7 +265,6 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     private fun stopCheck(result: QuickCheck.Result?) {
         ui.removeCallbacks(sampler)
-        sensors.unregisterListener(this)
         motion.stop()
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         window.attributes = window.attributes.apply {
@@ -288,6 +295,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent) {
         lux = event.values[0].toDouble()
+        liveReadings.addLast(System.currentTimeMillis() to event.values[0].toDouble())
         if (System.currentTimeMillis() >= measureFromMs) check?.addRaw(System.currentTimeMillis(), event.values[0].toDouble())
     }
 
@@ -682,6 +690,324 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             GradientDrawable.Orientation.TL_BR, intArrayOf(lighten(color, 0.15f), darken(color, 0.25f)),
         ).apply { cornerRadius = 16 * dp }
         barIcon.setImageResource(icon)
+    }
+
+    // ---- Phase 2 cards ----
+
+    /** Turns cards on or off as chosen in Settings > Cards. */
+    private fun applyCardSettings() {
+        val ids = mapOf(
+            "card_timeline" to R.id.timelineCard, "card_today" to R.id.todayCard, "card_week" to R.id.weekCard,
+            "card_stats" to R.id.statsCard, "card_wobble" to R.id.wobbleCard, "card_advice" to R.id.adviceCard,
+            "card_room" to R.id.roomCard, "card_recent" to R.id.recentCard, "card_monitor" to R.id.monitorCard,
+            "card_meter" to R.id.meterCard,
+        )
+        for ((key, id) in ids) findViewById<View>(id).visibility = if (Prefs.cardOn(this, key)) View.VISIBLE else View.GONE
+    }
+
+    private fun renderHistoryCards() {
+        val now = System.currentTimeMillis()
+        val spans = DayData.monitorSpans(this, now)
+        val checks = CheckHistory.read(this).filter { !it.fromMonitor }
+        renderTimeline(now, spans, checks)
+        renderWeek(now, spans, checks)
+        renderStats(now, spans, checks)
+        renderAdvice(now)
+    }
+
+    /** LAST 12 HOURS: one column per hour, from the monitor where it ran, else from checks. */
+    private fun renderTimeline(now: Long, spans: List<DayData.Span>, checks: List<CheckHistory.Entry>) {
+        val row = findViewById<LinearLayout>(R.id.timelineRow)
+        row.removeAllViews()
+        val hourStart = Calendar.getInstance().apply {
+            timeInMillis = now; set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        val label = SimpleDateFormat("h a", Locale.US)
+        var anyData = false
+        for (h in 11 downTo 0) {
+            val from = hourStart - h * 3_600_000L
+            val to = if (h == 0) now else from + 3_600_000L
+            val k = DayData.msOf(spans, Source.KAHRABA, from, to)
+            val m = DayData.msOf(spans, Source.MOTEUR, from, to)
+            val inHour = checks.filter { it.timeMs in from until to }
+            var icon = 0
+            var color = R.color.idle
+            var text = "–"
+            if (k + m >= 5 * 60_000) {
+                val kahrabaMost = k >= m
+                icon = if (kahrabaMost) R.drawable.ic_bolt else R.drawable.ic_moteur
+                color = if (kahrabaMost) R.color.kahraba else R.color.moteur
+                text = if (k > 0) "${k / 60_000}m" else "0m"
+            } else if (inHour.isNotEmpty()) {
+                val last = inHour.maxBy { it.timeMs }
+                icon = if (last.verdict == QuickCheck.Verdict.MOTEUR) R.drawable.ic_moteur else R.drawable.ic_bolt
+                color = colorFor(last.verdict)
+                text = "check"
+            }
+            if (icon != 0) anyData = true
+            row.addView(timelineColumn(if (h == 0) "Now" else label.format(Date(from)), icon, color, text))
+        }
+        val scroll = findViewById<android.widget.HorizontalScrollView>(R.id.timelineScroll)
+        scroll.post { scroll.fullScroll(View.FOCUS_RIGHT) }
+
+        val lastSwitch = EventLog.read(this).lastOrNull { it.source == Source.KAHRABA || it.source == Source.MOTEUR }
+        findViewById<TextView>(R.id.timelineNote).text = when {
+            lastSwitch != null && MonitorState.running ->
+                "${EventLog.label(lastSwitch.source).lowercase().replaceFirstChar { it.uppercase() }} since ${PowerDetector.formatClock(lastSwitch.timeMs)}"
+            anyData -> "Minutes are kahraba time recorded by the always-on monitor; other hours show your checks."
+            else -> "No data yet. Do a check, or turn on the always-on monitor."
+        }
+    }
+
+    private fun timelineColumn(hour: String, icon: Int, color: Int, text: String): View {
+        val col = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(0, (4 * dp).toInt(), 0, (4 * dp).toInt())
+        }
+        col.addView(TextView(this).apply {
+            this.text = hour
+            textSize = 14f
+            setTextColor(themeColor(if (hour == "Now") R.attr.appText else R.attr.appMuted))
+            if (hour == "Now") setTypeface(typeface, android.graphics.Typeface.BOLD)
+        })
+        col.addView(ImageView(this).apply {
+            if (icon != 0) {
+                setImageResource(icon)
+                setColorFilter(ContextCompat.getColor(this@MainActivity, color))
+            } else {
+                setImageResource(R.drawable.dot)
+                setColorFilter(themeColor(R.attr.appOutline))
+                setPadding((8 * dp).toInt(), (8 * dp).toInt(), (8 * dp).toInt(), (8 * dp).toInt())
+            }
+        }, LinearLayout.LayoutParams((26 * dp).toInt(), (26 * dp).toInt()).apply { topMargin = (8 * dp).toInt() })
+        col.addView(TextView(this).apply {
+            this.text = text
+            textSize = 13f
+            setTextColor(themeColor(R.attr.appText))
+            setPadding(0, (8 * dp).toInt(), 0, 0)
+        })
+        col.layoutParams = LinearLayout.LayoutParams((60 * dp).toInt(), LinearLayout.LayoutParams.WRAP_CONTENT)
+        return col
+    }
+
+    /** 7 DAYS: kahraba hours per day (monitor), or kahraba share of checks when there's no monitor data. */
+    private fun renderWeek(now: Long, spans: List<DayData.Span>, checks: List<CheckHistory.Entry>) {
+        val list = findViewById<LinearLayout>(R.id.weekList)
+        list.removeAllViews()
+        val today = DayData.startOfDay(now)
+        val dayName = SimpleDateFormat("EEE", Locale.US)
+        var usedMonitor = false
+        for (d in 0..6) {
+            val from = today - d * 86_400_000L
+            val dayStart = DayData.startOfDay(from + 3_600_000L) // safe across clock changes
+            val to = if (d == 0) now else dayStart + 86_400_000L
+            val k = DayData.msOf(spans, Source.KAHRABA, dayStart, to)
+            val m = DayData.msOf(spans, Source.MOTEUR, dayStart, to)
+            val dayChecks = checks.filter { it.timeMs in dayStart until to }
+            val name = if (d == 0) "Today" else dayName.format(Date(dayStart))
+            if (k + m > 0) {
+                usedMonitor = true
+                list.addView(weekRow(name, R.drawable.ic_bolt, R.color.kahraba, DayData.hours(k), k.toFloat() / (to - dayStart)))
+            } else if (dayChecks.isNotEmpty()) {
+                val kc = dayChecks.count { it.verdict == QuickCheck.Verdict.KAHRABA || it.verdict == QuickCheck.Verdict.NO_FLICKER }
+                val last = dayChecks.maxBy { it.timeMs }
+                list.addView(weekRow(name, if (last.verdict == QuickCheck.Verdict.MOTEUR) R.drawable.ic_moteur else R.drawable.ic_bolt,
+                    colorFor(last.verdict), "$kc/${dayChecks.size} checks", kc.toFloat() / dayChecks.size))
+            } else {
+                list.addView(weekRow(name, 0, R.color.idle, "no data", 0f))
+            }
+        }
+        findViewById<TextView>(R.id.weekNote).text = if (usedMonitor) {
+            "Bars show the share of each day on kahraba, from the always-on monitor."
+        } else {
+            "Bars show how many checks were kahraba (or no flicker). The always-on monitor gives exact hours."
+        }
+    }
+
+    private fun weekRow(name: String, icon: Int, color: Int, value: String, share: Float): View {
+        val row = LinearLayout(this).apply {
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, (10 * dp).toInt(), 0, (10 * dp).toInt())
+        }
+        row.addView(TextView(this).apply {
+            text = name
+            textSize = 17f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setTextColor(themeColor(R.attr.appText))
+        }, LinearLayout.LayoutParams((70 * dp).toInt(), LinearLayout.LayoutParams.WRAP_CONTENT))
+        row.addView(ImageView(this).apply {
+            if (icon != 0) {
+                setImageResource(icon)
+                setColorFilter(ContextCompat.getColor(this@MainActivity, color))
+            }
+        }, LinearLayout.LayoutParams((20 * dp).toInt(), (20 * dp).toInt()))
+        row.addView(TextView(this).apply {
+            text = value
+            textSize = 13f
+            setTextColor(themeColor(R.attr.appMuted))
+            setPadding((10 * dp).toInt(), 0, (10 * dp).toInt(), 0)
+        }, LinearLayout.LayoutParams((104 * dp).toInt(), LinearLayout.LayoutParams.WRAP_CONTENT))
+        // Bar: a track with the kahraba share filled.
+        val track = FrameLayout(this).apply {
+            background = GradientDrawable().apply { cornerRadius = 4 * dp; setColor(themeColor(R.attr.appOutline)) }
+        }
+        val fill = View(this).apply {
+            background = GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(ContextCompat.getColor(this@MainActivity, R.color.kahraba), lighten(ContextCompat.getColor(this@MainActivity, R.color.kahraba), 0.35f)),
+            ).apply { cornerRadius = 4 * dp }
+        }
+        track.addView(fill, FrameLayout.LayoutParams(0, FrameLayout.LayoutParams.MATCH_PARENT))
+        row.addView(track, LinearLayout.LayoutParams(0, (7 * dp).toInt(), 1f))
+        track.post {
+            fill.layoutParams = fill.layoutParams.apply { width = (track.width * share.coerceIn(0f, 1f)).toInt() }
+        }
+        return row
+    }
+
+    /** KAHRABA TODAY: hours, switches, last switch and longest stretch (monitor), or check counts. */
+    private fun renderStats(now: Long, spans: List<DayData.Span>, checks: List<CheckHistory.Entry>) {
+        val dayStart = DayData.startOfDay(now)
+        val k = DayData.msOf(spans, Source.KAHRABA, dayStart, now)
+        val m = DayData.msOf(spans, Source.MOTEUR, dayStart, now)
+        val labels = listOf(R.id.statLabel1, R.id.statLabel2, R.id.statLabel3, R.id.statLabel4).map { findViewById<TextView>(it) }
+        val values = listOf(R.id.statValue1, R.id.statValue2, R.id.statValue3, R.id.statValue4).map { findViewById<TextView>(it) }
+        val note = findViewById<TextView>(R.id.statNote)
+        if (k + m > 0) {
+            val events = EventLog.read(this).filter { it.timeMs >= dayStart && (it.source == Source.KAHRABA || it.source == Source.MOTEUR) }
+            val last = events.lastOrNull()
+            val longest = spans.filter { it.source == Source.KAHRABA }
+                .maxOfOrNull { maxOf(0L, minOf(it.end, now) - maxOf(it.start, dayStart)) } ?: 0L
+            val pairs = listOf(
+                "Kahraba" to DayData.hours(k),
+                "Moteur" to DayData.hours(m),
+                "Switches" to "${events.size}",
+                "Longest kahraba" to DayData.hours(longest),
+            )
+            for (i in 0..3) { labels[i].text = pairs[i].first; values[i].text = pairs[i].second }
+            note.text = if (last != null) {
+                "Last switch: ${EventLog.label(last.source).lowercase()} at ${PowerDetector.formatClock(last.timeMs)}"
+            } else "From the always-on monitor."
+        } else {
+            val today = checks.filter { it.timeMs >= dayStart }
+            val kc = today.count { it.verdict == QuickCheck.Verdict.KAHRABA }
+            val mc = today.count { it.verdict == QuickCheck.Verdict.MOTEUR }
+            val lastK = checks.firstOrNull { it.verdict == QuickCheck.Verdict.KAHRABA }
+            val pairs = listOf(
+                "Checks today" to "${today.size}",
+                "Kahraba" to "$kc",
+                "Moteur" to "$mc",
+                "Last kahraba" to (lastK?.let { PowerDetector.formatClock(it.timeMs) } ?: "–"),
+            )
+            for (i in 0..3) { labels[i].text = pairs[i].first; values[i].text = pairs[i].second }
+            note.text = "Turn on the always-on monitor for exact kahraba hours and switch times."
+        }
+    }
+
+    /** WHAT TO RUN: simple advice for the current source. */
+    private fun renderAdvice(now: Long) {
+        val icon = findViewById<ImageView>(R.id.adviceIcon)
+        val title = findViewById<TextView>(R.id.adviceTitle)
+        val sub = findViewById<TextView>(R.id.adviceSub)
+        // The monitor if it's running, otherwise a check from the last 30 minutes.
+        val recent = CheckHistory.read(this).firstOrNull { !it.fromMonitor }?.takeIf { now - it.timeMs < 30 * 60_000 }
+        val source: Source
+        val since: String
+        if (MonitorState.running && MonitorState.source != Source.UNKNOWN) {
+            source = MonitorState.source
+            since = "since ${PowerDetector.formatClock(MonitorState.sinceMs)}"
+        } else if (recent != null && recent.verdict != QuickCheck.Verdict.CANT_TELL) {
+            source = when (recent.verdict) {
+                QuickCheck.Verdict.MOTEUR -> Source.MOTEUR
+                QuickCheck.Verdict.KAHRABA -> Source.KAHRABA
+                else -> Source.UNKNOWN
+            }
+            since = "checked ${PowerDetector.formatClock(recent.timeMs)}"
+        } else {
+            source = Source.UNKNOWN
+            since = ""
+        }
+        val noFlicker = recent?.verdict == QuickCheck.Verdict.NO_FLICKER && !MonitorState.running
+        when {
+            source == Source.KAHRABA -> {
+                icon.setImageResource(R.drawable.ic_bolt)
+                icon.setColorFilter(ContextCompat.getColor(this, R.color.kahraba))
+                title.text = "Run the big things"
+                sub.text = "Kahraba $since. Good time for the washing machine, water heater, oven, iron or water pump."
+            }
+            source == Source.MOTEUR -> {
+                icon.setImageResource(R.drawable.ic_moteur)
+                icon.setColorFilter(ContextCompat.getColor(this, R.color.moteur))
+                title.text = "Keep it light"
+                sub.text = "Moteur $since. Stay under your amps: avoid the heater, kettle and washing machine at the same time."
+            }
+            noFlicker -> {
+                icon.setImageResource(R.drawable.ic_bolt)
+                icon.setColorFilter(ContextCompat.getColor(this, R.color.idle))
+                title.text = "Probably fine"
+                sub.text = "No flicker $since. Probably kahraba, but confirm before running several big appliances."
+            }
+            else -> {
+                icon.setImageResource(R.drawable.ic_bolt)
+                icon.setColorFilter(ContextCompat.getColor(this, R.color.idle))
+                title.text = "Check first"
+                sub.text = "Do a quick check to see if it's kahraba before running big appliances."
+            }
+        }
+    }
+
+    // Live readings for the Light wobble card (last few seconds).
+    private val liveReadings = ArrayDeque<Pair<Long, Double>>()
+
+    /** LIGHT WOBBLE: live lux and how much it wobbles now, as the app judges it. */
+    private fun renderWobble() {
+        val now = System.currentTimeMillis()
+        lux?.let { liveReadings.addLast(now to it) } // hold the last value between sensor updates
+        while (liveReadings.isNotEmpty() && liveReadings.first().first < now - PowerDetector.FLICKER_WINDOW_MS) liveReadings.removeFirst()
+        val values = liveReadings.map { it.second }
+        val med = PowerDetector.median(values)
+        val luxView = findViewById<TextView>(R.id.wobbleLux)
+        val title = findViewById<TextView>(R.id.wobbleTitle)
+        val sub = findViewById<TextView>(R.id.wobbleSub)
+        val note = findViewById<TextView>(R.id.wobbleNote)
+        val minLux = Prefs.config(this).minLux
+        luxView.text = med?.let { it.toInt().toString() } ?: "–"
+        val wobble = if (med != null && med > 0 && values.size >= 3) (values.max() - values.min()) / med * 100 else null
+        val (name, detail) = when {
+            med == null -> "No reading" to "Waiting for the light sensor"
+            med < minLux -> "Too dim" to "Needs at least ${minLux.toInt()} lux to judge"
+            wobble == null || wobble < Prefs.config(this).flickerThresholdPct -> "Steady" to "Kahraba, or a calm moteur"
+            wobble < 8 -> "Slight wobble" to "Moteur sign"
+            wobble < 20 -> "Busy" to "Moteur, wobbling"
+            else -> "Very busy" to "Moteur, or something moved"
+        }
+        title.text = name
+        sub.text = detail + (wobble?.let { " · %.0f%%".format(it) } ?: "")
+        note.text = "Live from the light sensor while this screen is open. A wobble means moteur; steady light can be either."
+
+        val gauge = findViewById<LinearLayout>(R.id.wobbleGauge)
+        val segments = 12
+        if (gauge.childCount != segments) {
+            gauge.removeAllViews()
+            for (i in 0 until segments) gauge.addView(View(this),
+                LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f).apply {
+                    marginEnd = if (i < segments - 1) (4 * dp).toInt() else 0
+                })
+        }
+        // 0–30% wobble across 12 segments; steady is one green segment.
+        val filled = when {
+            med == null || med < minLux -> 0
+            wobble == null || wobble < Prefs.config(this).flickerThresholdPct -> 1
+            else -> (wobble / 2.5).toInt().coerceIn(2, segments)
+        }
+        val on = ContextCompat.getColor(this, if (filled <= 1) R.color.kahraba else R.color.moteur)
+        for (i in 0 until segments) {
+            gauge.getChildAt(i).background = GradientDrawable().apply {
+                cornerRadius = 4 * dp
+                setColor(if (i < filled) on else themeColor(R.attr.appOutline))
+            }
+        }
     }
 
     // ---- Helpers ----

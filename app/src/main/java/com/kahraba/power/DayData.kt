@@ -60,6 +60,35 @@ object DayData {
         return out
     }
 
+    // ---- Combined history for the timeline and stats cards ----
+
+    data class Span(val start: Long, val end: Long, val source: Source)
+
+    /** What the always-on monitor recorded, as time spans (up to now while it's running). */
+    fun monitorSpans(ctx: Context, nowMs: Long = System.currentTimeMillis()): List<Span> {
+        val entries = EventLog.read(ctx).sortedBy { it.timeMs }
+        val out = ArrayList<Span>()
+        for (i in entries.indices) {
+            val start = entries[i].timeMs
+            val end = minOf(
+                if (i + 1 < entries.size) entries[i + 1].timeMs else if (MonitorState.running) nowMs else start,
+                nowMs,
+            )
+            if (end > start) out += Span(start, end, entries[i].source)
+        }
+        return out
+    }
+
+    /** Milliseconds of [source] between two times. */
+    fun msOf(spans: List<Span>, source: Source, from: Long, to: Long): Long =
+        spans.filter { it.source == source }.sumOf { maxOf(0L, minOf(it.end, to) - maxOf(it.start, from)) }
+
+    /** Midnight at the start of the day containing [timeMs]. */
+    fun startOfDay(timeMs: Long): Long = Calendar.getInstance().apply {
+        timeInMillis = timeMs
+        set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
+
     /** Monitor log entries that happened on a given day. */
     fun monitorEvents(ctx: Context, day: String): List<EventLog.Entry> =
         EventLog.read(ctx).filter { key(it.timeMs) == day }.sortedBy { it.timeMs }

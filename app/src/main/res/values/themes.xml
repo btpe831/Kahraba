@@ -58,6 +58,25 @@
         <item name="android:layout_marginStart">4dp</item>
     </style>
 
+    <!-- Small caps label and big number, like the weather app's Comfort card. -->
+    <style name="StatLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">?attr/appMuted</item>
+    </style>
+
+    <style name="StatValue">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">30sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/appText</item>
+    </style>
+
     <style name="TonalButton" parent="Widget.Material3.Button.TonalButton">
         <item name="android:minHeight">52dp</item>
         <item name="cornerRadius">26dp</item>
