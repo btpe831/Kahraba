@@ -321,6 +321,39 @@
                 </LinearLayout>
             </com.kahraba.power.NotchCard>
 
+            <!-- DID YOU KNOW? -->
+            <com.kahraba.power.NotchCard
+                android:id="@+id/factsCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:clickable="true"
+                android:focusable="true"
+                app:notchTitle="Did you know?">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/factText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:lineSpacingExtra="3dp"
+                        android:textColor="?attr/appText"
+                        android:textSize="17sp" />
+
+                    <TextView
+                        android:id="@+id/factFooter"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:textColor="?attr/appMuted"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </com.kahraba.power.NotchCard>
+
             <!-- LIGHT WOBBLE -->
             <com.kahraba.power.NotchCard
                 android:id="@+id/wobbleCard"

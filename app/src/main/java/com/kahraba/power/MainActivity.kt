@@ -118,6 +118,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         findViewById<View>(R.id.monitorCard).setOnClickListener { startActivity(Intent(this, MonitorActivity::class.java)) }
         findViewById<View>(R.id.meterCard).setOnClickListener { startActivity(Intent(this, LightMeterActivity::class.java)) }
         findViewById<View>(R.id.ampsCard).setOnClickListener { startActivity(Intent(this, AmpsActivity::class.java)) }
+        findViewById<View>(R.id.factsCard).setOnClickListener { Facts.next(this); renderFact() }
         findViewById<View>(R.id.footerNote).setOnClickListener { startActivity(Intent(this, HelpActivity::class.java)) }
         findViewById<View>(R.id.barSettings).setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
         findViewById<View>(R.id.barHistory).setOnClickListener { showAllChecks() }
@@ -199,6 +200,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         renderMonitorCard()
         renderHistoryCards()
         renderWobble()
+        renderFact()
         applyCardSettings()
     }
 
@@ -704,11 +706,19 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     // ---- Phase 2 cards ----
 
+    /** DID YOU KNOW?: a fact about kahraba, a new one each day; tap for another. */
+    private fun renderFact() {
+        val (fact, n) = Facts.current(this)
+        findViewById<TextView>(R.id.factText).text = fact
+        findViewById<TextView>(R.id.factFooter).text = "Tap for another  ·  $n of ${Facts.all.size}"
+    }
+
     /** Turns cards on or off as chosen in Settings > Cards. */
     private fun applyCardSettings() {
         val ids = mapOf(
             "card_timeline" to R.id.timelineCard, "card_today" to R.id.todayCard, "card_week" to R.id.weekCard,
             "card_stats" to R.id.statsCard, "card_wobble" to R.id.wobbleCard, "card_advice" to R.id.adviceCard,
+            "card_facts" to R.id.factsCard,
             "card_room" to R.id.roomCard, "card_recent" to R.id.recentCard, "card_monitor" to R.id.monitorCard,
             "card_meter" to R.id.meterCard, "card_amps" to R.id.ampsCard,
         )

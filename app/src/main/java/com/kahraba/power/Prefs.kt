@@ -108,6 +108,7 @@ object Prefs {
         "card_stats" to "Kahraba today",
         "card_wobble" to "Light wobble",
         "card_advice" to "What to run",
+        "card_facts" to "Did you know?",
         "card_room" to "Room",
         "card_recent" to "Recent checks",
         "card_monitor" to "Always-on monitor",
