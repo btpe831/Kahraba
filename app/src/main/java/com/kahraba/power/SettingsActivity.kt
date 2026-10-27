@@ -16,7 +16,13 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.materialswitch.MaterialSwitch
@@ -26,6 +32,45 @@ class SettingsActivity : ThemedActivity() {
 
     private val dp get() = resources.displayMetrics.density
     private lateinit var body: LinearLayout
+
+    private val saveBackup = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
+        if (uri != null) {
+            runCatching { contentResolver.openOutputStream(uri)!!.use { it.write(Backup.export(this).toByteArray()) } }
+                .onSuccess { toast("Backup saved") }
+                .onFailure { toast("Couldn't save the backup") }
+        }
+    }
+
+    private val openBackup = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) {
+            val json = runCatching { contentResolver.openInputStream(uri)!!.use { it.readBytes().decodeToString() } }.getOrNull()
+            val summary = json?.let { Backup.summary(it) }
+            if (json == null || summary == null) {
+                toast("That file isn't a Kahraba or Not backup")
+            } else {
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("Restore this backup?")
+                    .setMessage("It has $summary. Everything currently in this app will be replaced.")
+                    .setPositiveButton("Restore") { _, _ -> restore(json) }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            }
+        }
+    }
+
+    private fun restore(json: String) {
+        if (!Backup.restore(this, json)) {
+            toast("Couldn't restore that file")
+            return
+        }
+        toast("Restored")
+        AppCompatDelegate.setDefaultNightMode(Prefs.nightMode(this))
+        // Start fresh so every screen shows the restored data.
+        startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
+        finish()
+    }
+
+    private fun toast(s: String) = Toast.makeText(this, s, Toast.LENGTH_SHORT).show()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -114,6 +159,18 @@ class SettingsActivity : ThemedActivity() {
             addView(toggle("Moteur from flicker alone", "Switch to moteur when the light flickers, even without a power cut. " +
                 "Off by default because kahraba can wobble too.", Prefs.MOTEUR_ON_FLICKER, false))
         }, lp(top = 12))
+
+        // BACKUP
+        section("Backup")
+        body.addView(card {
+            addView(link("Back up to a file", "Saves your checks, rooms, notes, monitor log and settings in one file.") {
+                saveBackup.launch("kahraba-or-not-backup-" + SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date()) + ".json")
+            })
+            addView(divider())
+            addView(link("Restore from a file", "Replaces everything here with a backup, e.g. from the old Ijit app or another phone.") {
+                openBackup.launch(arrayOf("application/json", "application/octet-stream", "text/plain", "*/*"))
+            })
+        })
 
         // TOOLS
         section("Tools")

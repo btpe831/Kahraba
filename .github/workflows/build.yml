@@ -24,19 +24,21 @@ jobs:
       - name: Test and build
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon testDebugUnitTest assembleDebug
+          ./gradlew --no-daemon testStandardDebugUnitTest assembleStandardDebug assembleLegacyDebug
 
       - name: Read the app version
         id: version
         run: echo "name=$(grep '^appVersion=' gradle.properties | cut -d= -f2)" >> "$GITHUB_OUTPUT"
 
       - name: Name the APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk "KahrabaOrNot-${{ steps.version.outputs.name }}.apk"
+        run: |
+          cp app/build/outputs/apk/standard/debug/app-standard-debug.apk "KahrabaOrNot-${{ steps.version.outputs.name }}.apk"
+          cp app/build/outputs/apk/legacy/debug/app-legacy-debug.apk "Ijit-update-to-move-data.apk"
 
       - uses: actions/upload-artifact@v4
         with:
           name: KahrabaOrNot-apk
-          path: KahrabaOrNot-*.apk
+          path: "*.apk"
 
       - name: Publish as a release (download this on the phone)
         uses: softprops/action-gh-release@v2
@@ -45,6 +47,10 @@ jobs:
           name: Kahraba or Not ${{ steps.version.outputs.name }}
           target_commitish: ${{ github.sha }}
           make_latest: true
-          files: KahrabaOrNot-*.apk
+          files: |
+            KahrabaOrNot-*.apk
+            Ijit-update-to-move-data.apk
           body: |
-            Install on the Android phone: tap the .apk file below, then allow "Install unknown apps" if asked.
+            Install on the Android phone: tap KahrabaOrNot-….apk below, then allow "Install unknown apps" if asked.
+
+            Moving from the old Ijit app? Also install Ijit-update-to-move-data.apk (it updates Ijit), open it, go to Settings > Back up to a file, then in Kahraba or Not use Settings > Restore from a file.
