@@ -76,7 +76,15 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         spotInfo = findViewById(R.id.spotInfo)
         confirmRow = findViewById(R.id.confirmRow)
 
-        spotButton.setOnClickListener { if (check == null) pickSpot() }
+        spotButton.setOnClickListener {
+            if (check == null) {
+                RoomPicker.pick(this, Prefs.currentSpot(this)) { room ->
+                    Prefs.setCurrentSpot(this, room)
+                    renderSpot()
+                    renderHistory()
+                }
+            }
+        }
         findViewById<View>(R.id.confirmKahraba).setOnClickListener { confirmLatest(QuickCheck.Verdict.KAHRABA) }
         findViewById<View>(R.id.confirmMoteur).setOnClickListener { confirmLatest(QuickCheck.Verdict.MOTEUR) }
 
@@ -202,7 +210,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         findViewById<TextView>(R.id.confirmPrompt).text = if (spotName.isEmpty()) {
             "Know for sure? Confirm it:"
         } else {
-            "Know for sure? Confirm it so the app learns “$spotName”:"
+            "Know for sure? Confirm it to teach “$spotName”:"
         }
         renderSpot()
     }
@@ -218,7 +226,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     private fun showLastResult() {
         renderHistory()
-        val last = CheckHistory.read(this).firstOrNull()
+        val last = CheckHistory.read(this).firstOrNull { !it.fromMonitor }
         if (last == null) {
             showOrb(R.color.idle, R.drawable.ic_bolt, "Tap to check", "")
             statusLine.text = "No checks yet"
@@ -251,7 +259,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     private fun renderHistory() {
         historyList.removeAllViews()
-        val entries = CheckHistory.read(this).take(5)
+        val entries = CheckHistory.read(this).filter { !it.fromMonitor }.take(5)
         val fmt = SimpleDateFormat("EEE  HH:mm", Locale.US)
         if (entries.isEmpty()) {
             addHistoryRow(R.color.outline, "No checks yet", "")
@@ -271,112 +279,22 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     /** "It was kahraba / moteur" under the latest result. */
     private fun confirmLatest(v: QuickCheck.Verdict) {
-        val last = CheckHistory.read(this).firstOrNull() ?: return
+        val last = CheckHistory.read(this).firstOrNull { !it.fromMonitor } ?: return
         CheckHistory.correct(this, last.timeMs, v)
         confirmRow.visibility = View.GONE
         showLastResult()
         renderSpot()
     }
 
-    /** What the app has learned about the current spot, and what to do next. */
+    /** What the app has learned about the current room, and what to do next. */
     private fun renderSpot() {
-        val spot = Prefs.currentSpot(this)
-        spotButton.text = spot.ifEmpty { "None" }
-        if (spot.isEmpty()) {
-            spotInfo.text = "Pick or add a spot (e.g. Kitchen) when checking in a fixed place: same light, " +
-                "same position. After one confirmed check of each source there, it can say kahraba for sure."
-            return
-        }
-        val (k, m) = CheckHistory.spotLevels(this, spot)
-        spotInfo.text = when {
-            k != null && m != null && k > m * QuickCheck.LEVEL_GAP ->
-                "Learned: kahraba ≈ ${k.toInt()} lux, moteur ≈ ${m.toInt()} lux. Checks here can now say kahraba."
-            k != null && m != null ->
-                "Kahraba (${k.toInt()} lux) and moteur (${m.toInt()} lux) look too alike here. Try a spot closer to a halogen."
-            k == null && m == null ->
-                "Not learned yet. Do a check here and confirm it, once on kahraba and once on moteur."
-            k == null -> "Moteur ≈ ${m!!.toInt()} lux. Still needs one confirmed check on kahraba."
-            else -> "Kahraba ≈ ${k.toInt()} lux. Still needs one check on moteur."
-        }
-    }
-
-    // ---- Spots ----
-
-    private fun pickSpot() {
-        val spots = Prefs.spots(this)
-        val current = Prefs.currentSpot(this)
-        val items = listOf("No spot") + spots.map { if (it == current) "$it  ✓" else it } +
-            listOf("+ Add a spot…") + if (spots.isNotEmpty()) listOf("Rename or delete…") else emptyList()
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Where are you checking?")
-            .setItems(items.toTypedArray()) { _, i ->
-                when {
-                    i == 0 -> Prefs.setCurrentSpot(this, "")
-                    i <= spots.size -> Prefs.setCurrentSpot(this, spots[i - 1])
-                    i == spots.size + 1 -> askSpotName("New spot", "") { name ->
-                        Prefs.addSpot(this, name)
-                        Prefs.setCurrentSpot(this, name)
-                    }
-                    else -> manageSpots()
-                }
-                renderSpot()
-                renderHistory()
-            }
-            .show()
-    }
-
-    private fun manageSpots() {
-        val spots = Prefs.spots(this)
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Rename or delete")
-            .setItems(spots.toTypedArray()) { _, i ->
-                val name = spots[i]
-                MaterialAlertDialogBuilder(this)
-                    .setTitle(name)
-                    .setItems(arrayOf("Rename", "Delete (forget what it learned)")) { _, j ->
-                        if (j == 0) {
-                            askSpotName("Rename spot", name) { to ->
-                                Prefs.renameSpot(this, name, to)
-                                CheckHistory.renameSpot(this, name, to)
-                            }
-                        } else {
-                            Prefs.removeSpot(this, name)
-                            CheckHistory.forgetSpot(this, name)
-                        }
-                        renderSpot()
-                        renderHistory()
-                    }
-                    .show()
-            }
-            .setNegativeButton("Close", null)
-            .show()
-    }
-
-    private fun askSpotName(title: String, initial: String, onDone: (String) -> Unit) {
-        val input = android.widget.EditText(this).apply {
-            setText(initial)
-            hint = "e.g. Kitchen"
-            setSingleLine()
-            setSelection(text.length)
-        }
-        val box = android.widget.FrameLayout(this).apply {
-            val pad = (20 * resources.displayMetrics.density).toInt()
-            setPadding(pad, pad / 2, pad, 0)
-            addView(input)
-        }
-        MaterialAlertDialogBuilder(this)
-            .setTitle(title)
-            .setView(box)
-            .setPositiveButton("Save") { _, _ ->
-                val name = Prefs.cleanSpotName(input.text.toString())
-                if (name.isNotEmpty() && (name == initial || name !in Prefs.spots(this))) {
-                    onDone(name)
-                    renderSpot()
-                    renderHistory()
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
+        val room = Prefs.currentSpot(this)
+        spotButton.text = room.ifEmpty { "None" }
+        spotInfo.text = RoomPicker.describe(
+            this, room,
+            "Pick or add a room (e.g. Kitchen) and always check from the same place in it, under the " +
+                "same light. After one confirmed check of each source there, it can say kahraba for sure.",
+        )
     }
 
     /** Tap a recent check to fix it (e.g. it said kahraba but the lamp post was green) or delete it. */

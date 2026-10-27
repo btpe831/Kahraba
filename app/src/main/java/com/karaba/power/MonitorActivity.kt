@@ -80,6 +80,12 @@ class MonitorActivity : ThemedActivity() {
             if (MonitorState.running) MonitorService.send(this, MonitorService.ACTION_SILENCE)
         }
         findViewById<Button>(R.id.shareData).setOnClickListener { shareRecordings() }
+        findViewById<Button>(R.id.monitorRoomButton).setOnClickListener {
+            RoomPicker.pick(this, Prefs.monitorRoom(this)) { room ->
+                Prefs.setMonitorRoom(this, room)
+                renderRoom()
+            }
+        }
         battery.setOnClickListener { askBatteryExemption() }
 
         askNotificationPermission()
@@ -88,6 +94,7 @@ class MonitorActivity : ThemedActivity() {
 
     override fun onResume() {
         super.onResume()
+        renderRoom()
         ui.post(refresh)
     }
 
@@ -102,6 +109,7 @@ class MonitorActivity : ThemedActivity() {
     }
 
     private fun render() {
+        renderRoom()
         val running = MonitorState.running
         val s = MonitorState.source
         val box = stateBox.background.mutate() as android.graphics.drawable.GradientDrawable
@@ -153,6 +161,16 @@ class MonitorActivity : ThemedActivity() {
 
         val pm = getSystemService(POWER_SERVICE) as PowerManager
         battery.visibility = if (pm.isIgnoringBatteryOptimizations(packageName)) View.GONE else View.VISIBLE
+    }
+
+    private fun renderRoom() {
+        val room = Prefs.monitorRoom(this)
+        findViewById<Button>(R.id.monitorRoomButton).text = room.ifEmpty { "None" }
+        findViewById<TextView>(R.id.monitorRoomInfo).text = RoomPicker.describe(
+            this, room,
+            "Optional. Pick the room this phone sits in to share what it learned with quick checks there. " +
+                "With learned levels, the monitor can tell kahraba from moteur straight away, even a calm moteur.",
+        )
     }
 
     private fun confirmSet(s: Source) {

@@ -21,6 +21,7 @@ object Prefs {
     const val HELP_SEEN = "help_seen"
     private const val SPOTS = "spots"
     private const val CURRENT_SPOT = "current_spot"
+    private const val MONITOR_ROOM = "monitor_room"
     const val COLOR_THEME = "color_theme"
     const val APPEARANCE = "appearance"
 
@@ -41,8 +42,8 @@ object Prefs {
         flickerThresholdPct = num(ctx, FLICKER_THRESHOLD, DEFAULT_THRESHOLD),
         steadyMinutes = num(ctx, STEADY_MINUTES, 2.0),
         minLux = num(ctx, MIN_LUX, 100.0),
-        kahrabaLevel = sp(ctx).getFloat(LEVEL_KAHRABA, -1f).takeIf { it > 0 }?.toDouble(),
-        moteurLevel = sp(ctx).getFloat(LEVEL_MOTEUR, -1f).takeIf { it > 0 }?.toDouble(),
+        kahrabaLevel = monitorLevels(ctx).first,
+        moteurLevel = monitorLevels(ctx).second,
         moteurOnFlickerAlone = sp(ctx).getBoolean(MOTEUR_ON_FLICKER, false),
     )
 
@@ -93,11 +94,13 @@ object Prefs {
     fun removeSpot(ctx: Context, name: String) {
         saveSpots(ctx, spots(ctx) - name)
         if (currentSpot(ctx) == name) setCurrentSpot(ctx, "")
+        if (monitorRoom(ctx) == name) setMonitorRoom(ctx, "")
     }
 
     fun renameSpot(ctx: Context, from: String, to: String) {
         saveSpots(ctx, spots(ctx).map { if (it == from) to else it })
         if (sp(ctx).getString(CURRENT_SPOT, "") == from) setCurrentSpot(ctx, to)
+        if (sp(ctx).getString(MONITOR_ROOM, "") == from) setMonitorRoom(ctx, to)
     }
 
     fun autoCheck(ctx: Context) = sp(ctx).getBoolean(AUTO_CHECK, false)
@@ -134,7 +137,26 @@ object Prefs {
         return h * 60 + m
     }
 
-    /** Remembers the light level at the monitor's spot for a source the user confirmed. */
+    /** The room the always-on monitor's phone sits in, or "" for none. */
+    fun monitorRoom(ctx: Context): String =
+        (sp(ctx).getString(MONITOR_ROOM, "") ?: "").takeIf { it in spots(ctx) } ?: ""
+
+    fun setMonitorRoom(ctx: Context, name: String) {
+        sp(ctx).edit().putString(MONITOR_ROOM, name).apply()
+    }
+
+    /**
+     * Brightness the monitor compares against: the chosen room's learned levels, or (with no
+     * room) the levels taught where the monitor phone sits.
+     */
+    fun monitorLevels(ctx: Context): Pair<Double?, Double?> {
+        val room = monitorRoom(ctx)
+        if (room.isNotEmpty()) return CheckHistory.spotLevels(ctx, room)
+        return sp(ctx).getFloat(LEVEL_KAHRABA, -1f).takeIf { it > 0 }?.toDouble() to
+            sp(ctx).getFloat(LEVEL_MOTEUR, -1f).takeIf { it > 0 }?.toDouble()
+    }
+
+    /** Remembers the light level where the monitor sits (no room chosen) for a confirmed source. */
     fun saveLevel(ctx: Context, source: Source, lux: Double) {
         val key = if (source == Source.KAHRABA) LEVEL_KAHRABA else LEVEL_MOTEUR
         sp(ctx).edit().putFloat(key, lux.toFloat()).apply()

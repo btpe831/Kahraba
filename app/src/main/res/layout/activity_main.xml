@@ -133,7 +133,7 @@
             android:textColor="?attr/appMuted"
             android:textSize="15sp" />
 
-        <!-- Shown after a check, to confirm what it really was (teaches the spot). -->
+        <!-- Shown after a check, to confirm what it really was (teaches the room). -->
         <LinearLayout
             android:id="@+id/confirmRow"
             android:layout_width="match_parent"
@@ -147,7 +147,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="Know for sure? Confirm it so the app learns your spot:"
+                android:text="Know for sure? Confirm it:"
                 android:textColor="?attr/appMuted"
                 android:textSize="13sp" />
 
@@ -197,7 +197,7 @@
             android:textColor="?attr/appMuted"
             android:textSize="13sp" />
 
-        <!-- My spot -->
+        <!-- Room -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Card"
             android:layout_width="match_parent"
@@ -223,7 +223,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Spot"
+                        android:text="Room"
                         android:textColor="?attr/appText"
                         android:textSize="16sp"
                         android:textStyle="bold" />

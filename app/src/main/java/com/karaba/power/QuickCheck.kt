@@ -90,14 +90,14 @@ class QuickCheck(
                         val k = kahrabaLevel!!
                         val m = moteurLevel!!
                         val mid = kotlin.math.sqrt(k * m)
-                        val levels = "${med.toInt()} lux; your spot: kahraba ${k.toInt()}, moteur ${m.toInt()}"
+                        val levels = "${med.toInt()} lux; this room: kahraba ${k.toInt()}, moteur ${m.toInt()}"
                         if (med >= mid && med <= k * 1.25) {
-                            return Result(Verdict.KAHRABA, "Steady and as bright as kahraba at your spot ($levels).", med, byLevel = true)
+                            return Result(Verdict.KAHRABA, "Steady and as bright as kahraba in this room ($levels).", med, byLevel = true)
                         }
                         if (med < mid && med >= m * 0.75) {
                             return Result(
                                 Verdict.MOTEUR,
-                                "Steady but dimmer, like the moteur at your spot ($levels). A calm moteur.",
+                                "Steady but dimmer, like the moteur in this room ($levels). A calm moteur.",
                                 med,
                                 byLevel = true,
                             )
@@ -106,7 +106,7 @@ class QuickCheck(
                     }
                     if (tMs - steadySinceMs >= STEADY_NEEDED_MS) {
                         val offSpot = if (useLevels) {
-                            " The brightness (${med.toInt()} lux) doesn't match your spot – is the phone in the same place?"
+                            " The brightness (${med.toInt()} lux) doesn't match this room – is the phone in its usual place, with the same lights on?"
                         } else ""
                         return Result(
                             Verdict.NO_FLICKER,

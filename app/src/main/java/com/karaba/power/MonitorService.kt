@@ -237,11 +237,21 @@ class MonitorService : Service(), SensorEventListener {
         val noise = sorted[minOf(sorted.size - 1, ceil(sorted.size * pct).toInt() - 1)]
         val thr = Prefs.saveCalibration(this, s, noise)
         val level = PowerDetector.median(calibrationLevels)
-        if (level != null) Prefs.saveLevel(this, s, level)
+        val room = Prefs.monitorRoom(this)
+        if (level != null) {
+            if (room.isNotEmpty()) {
+                // Teach the room, shared with the quick check.
+                val v = if (s == Source.KAHRABA) QuickCheck.Verdict.KAHRABA else QuickCheck.Verdict.MOTEUR
+                CheckHistory.add(this, v, level, spot = room, verified = true, fromMonitor = true)
+            } else {
+                Prefs.saveLevel(this, s, level)
+            }
+        }
         detector.config = Prefs.config(this)
-        MonitorState.message = "Learned ${EventLog.label(s).lowercase()} at this spot: " +
-            "${level?.toInt() ?: "–"} lux, wobble ${"%.1f".format(noise)}%. " +
-            "Keep the phone in this exact spot so the levels stay comparable."
+        MonitorState.message = "Learned ${EventLog.label(s).lowercase()}" +
+            (if (room.isNotEmpty()) " for “$room”" else " here") +
+            ": ${level?.toInt() ?: "–"} lux, wobble ${"%.1f".format(noise)}%. " +
+            "Keep the phone in this exact place so the levels stay comparable."
     }
 
     // ---- Notifications ----

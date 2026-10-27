@@ -4,7 +4,8 @@ import android.content.Context
 
 /**
  * Quick check results, newest first, kept on the phone.
- * Each line: "timeMs;VERDICT;verified;lux;spot;byLevel" (older lines have fewer fields).
+ * Each line: "timeMs;VERDICT;verified;lux;spot;byLevel;fromMonitor" (older lines have fewer fields).
+ * A "spot" is what the app calls a room.
  * The time is used as the entry's id for changing or deleting it.
  *
  * Checks done at a named spot (e.g. "Kitchen") also teach the app how bright that spot is on
@@ -26,6 +27,8 @@ object CheckHistory {
         val spot: String = "",
         /** Decided from the learned brightness (not from wobble), so it doesn't teach anything. */
         val byLevel: Boolean = false,
+        /** Taught from the always-on monitor ("It's kahraba / moteur"); not shown as a check. */
+        val fromMonitor: Boolean = false,
     )
 
     fun read(ctx: Context): List<Entry> =
@@ -35,14 +38,14 @@ object CheckHistory {
             val v = runCatching { QuickCheck.Verdict.valueOf(p[1]) }.getOrNull() ?: return@mapNotNull null
             // An early test version saved "1" for "at my spot".
             val spot = when (val raw = p.getOrNull(4) ?: "") { "0" -> ""; "1" -> "My spot"; else -> raw }
-            Entry(t, v, p.getOrNull(2) == "1", p.getOrNull(3)?.toDoubleOrNull(), spot, p.getOrNull(5) == "1")
+            Entry(t, v, p.getOrNull(2) == "1", p.getOrNull(3)?.toDoubleOrNull(), spot, p.getOrNull(5) == "1", p.getOrNull(6) == "1")
         }
 
     private fun write(ctx: Context, entries: List<Entry>) {
         fun b(x: Boolean) = if (x) 1 else 0
         val text = entries.take(KEEP).joinToString("\n") {
             "${it.timeMs};${it.verdict.name};${b(it.corrected)};" +
-                "${it.lux?.let { l -> "%.1f".format(java.util.Locale.US, l) } ?: ""};${it.spot};${b(it.byLevel)}"
+                "${it.lux?.let { l -> "%.1f".format(java.util.Locale.US, l) } ?: ""};${it.spot};${b(it.byLevel)};${b(it.fromMonitor)}"
         }
         Prefs.sp(ctx).edit().putString(KEY, text).apply()
     }
@@ -53,9 +56,12 @@ object CheckHistory {
         lux: Double?,
         spot: String = "",
         byLevel: Boolean = false,
+        verified: Boolean = false,
+        fromMonitor: Boolean = false,
         timeMs: Long = System.currentTimeMillis(),
     ) {
-        write(ctx, listOf(Entry(timeMs, verdict, lux = lux, spot = spot, byLevel = byLevel)) + read(ctx))
+        val e = Entry(timeMs, verdict, verified, lux, spot, byLevel, fromMonitor)
+        write(ctx, listOf(e) + read(ctx))
     }
 
     /** The user says what it really was (confirming or fixing the result). */
