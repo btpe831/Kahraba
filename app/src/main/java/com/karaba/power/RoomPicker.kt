@@ -18,7 +18,7 @@ object RoomPicker {
         val items = listOf("No room") + rooms.map { if (it == current) "$it  ✓" else it } +
             listOf("+ Add a room…") + if (rooms.isNotEmpty()) listOf("Rename or delete…") else emptyList()
         MaterialAlertDialogBuilder(activity)
-            .setTitle("Which room are you in?")
+            .setTitle("Select room")
             .setItems(items.toTypedArray()) { _, i ->
                 when {
                     i == 0 -> onChanged("")

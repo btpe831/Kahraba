@@ -46,7 +46,7 @@ class HelpActivity : ThemedActivity() {
                 On its own, a check can prove <b>Moteur</b> (wobble) but not Kahraba, because a calm moteur can be steady too. Rooms fix that.
                 Kahraba's higher voltage makes a halogen about 25% brighter. Once the app knows how bright a room is on each source, it can tell them apart even when the light is steady.
                 <b>Set up a room:</b>
-                1. Tap <b>Room</b> → <b>Add a room</b> and name it (Kitchen, Bathroom…).
+                1. Tap <b>Select room</b> → <b>Add a room</b> and name it (Kitchen, Bathroom…).
                 2. Always check from the <b>same place</b> in that room, under the <b>same light</b> (a bit of tape helps).
                 3. Do a check when you <b>know</b> it's kahraba (e.g. the neighbourhood indicator light is off) and tap <b>It was kahraba</b>.
                 4. Do one when you know it's moteur and tap <b>It was moteur</b>. (A check that sees a wobble there counts too.)
@@ -55,7 +55,7 @@ class HelpActivity : ThemedActivity() {
                 • Each room learns on its own. Pick the right room before each check.
                 • If the brightness doesn't match the room, you get “No flicker” instead of a guess.
                 • Keep the other lights in the room as they were when you set it up, and avoid daylight.
-                • Moved the lamp or changed the bulb? Room → Rename or delete → delete it, and set it up again.
+                • Moved the lamp or changed the bulb? Select room → Rename or delete → delete it, and set it up again.
                 • The always-on monitor can use the same rooms, so teaching a room once helps both.
                 • Rooms are learned per phone: each phone's light sensor reads differently.
             """,
@@ -119,7 +119,7 @@ class HelpActivity : ThemedActivity() {
                 • Plug the phone into a <b>wall socket</b> (not a UPS) and leave it face-up under a halogen light. The screen can be off.
                 • A power cut is seen through the charger and means the moteur took over.
                 • It says Kahraba is back when the light gets clearly <b>brighter</b> (no blackout) and stays steady for 2 minutes – kahraba's higher voltage makes the bulb brighter. Steady light alone is not enough, because a calm moteur is steady too.
-                • Pick the <b>room</b> the phone is in, then tap “It's kahraba” and “It's moteur” once each (when you're sure) so it learns how bright that room is on each. If quick checks already taught that room, it knows straight away. Then it can tell kahraba from moteur even when the light is steady. Keep the phone in the exact same place.
+                • Under <b>Select room</b>, pick the room the phone is in, then tap “It's kahraba” and “It's moteur” once each (when you're sure) so it learns how bright that room is on each. If quick checks already taught that room, it knows straight away. Then it can tell kahraba from moteur even when the light is steady. Keep the phone in the exact same place.
                 • Keep other lights the same: switching a lamp on can look like the brightness change.
                 • Every switch is logged with its time, and it beeps on each change. Night silence and beep volume are in Settings.
                 • When the monitor is off it shows “Off”. After you start it, it shows “Not sure yet” until it sees a wobble or a power cut (moteur), matches a learned level, or you tap “It's kahraba” / “It's moteur”.
