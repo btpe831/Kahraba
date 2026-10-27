@@ -168,7 +168,7 @@ class SettingsActivity : ThemedActivity() {
                 saveBackup.launch("kahraba-or-not-backup-" + SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date()) + ".json")
             })
             addView(divider())
-            addView(link("Restore from a file", "Replaces everything here with a backup, e.g. from the old Ijit app or another phone.") {
+            addView(link("Restore from a file", "Replaces everything here with a backup, e.g. from another phone or Google Drive.") {
                 openBackup.launch(arrayOf("application/json", "application/octet-stream", "text/plain", "*/*"))
             })
         })

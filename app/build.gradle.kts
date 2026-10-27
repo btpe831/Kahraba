@@ -20,18 +20,6 @@ android {
         versionName = appVersion
     }
 
-    flavorDimensions += "app"
-    productFlavors {
-        create("standard") {
-            dimension = "app"
-        }
-        // Installs over the old Ijit app (its old app ID) so its data can be backed up and moved.
-        create("legacy") {
-            dimension = "app"
-            applicationId = "com.karaba.power"
-        }
-    }
-
     signingConfigs {
         // A fixed key kept in the repo so updates install over the previous version.
         getByName("debug") {

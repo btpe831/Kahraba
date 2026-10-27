@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- The old app, updated only to back up its data. -->
-    <string name="app_name">Ijit (move data)</string>
-</resources>

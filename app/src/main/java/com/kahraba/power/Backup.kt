@@ -7,7 +7,7 @@ import java.io.File
 
 /**
  * Back up and restore everything the app keeps (settings, checks, rooms, notes, the monitor's
- * switch log) as one JSON file. Used to move data from the old Ijit app, or to a new phone.
+ * switch log) as one JSON file. Used to move data to a new phone or keep a copy (e.g. on Google Drive).
  */
 object Backup {
     private const val FORMAT = "kahraba-or-not-backup"
