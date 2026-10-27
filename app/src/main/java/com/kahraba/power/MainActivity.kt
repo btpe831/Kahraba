@@ -724,7 +724,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         findViewById<TextView>(R.id.factFooter).text = "Tap for another  ·  $n of ${Facts.all.size}"
     }
 
-    /** Turns cards on or off as chosen in Settings > Cards. */
+    /** Shows, hides and orders the cards as chosen in Settings > Cards > Arrange cards. */
     private fun applyCardSettings() {
         val ids = mapOf(
             "card_timeline" to R.id.timelineCard, "card_today" to R.id.todayCard, "card_week" to R.id.weekCard,
@@ -735,6 +735,15 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             "card_meter" to R.id.meterCard, "card_amps" to R.id.ampsCard,
         )
         for ((key, id) in ids) findViewById<View>(id).visibility = if (Prefs.cardOn(this, key)) View.VISIBLE else View.GONE
+
+        // The order chosen in Arrange cards; only moves views when it changed.
+        val stack = findViewById<LinearLayout>(R.id.cardStack)
+        val wanted = Prefs.cardOrder(this).mapNotNull { key -> ids[key]?.let { findViewById<View>(it) } }
+        val now = (0 until stack.childCount).map { stack.getChildAt(it) }
+        if (wanted.size == now.size && wanted != now) {
+            stack.removeAllViews()
+            for (v in wanted) stack.addView(v)
+        }
     }
 
     /**

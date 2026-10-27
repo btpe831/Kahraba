@@ -121,11 +121,9 @@ class SettingsActivity : ThemedActivity() {
         // CARDS
         section("Cards")
         body.addView(card {
-            addView(text("Choose which cards show on the main screen.", 14f, R.attr.appMuted))
-            for ((i, card) in Prefs.CARDS.withIndex()) {
-                if (i > 0) addView(divider())
-                addView(simpleToggle(card.second, card.first, true))
-            }
+            addView(link("Arrange cards", "Show, hide and reorder the cards on the main screen.") {
+                startActivity(Intent(this@SettingsActivity, CardsActivity::class.java))
+            })
         })
 
         // ROOMS
@@ -319,16 +317,6 @@ class SettingsActivity : ThemedActivity() {
         texts.addView(text(title, 18f, R.attr.appText, bold = true))
         texts.addView(text(sub, 14f, R.attr.appMuted), lp(top = 2))
         row.addView(texts, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = px(12) })
-        row.addView(MaterialSwitch(this).apply {
-            isChecked = Prefs.sp(this@SettingsActivity).getBoolean(key, def)
-            setOnCheckedChangeListener { _, on -> Prefs.sp(this@SettingsActivity).edit().putBoolean(key, on).apply() }
-        })
-        return row
-    }
-
-    private fun simpleToggle(title: String, key: String, def: Boolean): View {
-        val row = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL; setPadding(0, px(4), 0, px(4)) }
-        row.addView(text(title, 17f, R.attr.appText), LinearLayout.LayoutParams(0, -2, 1f))
         row.addView(MaterialSwitch(this).apply {
             isChecked = Prefs.sp(this@SettingsActivity).getBoolean(key, def)
             setOnCheckedChangeListener { _, on -> Prefs.sp(this@SettingsActivity).edit().putBoolean(key, on).apply() }

@@ -120,6 +120,16 @@ object Prefs {
 
     fun cardOn(ctx: Context, key: String) = sp(ctx).getBoolean(key, true)
 
+    private const val CARD_ORDER = "card_order"
+
+    /** The order of the movable cards (see [CardOrder]). */
+    fun cardOrder(ctx: Context): List<String> = CardOrder.parse(sp(ctx).getString(CARD_ORDER, null))
+
+    fun setCardOrder(ctx: Context, order: List<String>?) {
+        if (order == null) sp(ctx).edit().remove(CARD_ORDER).apply()
+        else sp(ctx).edit().putString(CARD_ORDER, CardOrder.format(order)).apply()
+    }
+
     fun autoCheck(ctx: Context) = sp(ctx).getBoolean(AUTO_CHECK, false)
 
     var Context.monitoring: Boolean
