@@ -72,6 +72,45 @@ class SettingsActivity : ThemedActivity() {
 
     private fun toast(s: String) = Toast.makeText(this, s, Toast.LENGTH_SHORT).show()
 
+    /** Your area: a district from the list, then an optional town. */
+    private fun pickArea() {
+        val current = Area.district(this)
+        val items = Area.DISTRICTS.map { if (it == current) "$it  ✓" else it } +
+            (if (current.isNotEmpty()) listOf("Clear my area") else emptyList())
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Your district")
+            .setItems(items.toTypedArray()) { _, i ->
+                if (i >= Area.DISTRICTS.size) {
+                    Area.clear(this)
+                    build()
+                } else {
+                    askTown(Area.DISTRICTS[i])
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun askTown(district: String) {
+        val input = EditText(this).apply {
+            hint = "Town or neighbourhood (optional)"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
+            filters = arrayOf(android.text.InputFilter.LengthFilter(Area.TOWN_MAX))
+            if (district == Area.district(this@SettingsActivity)) setText(Area.town(this@SettingsActivity))
+            setSelection(text.length)
+        }
+        val box = FrameLayout(this).apply { setPadding(px(20), px(8), px(20), 0); addView(input) }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(district)
+            .setView(box)
+            .setPositiveButton("Save") { _, _ ->
+                Area.set(this, district, input.text.toString())
+                build()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
@@ -134,6 +173,15 @@ class SettingsActivity : ThemedActivity() {
                     Prefs.setCurrentSpot(this@SettingsActivity, room)
                 }
             })
+        })
+
+        // AREA
+        section("Your area")
+        body.addView(card {
+            val area = Area.label(this@SettingsActivity)
+            addView(link(area.ifEmpty { "Choose your area" },
+                if (area.isEmpty()) "Optional. Pick your district, and a town if you like. Never uses GPS."
+                else "Tap to change. Stays on this phone; added to feedback emails.") { pickArea() })
         })
 
         // MONITOR
