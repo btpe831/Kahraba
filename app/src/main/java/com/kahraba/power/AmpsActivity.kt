@@ -266,13 +266,26 @@ class AmpsActivity : ThemedActivity() {
         val surge = MaterialSwitch(this).apply { isChecked = old?.surge ?: false }
         surgeRow.addView(surge)
         box.addView(name); box.addView(watts); box.addView(surgeRow)
-        val dialog = MaterialAlertDialogBuilder(this)
+        val builder = MaterialAlertDialogBuilder(this)
             .setTitle(if (old == null) "Add an appliance" else "Edit appliance")
             .setView(box)
-            .setPositiveButton(if (old == null) "Add" else "Save") { _, _ ->
-                val n = clean(name.text.toString())
-                val w = watts.text.toString().toIntOrNull()
-                if (n.isNotEmpty() && w != null && w > 0) {
+            .setPositiveButton(if (old == null) "Add" else "Save", null)
+            .setNegativeButton("Cancel", null)
+        if (ii != null) {
+            builder.setNeutralButton("Delete") { _, _ ->
+                categories[ci] = categories[ci].copy(items = categories[ci].items.filterIndexed { i, _ -> i != ii })
+                save(); build(); update()
+            }
+        }
+        val dialog = builder.show()
+        // Check the fields before closing: show what's missing instead of quietly doing nothing.
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).setOnClickListener {
+            val n = clean(name.text.toString())
+            val w = watts.text.toString().toIntOrNull()
+            when {
+                n.isEmpty() -> name.error = "Enter a name"
+                w == null || w <= 0 -> watts.error = "Enter the watts from the label"
+                else -> {
                     val item = Item(n, w, surge.isChecked, old?.count ?: 0)
                     if (ii == null) {
                         categories[ci] = categories[ci].copy(items = categories[ci].items + item)
@@ -280,27 +293,30 @@ class AmpsActivity : ThemedActivity() {
                         setItem(ci, ii, item)
                     }
                     save(); build(); update()
+                    dialog.dismiss()
                 }
             }
-            .setNegativeButton("Cancel", null)
-        if (ii != null) {
-            dialog.setNeutralButton("Delete") { _, _ ->
-                categories[ci] = categories[ci].copy(items = categories[ci].items.filterIndexed { i, _ -> i != ii })
-                save(); build(); update()
-            }
         }
-        dialog.show()
     }
 
     private fun askText(title: String, hint: String, initial: String, onDone: (String) -> Unit) {
         val input = EditText(this).apply { this.hint = hint; setSingleLine(); setText(initial); setSelection(text.length) }
         val box = FrameLayout(this).apply { setPadding(px(20), px(8), px(20), 0); addView(input) }
-        MaterialAlertDialogBuilder(this)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setTitle(title)
             .setView(box)
-            .setPositiveButton("Save") { _, _ -> clean(input.text.toString()).takeIf { it.isNotEmpty() }?.let(onDone) }
+            .setPositiveButton("Save", null)
             .setNegativeButton("Cancel", null)
             .show()
+        dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).setOnClickListener {
+            val v = clean(input.text.toString())
+            if (v.isEmpty()) {
+                input.error = "Enter a name"
+            } else {
+                onDone(v)
+                dialog.dismiss()
+            }
+        }
     }
 
     private fun clean(s: String) = s.replace("\n", " ").trim().take(40)
