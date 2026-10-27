@@ -486,7 +486,7 @@
                 android:maxLines="1"
                 android:textAllCaps="true"
                 android:textColor="?attr/appMuted"
-                android:textSize="11sp"
+                android:textSize="8sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -496,7 +496,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="?attr/appText"
-                android:textSize="16sp"
+                android:textSize="11sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
