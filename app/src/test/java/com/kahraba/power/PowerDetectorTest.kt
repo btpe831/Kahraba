@@ -335,4 +335,33 @@ class PowerDetectorTest {
         r.run(1_000) { calmMoteur(it) }
         assertEquals(1, r.transitions.count { it.reason.startsWith("Power cut") })
     }
+
+    @Test
+    fun oneDipOnKahrabaIsNotMoteur() {
+        // A kettle switching on dips the voltage once, then the light settles (a bit dimmer).
+        val r = quick(0) { t -> if (t < 8_000) 865.0 else if (t < 8_400) 760.0 else 845.0 }
+        assertTrue("got ${r.first}", r.first != QuickCheck.Verdict.MOTEUR)
+    }
+
+    @Test
+    fun repeatedWobbleIsMoteur() {
+        val r = quick(0, moteur(5_000))
+        assertEquals(QuickCheck.Verdict.MOTEUR, r.first)
+    }
+
+    @Test
+    fun oneOffJumpsOnKahrabaAreNotMoteur() {
+        // 26 Oct, 17:57:50 and 18:02:03: two one-off light jumps while on kahraba (lamp post off).
+        val rec = recording()
+        fun at(t: Long): Double {
+            var i = rec.binarySearch { it.first.compareTo(t) }
+            if (i < 0) i = -i - 2
+            return rec[i.coerceIn(0, rec.size - 1)].second
+        }
+        val starts = (1_960_000L until 2_000_000L step 2_000L) + (2_210_000L until 2_250_000L step 2_000L)
+        val results = starts.map { quick(it, ::at).first }
+        val moteur = results.count { it == QuickCheck.Verdict.MOTEUR }
+        println("Checks spanning the one-off jumps on kahraba: $moteur of ${results.size} said moteur")
+        assertEquals(0, moteur)
+    }
 }

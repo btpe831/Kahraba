@@ -36,7 +36,7 @@ class HelpActivity : ThemedActivity() {
                 2. Tap <b>Check now</b>.
                 3. Within 3 seconds, lay the phone <b>face-up</b> right under the light and let go.
                 4. Wait for the beep:
-                &nbsp;&nbsp;• <b>1 long beep = Moteur</b> (usually within a few seconds)
+                &nbsp;&nbsp;• <b>1 long beep = Moteur</b> (usually within about 10 seconds)
                 &nbsp;&nbsp;• <b>4 short beeps = Kahraba</b> – only in a learned room (see “Rooms”)
                 &nbsp;&nbsp;• <b>2 short beeps = No flicker</b> (after 25 seconds) – probably kahraba, but not certain
                 Don't touch the phone or lean over it until it beeps. If the phone is moved, the check stops – just put it down and try again.
@@ -64,7 +64,7 @@ class HelpActivity : ThemedActivity() {
                 The moteur's voltage is never quite steady; it rises and falls as neighbours switch things on and off. A halogen bulb's brightness follows the voltage, so on the moteur the light <b>wobbles</b> slightly, often too little for your eyes to notice.
                 Kahraba is much steadier, so the light stays <b>flat</b>. Kahraba's voltage is usually higher too, so the same bulb shines about <b>25% brighter</b>.
                 Your phone's light sensor watches for that wobble:
-                &nbsp;&nbsp;• Any wobble → <b>Moteur</b>
+                &nbsp;&nbsp;• A wobble that repeats or keeps going → <b>Moteur</b>. A single dip doesn't count: switching on a kettle or heater dips the voltage on kahraba too.
                 &nbsp;&nbsp;• 25 seconds with no wobble → <b>No flicker</b> (probably kahraba)
                 <b>Why “No flicker” isn't a sure Kahraba:</b> when few people are using it (often at night), the moteur can stay perfectly steady for many minutes. The phone's light sensor also only notices changes bigger than about 8%. So a wobble proves moteur, but a steady light can be either. To be sure, check the lamp post or your voltage meter (kahraba usually reads higher, e.g. 234 V vs 213 V).
             """,

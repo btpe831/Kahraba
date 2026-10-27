@@ -3,7 +3,9 @@ package com.kahraba.power
 /**
  * A one-off check under a halogen bulb that stops as soon as it is sure.
  *
- * - Any wobble above the limit -> moteur, straight away (usually within a few seconds).
+ * - Wobble above the limit that repeats ([WOBBLES_NEEDED] separate times) or keeps going (longer
+ *   than [SUSTAINED_WOBBLE_MS]) -> moteur. The moteur's engine keeps hunting; a single dip is more
+ *   likely an appliance switching on, which dips the voltage on kahraba too.
  * - Steady light for [STEADY_NEEDED_MS] -> "no flicker": probably kahraba, but not proof. A busy
  *   moteur wobbles within seconds, but at night a calm moteur stayed steady for 19 minutes, and
  *   the Pixel's sensor only reports changes of about 8% or more.
@@ -39,6 +41,12 @@ class QuickCheck(
     private var darkSeen = false
     private var darkCount = 0
     private var lastMed: Double? = null
+    private var inWobble = false
+    private var wobbleStartMs = 0L
+
+    /** Separate wobbles seen so far (one dip spans several overlapping windows). */
+    var wobbles = 0
+        private set
 
     /** Seconds of steady light so far, for the progress display. */
     val steadySeconds: Int
@@ -78,13 +86,23 @@ class QuickCheck(
                     val swing = (w.max() - w.min()) / med * 100
                     maxSwing = maxOf(maxSwing, swing)
                     if (swing > thresholdPct) {
-                        return Result(
-                            Verdict.MOTEUR,
-                            "Light wobbled ${"%.0f".format(swing)}% after ${(tMs - startMs) / 1000}s. " +
-                                "Kahraba doesn't do that.",
-                            med,
-                        )
+                        if (!inWobble) {
+                            inWobble = true
+                            wobbleStartMs = tMs
+                            wobbles++
+                        }
+                        steadySinceMs = -1
+                        if (wobbles >= WOBBLES_NEEDED || tMs - wobbleStartMs >= SUSTAINED_WOBBLE_MS) {
+                            return Result(
+                                Verdict.MOTEUR,
+                                "Light kept wobbling (up to ${"%.0f".format(maxSwing)}%) over " +
+                                    "${(tMs - startMs) / 1000}s. Kahraba doesn't keep doing that.",
+                                med,
+                            )
+                        }
+                        return null
                     }
+                    inWobble = false
                     if (steadySinceMs < 0) steadySinceMs = tMs - PowerDetector.FLICKER_WINDOW_MS
                     if (useLevels && tMs - steadySinceMs >= STEADY_LEVEL_MS) {
                         val k = kahrabaLevel!!
@@ -137,6 +155,13 @@ class QuickCheck(
         /** Kahraba must be at least this much brighter than moteur at the spot to use levels. */
         const val LEVEL_GAP = 1.08
         const val MAX_MS = 40_000L
+        /** Separate wobbles needed before calling moteur. */
+        const val WOBBLES_NEEDED = 2
+        /**
+         * A wobble lasting this long also counts. One dip only shows for about the 4 s window plus
+         * the dip itself, so 6 s of continuous wobble means it's still going.
+         */
+        const val SUSTAINED_WOBBLE_MS = 6_000L
         /** Seconds of too-dim light before giving up. */
         const val DIM_GIVE_UP = 3
     }
