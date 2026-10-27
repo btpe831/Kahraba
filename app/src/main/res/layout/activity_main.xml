@@ -264,6 +264,59 @@
                 android:textColor="?attr/appMuted"
                 android:textSize="12sp" />
 
+            <!-- SET UP A ROOM: shown until the current room has learned both levels -->
+            <com.kahraba.power.NotchCard
+                android:id="@+id/setupCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:visibility="gone"
+                app:notchTitle="Set up a room">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:lineSpacingExtra="2dp"
+                        android:text="Teach the app what kahraba and moteur look like in one room. It takes two checks."
+                        android:textColor="?attr/appText"
+                        android:textSize="16sp" />
+
+                    <LinearLayout
+                        android:id="@+id/setupSteps"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="vertical" />
+
+                    <TextView
+                        android:id="@+id/setupTip"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:lineSpacingExtra="2dp"
+                        android:textColor="?attr/appMuted"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/setupHide"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end"
+                        android:layout_marginTop="6dp"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="8dp"
+                        android:text="Hide"
+                        android:textColor="?attr/appAccent"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </com.kahraba.power.NotchCard>
+
             <!-- WHAT TO RUN -->
             <com.kahraba.power.NotchCard
                 android:id="@+id/adviceCard"
@@ -759,6 +812,45 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical" />
+            </com.kahraba.power.NotchCard>
+
+            <!-- HOW RIGHT IS IT?: the accuracy score from confirmed checks -->
+            <com.kahraba.power.NotchCard
+                android:id="@+id/accuracyCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                app:notchTitle="How right is it?">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/accuracyTotal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="?attr/appText"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:id="@+id/accuracyList"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:orientation="vertical" />
+
+                    <TextView
+                        android:id="@+id/accuracyNote"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:lineSpacingExtra="2dp"
+                        android:textColor="?attr/appMuted"
+                        android:textSize="13sp" />
+                </LinearLayout>
             </com.kahraba.power.NotchCard>
 
             <!-- ALWAYS-ON MONITOR -->

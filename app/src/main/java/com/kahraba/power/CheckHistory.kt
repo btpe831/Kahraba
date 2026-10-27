@@ -4,7 +4,7 @@ import android.content.Context
 
 /**
  * Quick check results, newest first, kept on the phone.
- * Each line: "timeMs;VERDICT;verified;lux;spot;byLevel;fromMonitor" (older lines have fewer fields).
+ * Each line: "timeMs;VERDICT;verified;lux;spot;byLevel;fromMonitor;SAID" (older lines have fewer fields).
  * A "spot" is what the app calls a room.
  * The time is used as the entry's id for changing or deleting it.
  *
@@ -30,6 +30,11 @@ object CheckHistory {
         val byLevel: Boolean = false,
         /** Taught from the always-on monitor ("It's kahraba / moteur"); not shown as a check. */
         val fromMonitor: Boolean = false,
+        /**
+         * What the app said before the user confirmed or fixed it, for the accuracy score.
+         * Null if never confirmed (or confirmed before version 1.4, when this wasn't kept).
+         */
+        val said: QuickCheck.Verdict? = null,
     )
 
     fun read(ctx: Context): List<Entry> =
@@ -39,14 +44,15 @@ object CheckHistory {
             val v = runCatching { QuickCheck.Verdict.valueOf(p[1]) }.getOrNull() ?: return@mapNotNull null
             // An early test version saved "1" for "at my spot".
             val spot = when (val raw = p.getOrNull(4) ?: "") { "0" -> ""; "1" -> "My spot"; else -> raw }
-            Entry(t, v, p.getOrNull(2) == "1", p.getOrNull(3)?.toDoubleOrNull(), spot, p.getOrNull(5) == "1", p.getOrNull(6) == "1")
+            val said = p.getOrNull(7)?.let { s -> runCatching { QuickCheck.Verdict.valueOf(s) }.getOrNull() }
+            Entry(t, v, p.getOrNull(2) == "1", p.getOrNull(3)?.toDoubleOrNull(), spot, p.getOrNull(5) == "1", p.getOrNull(6) == "1", said)
         }
 
     private fun write(ctx: Context, entries: List<Entry>) {
         fun b(x: Boolean) = if (x) 1 else 0
         val text = entries.take(KEEP).joinToString("\n") {
             "${it.timeMs};${it.verdict.name};${b(it.corrected)};" +
-                "${it.lux?.let { l -> "%.1f".format(java.util.Locale.US, l) } ?: ""};${it.spot};${b(it.byLevel)};${b(it.fromMonitor)}"
+                "${it.lux?.let { l -> "%.1f".format(java.util.Locale.US, l) } ?: ""};${it.spot};${b(it.byLevel)};${b(it.fromMonitor)};${it.said?.name ?: ""}"
         }
         Prefs.sp(ctx).edit().putString(KEY, text).apply()
     }
@@ -67,7 +73,30 @@ object CheckHistory {
 
     /** The user says what it really was (confirming or fixing the result). */
     fun correct(ctx: Context, timeMs: Long, verdict: QuickCheck.Verdict) {
-        write(ctx, read(ctx).map { if (it.timeMs == timeMs) it.copy(verdict = verdict, corrected = true) else it })
+        write(ctx, read(ctx).map { if (it.timeMs == timeMs) corrected(it, verdict) else it })
+    }
+
+    /** Keeps what the app first said, so fixing a fix still scores the app's own answer. */
+    fun corrected(e: Entry, verdict: QuickCheck.Verdict) =
+        e.copy(verdict = verdict, corrected = true, said = e.said ?: if (e.corrected) null else e.verdict)
+
+    /** How often one kind of result was right, among checks the user confirmed. */
+    data class Score(val said: QuickCheck.Verdict, val right: Int, val total: Int)
+
+    /**
+     * The accuracy score: for each result the app gives (moteur, kahraba, no flicker), how many
+     * confirmed checks were right. "No flicker" counts as right when it was kahraba.
+     */
+    fun scores(entries: List<Entry>): List<Score> {
+        val judged = entries.filter {
+            !it.fromMonitor && it.said != null &&
+                (it.verdict == QuickCheck.Verdict.KAHRABA || it.verdict == QuickCheck.Verdict.MOTEUR)
+        }
+        return listOf(QuickCheck.Verdict.MOTEUR, QuickCheck.Verdict.KAHRABA, QuickCheck.Verdict.NO_FLICKER).map { v ->
+            val said = judged.filter { it.said == v }
+            val truth = if (v == QuickCheck.Verdict.MOTEUR) QuickCheck.Verdict.MOTEUR else QuickCheck.Verdict.KAHRABA
+            Score(v, said.count { it.verdict == truth }, said.size)
+        }
     }
 
     fun delete(ctx: Context, timeMs: Long) {

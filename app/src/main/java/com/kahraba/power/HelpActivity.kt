@@ -45,8 +45,8 @@ class HelpActivity : ThemedActivity() {
             "Rooms: how to get a sure “Kahraba”" to """
                 On its own, a check can prove <b>Moteur</b> (wobble) but not Kahraba, because a calm moteur can be steady too. Rooms fix that.
                 Kahraba's higher voltage makes a halogen about 25% brighter. Once the app knows how bright a room is on each source, it can tell them apart even when the light is steady.
-                <b>Set up a room:</b>
-                1. Tap <b>Select room</b> → <b>Add a room</b> and name it (Kitchen, Bathroom…).
+                <b>Set up a room</b> (the <b>Set up a room</b> card on the main screen walks you through it):
+                1. Tap the room button under <b>Checking in</b> → <b>Add a room</b> and name it (Kitchen, Bathroom…).
                 2. Always check from the <b>same place</b> in that room, under the <b>same light</b> (a bit of tape helps).
                 3. Do a check when you <b>know</b> it's kahraba (e.g. the neighbourhood indicator light is off) and tap <b>It was kahraba</b>.
                 4. Do one when you know it's moteur and tap <b>It was moteur</b>. (A check that sees a wobble there counts too.)
@@ -58,6 +58,7 @@ class HelpActivity : ThemedActivity() {
                 • Moved the lamp or changed the bulb? Select room → Rename or delete → delete it, and set it up again.
                 • The always-on monitor can use the same rooms, so teaching a room once helps both.
                 • Rooms are learned per phone: each phone's light sensor reads differently.
+                • The <b>How right is it?</b> card keeps score of the results you confirm, so you can see how much to trust the app in your home.
             """,
 
             "How it works" to """

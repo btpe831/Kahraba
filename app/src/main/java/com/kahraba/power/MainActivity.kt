@@ -119,6 +119,11 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         findViewById<View>(R.id.meterCard).setOnClickListener { startActivity(Intent(this, LightMeterActivity::class.java)) }
         findViewById<View>(R.id.ampsCard).setOnClickListener { startActivity(Intent(this, AmpsActivity::class.java)) }
         findViewById<View>(R.id.factsCard).setOnClickListener { Facts.next(this); renderFact() }
+        findViewById<View>(R.id.setupHide).setOnClickListener {
+            Prefs.sp(this).edit().putBoolean(SETUP_CARD, false).apply()
+            android.widget.Toast.makeText(this, "You can turn it back on in Settings › Cards", android.widget.Toast.LENGTH_LONG).show()
+            renderSetup()
+        }
         findViewById<View>(R.id.footerNote).setOnClickListener { startActivity(Intent(this, HelpActivity::class.java)) }
         findViewById<View>(R.id.barSettings).setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
         findViewById<View>(R.id.barHistory).setOnClickListener { showAllChecks() }
@@ -202,6 +207,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         renderWobble()
         renderFact()
         applyCardSettings()
+        renderSetup()
+        renderAccuracy()
     }
 
     // ---- The check ----
@@ -719,10 +726,104 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             "card_timeline" to R.id.timelineCard, "card_today" to R.id.todayCard, "card_week" to R.id.weekCard,
             "card_stats" to R.id.statsCard, "card_wobble" to R.id.wobbleCard, "card_advice" to R.id.adviceCard,
             "card_facts" to R.id.factsCard,
-            "card_room" to R.id.roomCard, "card_recent" to R.id.recentCard, "card_monitor" to R.id.monitorCard,
+            "card_room" to R.id.roomCard, "card_recent" to R.id.recentCard, "card_accuracy" to R.id.accuracyCard,
+            "card_monitor" to R.id.monitorCard,
             "card_meter" to R.id.meterCard, "card_amps" to R.id.ampsCard,
         )
         for ((key, id) in ids) findViewById<View>(id).visibility = if (Prefs.cardOn(this, key)) View.VISIBLE else View.GONE
+    }
+
+    /**
+     * SET UP A ROOM: three steps to teach the current room (pick a room, one moteur check,
+     * one confirmed kahraba check). Shown until the room is learned, or hidden by the user.
+     */
+    private fun renderSetup() {
+        val card = findViewById<View>(R.id.setupCard)
+        val room = Prefs.currentSpot(this)
+        val (k, m) = CheckHistory.spotLevels(this, room)
+        val learned = room.isNotEmpty() && k != null && m != null && k > m * QuickCheck.LEVEL_GAP
+        card.visibility = if (Prefs.cardOn(this, SETUP_CARD) && !learned) View.VISIBLE else View.GONE
+        if (card.visibility != View.VISIBLE) return
+
+        val steps = findViewById<LinearLayout>(R.id.setupSteps)
+        steps.removeAllViews()
+        val pickRoom = {
+            RoomPicker.pick(this, room) { picked ->
+                Prefs.setCurrentSpot(this, picked)
+                refreshAll()
+            }
+        }
+        steps.addView(setupStep(1, room.isNotEmpty(),
+            if (room.isEmpty()) "Choose the room you're in. Tap here." else "Room: $room",
+            if (check == null) pickRoom else null))
+        steps.addView(setupStep(2, m != null,
+            "On moteur, do a check here. If it doesn't say Moteur, tap It was moteur."))
+        steps.addView(setupStep(3, k != null,
+            "On kahraba, do a check here, then tap It was kahraba."))
+        findViewById<TextView>(R.id.setupTip).text = if (k != null && m != null) {
+            "Kahraba and moteur look alike in this room. Try a spot closer to a halogen bulb, or another room."
+        } else {
+            "Only confirm when you know for sure. Keep the phone in the same place each time, with daylight out of the way."
+        }
+    }
+
+    private fun setupStep(n: Int, done: Boolean, text: String, onClick: (() -> Unit)? = null): View {
+        val row = LinearLayout(this).apply {
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, (8 * dp).toInt(), 0, (8 * dp).toInt())
+        }
+        val accent = themeColor(R.attr.appAccent)
+        row.addView(TextView(this).apply {
+            this.text = if (done) "✓" else "$n"
+            gravity = Gravity.CENTER
+            textSize = 14f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setTextColor(if (done) themeColor(R.attr.appOnAccent) else accent)
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                if (done) setColor(accent) else setStroke((1.5f * dp).toInt(), accent)
+            }
+        }, LinearLayout.LayoutParams((28 * dp).toInt(), (28 * dp).toInt()))
+        row.addView(TextView(this).apply {
+            this.text = text
+            textSize = 15f
+            setTextColor(themeColor(if (done) R.attr.appMuted else R.attr.appText))
+            setPadding((12 * dp).toInt(), 0, 0, 0)
+        }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        if (onClick != null) {
+            row.setOnClickListener { onClick() }
+            val ripple = TypedValue()
+            theme.resolveAttribute(android.R.attr.selectableItemBackground, ripple, true)
+            row.setBackgroundResource(ripple.resourceId)
+        }
+        return row
+    }
+
+    /** HOW RIGHT IS IT?: how often each result was right, from the checks the user confirmed. */
+    private fun renderAccuracy() {
+        val scores = CheckHistory.scores(CheckHistory.read(this))
+        val right = scores.sumOf { it.right }
+        val total = scores.sumOf { it.total }
+        val list = findViewById<LinearLayout>(R.id.accuracyList)
+        list.removeAllViews()
+        val head = findViewById<TextView>(R.id.accuracyTotal)
+        val note = findViewById<TextView>(R.id.accuracyNote)
+        if (total == 0) {
+            head.text = "No score yet"
+            note.text = "After a check, tap It was kahraba or It was moteur when you know for sure. The app keeps score here."
+            return
+        }
+        head.text = "Right $right of $total (${right * 100 / total}%)"
+        for (sc in scores.filter { it.total > 0 }) {
+            val (label, value) = when (sc.said) {
+                QuickCheck.Verdict.MOTEUR -> "Said moteur" to "right ${sc.right} of ${sc.total}"
+                QuickCheck.Verdict.KAHRABA -> "Said kahraba" to "right ${sc.right} of ${sc.total}"
+                else -> "Said no flicker" to "kahraba ${sc.right} of ${sc.total}"
+            }
+            list.addView(row(colorFor(sc.said), label, value))
+        }
+        note.text = (if (total < 10) "Early days: the score settles after about 10 confirmed checks. " else "") +
+            "Counts checks you confirmed. Confirm right answers too, not just wrong ones, so the score stays fair."
     }
 
     private fun renderHistoryCards() {
@@ -1050,5 +1151,6 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     companion object {
         private const val SETTLE_MS = 3_000L
         private const val CAL_MONITOR = "calendar_monitor"
+        private const val SETUP_CARD = "card_setup"
     }
 }
