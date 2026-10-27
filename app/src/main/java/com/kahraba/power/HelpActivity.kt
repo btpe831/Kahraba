@@ -41,7 +41,7 @@ class HelpActivity : ThemedActivity() {
                 On its own, a check can prove <b>Moteur</b> (wobble) but not Kahraba, because a calm moteur can be steady too. Rooms fix that.
                 Kahraba's higher voltage makes a halogen about 25% brighter. Once the app knows how bright a room is on each source, it can tell them apart even when the light is steady.
                 <b>Set up a room</b> (the <b>Set up a room</b> card on the main screen walks you through it):
-                1. Tap the room button under <b>Checking in</b> → <b>Add a room</b> and name it (Kitchen, Bathroom…).
+                1. Tap the room button above <b>Check now</b> → <b>Add a room</b> and name it (Kitchen, Bathroom…).
                 2. Always check from the <b>same place</b> in that room, under the <b>same light</b> (a bit of tape helps).
                 3. Do a check when you <b>know for sure</b> it's kahraba and tap <b>It was kahraba</b>.
                 4. Do one when you know it's moteur and tap <b>It was moteur</b>. (A check that sees a wobble there counts too.)

@@ -589,12 +589,12 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         spotButton.text = (room.ifEmpty { "Choose" }) + "  ▾"
         val (k, m) = CheckHistory.spotLevels(this, room)
         spotInfo.text = when {
-            room.isEmpty() -> "Pick one for sure kahraba results"
-            k != null && m != null && k > m * QuickCheck.LEVEL_GAP -> "Learned ✓"
+            room.isEmpty() -> "No room chosen yet"
+            k != null && m != null && k > m * QuickCheck.LEVEL_GAP -> "Set up and ready ✓"
             k != null && m != null -> "Kahraba and moteur look alike here"
-            k == null && m == null -> "Not learned yet"
-            k == null -> "Needs one confirmed kahraba"
-            else -> "Needs one moteur check"
+            k == null && m == null -> "Not set up yet"
+            k == null -> "Almost ready: needs a kahraba check"
+            else -> "Almost ready: needs a moteur check"
         }
     }
 
