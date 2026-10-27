@@ -157,8 +157,10 @@ class SettingsActivity : ThemedActivity() {
             addView(divider())
             addView(numberRow("Minimum light", "lux", Prefs.MIN_LUX, 100.0, "Below this the light is too dim to judge."))
             addView(divider())
-            addView(toggle("Moteur from flicker alone", "Switch to moteur when the light flickers, even without a power cut. " +
-                "Off by default because kahraba can wobble too.", Prefs.MOTEUR_ON_FLICKER, false))
+            addView(toggle("Detect moteur without a power cut",
+                "Normally the monitor switches to moteur only when the power cuts out. Turn this on to also switch " +
+                    "when the light keeps flickering. Can give false alarms, so it's off by default.",
+                Prefs.MOTEUR_ON_FLICKER, false))
         }, lp(top = 12))
 
         // BACKUP
