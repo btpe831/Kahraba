@@ -36,6 +36,11 @@
             android:parentActivityName=".MainActivity" />
 
         <activity
+            android:name=".LightMeterActivity"
+            android:label="Light meter"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
             android:name=".HelpActivity"
             android:label="How to use Ijit"
             android:parentActivityName=".MainActivity" />

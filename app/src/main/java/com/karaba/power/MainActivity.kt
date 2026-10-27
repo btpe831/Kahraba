@@ -116,6 +116,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         findViewById<View>(R.id.confirmKahraba).setOnClickListener { confirmLatest(QuickCheck.Verdict.KAHRABA) }
         findViewById<View>(R.id.confirmMoteur).setOnClickListener { confirmLatest(QuickCheck.Verdict.MOTEUR) }
         findViewById<View>(R.id.monitorCard).setOnClickListener { startActivity(Intent(this, MonitorActivity::class.java)) }
+        findViewById<View>(R.id.meterCard).setOnClickListener { startActivity(Intent(this, LightMeterActivity::class.java)) }
         findViewById<View>(R.id.footerNote).setOnClickListener { startActivity(Intent(this, HelpActivity::class.java)) }
         findViewById<View>(R.id.barSettings).setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
         findViewById<View>(R.id.barHistory).setOnClickListener { showAllChecks() }
@@ -204,6 +205,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         measureFromMs = checkStartMs + SETTLE_MS
         confirmRow.visibility = View.GONE
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        // Fixed screen brightness: the light sensor sits under the screen, so auto-brightness
+        // changing it mid-check could nudge the reading.
+        window.attributes = window.attributes.apply { screenBrightness = LightMeterActivity.LOCKED_BRIGHTNESS }
         sensors.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST)
         motion.start()
         checkButton.text = "Cancel"
@@ -256,6 +260,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         sensors.unregisterListener(this)
         motion.stop()
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        window.attributes = window.attributes.apply {
+            screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+        }
         check = null
         checkButton.text = "Check now"
         heroProgress.visibility = View.GONE

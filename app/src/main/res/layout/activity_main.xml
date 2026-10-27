@@ -429,6 +429,40 @@
                 </LinearLayout>
             </com.karaba.power.NotchCard>
 
+            <!-- LIGHT METER -->
+            <com.karaba.power.NotchCard
+                android:id="@+id/meterCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:clickable="true"
+                android:focusable="true"
+                app:notchChevron="true"
+                app:notchTitle="Light meter">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Live lux, a chart, and recordings you can save as CSV"
+                        android:textColor="?attr/appText"
+                        android:textSize="16sp" />
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_chevron"
+                        app:tint="?attr/appAccent" />
+                </LinearLayout>
+            </com.karaba.power.NotchCard>
+
             <TextView
                 android:id="@+id/footerNote"
                 android:layout_width="match_parent"

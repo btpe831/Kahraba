@@ -115,6 +115,14 @@ class SettingsActivity : ThemedActivity() {
                 "Off by default because kahraba can wobble too.", Prefs.MOTEUR_ON_FLICKER, false))
         }, lp(top = 12))
 
+        // TOOLS
+        section("Tools")
+        body.addView(card {
+            addView(link("Light meter", "Live lux, a chart, and recordings you can save as CSV.") {
+                startActivity(Intent(this@SettingsActivity, LightMeterActivity::class.java))
+            })
+        })
+
         // ABOUT
         section("About")
         body.addView(card {
