@@ -149,13 +149,17 @@ class SettingsActivity : ThemedActivity() {
         })
         body.addView(card {
             addView(text("Advanced", 18f, R.attr.appText, bold = true))
-            addView(numberRow("Flicker limit", "%", Prefs.FLICKER_THRESHOLD, Prefs.DEFAULT_THRESHOLD,
-                "Light wobble above this counts as moteur. Set automatically when you teach the monitor."))
+            addView(text("You don't need to change these. The defaults work for most homes.", 14f, R.attr.appMuted), lp(top = 2))
+            addView(numberRow("Flicker sensitivity", "%", Prefs.FLICKER_THRESHOLD, Prefs.DEFAULT_THRESHOLD,
+                "How much the light must flicker to count as moteur. A lower number catches moteur more easily but " +
+                    "may give false alarms. It's set for you when you use “It's kahraba” / “It's moteur”."))
             addView(divider())
-            addView(numberRow("Minutes before calling kahraba", "min", Prefs.STEADY_MINUTES, 2.0,
-                "How long the light must stay brighter and steady."))
+            addView(numberRow("Wait before saying kahraba", "min", Prefs.STEADY_MINUTES, 2.0,
+                "When kahraba comes back, the light gets brighter and steadier. The monitor waits this long to be " +
+                    "sure before switching to kahraba."))
             addView(divider())
-            addView(numberRow("Minimum light", "lux", Prefs.MIN_LUX, 100.0, "Below this the light is too dim to judge."))
+            addView(numberRow("Minimum brightness", "lux", Prefs.MIN_LUX, 100.0,
+                "If the light is dimmer than this, the app won't guess. Move the phone closer to a halogen light."))
             addView(divider())
             addView(toggle("Detect moteur without a power cut",
                 "Normally the monitor switches to moteur only when the power cuts out. Turn this on to also switch " +
