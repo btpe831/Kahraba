@@ -26,7 +26,18 @@ import java.util.Locale
  */
 class AmpsActivity : ThemedActivity() {
 
-    private data class Appliance(val name: String, val watts: Int, val motor: Boolean = false, val custom: Boolean = false)
+    /**
+     * [inverterWatts]: for motor appliances, the typical draw of an inverter model, which also
+     * starts gently (no surge). Non-inverter motors briefly draw 3-5x when they start.
+     */
+    private data class Appliance(
+        val name: String,
+        val watts: Int,
+        val inverterWatts: Int? = null,
+        val custom: Boolean = false,
+    ) {
+        val motor get() = inverterWatts != null
+    }
 
     private val presets = listOf(
         "Lighting & small" to listOf(
@@ -34,18 +45,18 @@ class AmpsActivity : ThemedActivity() {
             Appliance("Laptop", 65), Appliance("Wi-Fi router", 12), Appliance("TV", 100), Appliance("Fan", 60),
         ),
         "Kitchen" to listOf(
-            Appliance("Fridge", 150, motor = true), Appliance("Freezer", 200, motor = true), Appliance("Kettle", 2000),
+            Appliance("Fridge", 150, inverterWatts = 100), Appliance("Freezer", 200, inverterWatts = 130), Appliance("Kettle", 2000),
             Appliance("Coffee machine", 1200), Appliance("Microwave", 1200), Appliance("Toaster", 900),
             Appliance("Air fryer", 1500), Appliance("Electric oven", 2500), Appliance("Dishwasher", 1800),
         ),
         "Laundry & cleaning" to listOf(
-            Appliance("Washing machine (heating water)", 2000, motor = true), Appliance("Clothes dryer", 2500),
+            Appliance("Washing machine (heating water)", 2000, inverterWatts = 2000), Appliance("Clothes dryer", 2500),
             Appliance("Iron", 1200), Appliance("Vacuum cleaner", 1400),
         ),
         "Comfort & water" to listOf(
             Appliance("Electric heater", 2000), Appliance("Water heater (boiler)", 2000),
-            Appliance("Air conditioner (12,000 BTU)", 1200, motor = true), Appliance("Hair dryer", 1800),
-            Appliance("Water pump", 750, motor = true),
+            Appliance("Air conditioner (12,000 BTU)", 1200, inverterWatts = 900), Appliance("Hair dryer", 1800),
+            Appliance("Water pump", 750, inverterWatts = 750),
         ),
     )
 
@@ -58,6 +69,12 @@ class AmpsActivity : ThemedActivity() {
     private lateinit var totalTrack: FrameLayout
     private lateinit var convertResult: TextView
     private var convertWatts: Double? = null
+
+    /** Motor appliances are inverter models unless switched off (most new ones are). */
+    private fun isInverter(a: Appliance) = a.motor && Prefs.sp(this).getBoolean("amps_inverter_${a.name}", true)
+
+    /** The watts used for an appliance, given whether it's an inverter model. */
+    private fun wattsOf(a: Appliance) = if (isInverter(a)) a.inverterWatts!! else a.watts
 
     private val subscription get() = Prefs.sp(this).getInt(SUB_KEY, 10)
     private val volts get() = Prefs.sp(this).getInt(VOLT_KEY, 220)
@@ -145,8 +162,9 @@ class AmpsActivity : ThemedActivity() {
         for ((group, items) in presets) body.addView(applianceCard(group, items))
         body.addView(applianceCard("Your own", customAppliances(), addButton = true))
         body.addView(text(
-            "* Motors (fridge, freezer, AC, water pump, washing machine) draw 3–5× more for a second or two when they start. " +
-                "Wattages are typical; check the label for yours. Amps = watts ÷ volts.",
+            "Inverter models (most new fridges, ACs, washers and pumps) start gently and use less on average. " +
+                "Older non-inverter motors (⚡) draw 3–5× more for a second or two when they start, which can trip a small subscription. " +
+                "Tap the chip to switch. Wattages are typical; check the label for yours. Amps = watts ÷ volts.",
             13f, R.attr.appMuted,
         ).apply { setPadding(px(4), px(16), px(4), 0) })
     }
@@ -168,8 +186,33 @@ class AmpsActivity : ThemedActivity() {
     private fun applianceRow(a: Appliance): View {
         val row = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL; setPadding(0, px(10), 0, px(10)) }
         val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        texts.addView(text(a.name + if (a.motor) " *" else "", 16f, R.attr.appText, bold = true))
-        texts.addView(text("${a.watts} W · ${amps(a.watts.toDouble())} A", 13f, R.attr.appMuted))
+        texts.addView(text(a.name, 16f, R.attr.appText, bold = true))
+        val detail = text("", 13f, R.attr.appMuted)
+        fun paintDetail() {
+            val w = wattsOf(a)
+            detail.text = "$w W · ${amps(w.toDouble())} A" + if (a.motor && !isInverter(a)) " · ⚡ start-up surge" else ""
+        }
+        paintDetail()
+        texts.addView(detail)
+        if (a.motor) {
+            // Inverter switch: on for most new fridges, ACs, washers and pumps.
+            val chip = text("", 12f, R.attr.appAccent, bold = true).apply {
+                setPadding(px(10), px(4), px(10), px(4))
+            }
+            fun paintChip() {
+                val on = isInverter(a)
+                chip.text = if (on) "✓ Inverter" else "Not inverter"
+                chip.setTextColor(color(if (on) R.attr.appOnAccent else R.attr.appMuted))
+                chip.background = if (on) rounded(color(R.attr.appAccent), color(R.attr.appAccent), 14f)
+                    else rounded(color(R.attr.appBg), color(R.attr.appBorder), 14f)
+            }
+            paintChip()
+            chip.setOnClickListener {
+                Prefs.sp(this).edit().putBoolean("amps_inverter_${a.name}", !isInverter(a)).apply()
+                paintChip(); paintDetail(); update()
+            }
+            texts.addView(chip, LinearLayout.LayoutParams(-2, -2).apply { topMargin = px(6) })
+        }
         row.addView(texts, LinearLayout.LayoutParams(0, -2, 1f))
         if (a.custom) {
             row.setOnLongClickListener {
@@ -213,13 +256,18 @@ class AmpsActivity : ThemedActivity() {
     private fun amps(watts: Double) = String.format(Locale.US, "%.1f", watts / volts)
 
     private fun update() {
-        val totalW = allAppliances().sumOf { (counts[it.name] ?: 0) * it.watts.toDouble() }
+        val on = allAppliances().filter { (counts[it.name] ?: 0) > 0 }
+        val totalW = on.sumOf { (counts[it.name] ?: 0) * wattsOf(it).toDouble() }
+        // Biggest start-up kick from a non-inverter motor (about 3x its running draw, briefly).
+        val surgeW = on.filter { it.motor && !isInverter(it) }.maxOfOrNull { wattsOf(it) * 2.0 } ?: 0.0
         val totalA = totalW / volts
         val sub = subscription.toDouble()
         totalText.text = "${amps(totalW)} A of ${subscription} A"
         val spare = sub - totalA
         totalSub.text = when {
             totalW == 0.0 -> "Add appliances to see the total"
+            spare >= 0 && (totalW + surgeW) / volts > sub ->
+                "${totalW.toInt()} W · fits, but a non-inverter motor starting could trip it"
             spare >= 1 -> "${totalW.toInt()} W · ${String.format(Locale.US, "%.1f", spare)} A spare"
             spare >= 0 -> "${totalW.toInt()} W · right at the limit – a motor starting could trip it"
             else -> "${totalW.toInt()} W · over by ${String.format(Locale.US, "%.1f", -spare)} A – the breaker will likely trip"
