@@ -9,10 +9,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingStart="16dp"
-        android:paddingTop="8dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="32dp">
+        android:paddingStart="20dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="40dp">
+
+        <include layout="@layout/screen_header" />
 
         <!-- Digital readout -->
         <com.kahraba.power.NotchCard
@@ -173,7 +175,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:lineSpacingExtra="2dp"
-                    android:text="The screen stays on with its brightness locked, so it doesn't affect the reading. Lay the phone face-up and don't touch it. Note the times the lamp post changes, then share the file for tuning."
+                    android:text="The screen stays on with its brightness locked, so it doesn't affect the reading. Lay the phone face-up and don't touch it. Note the times you know it switched, then share the file for tuning."
                     android:textColor="?attr/appMuted"
                     android:textSize="13sp" />
             </LinearLayout>

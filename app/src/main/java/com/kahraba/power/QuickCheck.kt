@@ -129,7 +129,7 @@ class QuickCheck(
                         return Result(
                             Verdict.NO_FLICKER,
                             "No wobble in ${STEADY_NEEDED_MS / 1000}s. Probably kahraba – but a calm moteur " +
-                                "(often at night) can look the same. Check the lamp post or your voltage meter to be sure.$offSpot",
+                                "(often at night) can look the same. Confirm it if you know for sure.$offSpot",
                             med,
                         )
                     }

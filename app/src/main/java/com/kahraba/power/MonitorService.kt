@@ -72,7 +72,12 @@ class MonitorService : Service(), SensorEventListener {
     override fun onCreate() {
         super.onCreate()
         createChannels(this)
-        goForeground()
+        if (!goForeground()) {
+            // Android refused (e.g. a restart while the app is in the background on Android 12+).
+            // Stop; it starts again the next time the app is opened, as monitoring stays on.
+            stopSelf()
+            return
+        }
 
         thread = HandlerThread("karaba-monitor").apply { start() }
         handler = Handler(thread.looper)
@@ -101,7 +106,10 @@ class MonitorService : Service(), SensorEventListener {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        goForeground()
+        if (!::handler.isInitialized || !goForeground()) {
+            stopSelf()
+            return START_NOT_STICKY
+        }
         when (intent?.action) {
             ACTION_STOP -> {
                 monitoring = false
@@ -127,6 +135,10 @@ class MonitorService : Service(), SensorEventListener {
     }
 
     override fun onDestroy() {
+        if (!::handler.isInitialized) {
+            super.onDestroy()
+            return
+        }
         handler.removeCallbacksAndMessages(null)
         runCatching { sensors.unregisterListener(this) }
         runCatching { motion?.stop() }
@@ -290,14 +302,15 @@ class MonitorService : Service(), SensorEventListener {
         notifications().notify(STATUS_ID, statusNotification())
     }
 
-    private fun goForeground() {
+    /** False if Android doesn't allow it right now. */
+    private fun goForeground(): Boolean = runCatching {
         val n = statusNotification()
         if (Build.VERSION.SDK_INT >= 34) {
             startForeground(STATUS_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
         } else {
             startForeground(STATUS_ID, n)
         }
-    }
+    }.isSuccess
 
     companion object {
         const val ACTION_START = "com.kahraba.power.START"
@@ -327,7 +340,7 @@ class MonitorService : Service(), SensorEventListener {
         fun send(ctx: Context, action: String, extras: (Intent) -> Unit = {}) {
             val i = Intent(ctx, MonitorService::class.java).setAction(action)
             extras(i)
-            ContextCompat.startForegroundService(ctx, i)
+            runCatching { ContextCompat.startForegroundService(ctx, i) }
         }
 
         fun createChannels(ctx: Context) {

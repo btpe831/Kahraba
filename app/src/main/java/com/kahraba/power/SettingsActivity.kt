@@ -171,11 +171,11 @@ class SettingsActivity : ThemedActivity() {
         section("Backup")
         body.addView(card {
             addView(link("Back up to a file", "Saves your checks, rooms, notes, monitor log and settings in one file.") {
-                saveBackup.launch("kahraba-or-not-backup-" + SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date()) + ".json")
+                launchSafely { saveBackup.launch("kahraba-or-not-backup-" + SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date()) + ".json") }
             })
             addView(divider())
             addView(link("Restore from a file", "Replaces everything here with a backup, e.g. from another phone or Google Drive.") {
-                openBackup.launch(arrayOf("application/json", "application/octet-stream", "text/plain", "*/*"))
+                launchSafely { openBackup.launch(arrayOf("application/json", "application/octet-stream", "text/plain", "*/*")) }
             })
         })
 
@@ -197,9 +197,15 @@ class SettingsActivity : ThemedActivity() {
             addView(link("How to use the app", "Which bulbs work, distance, rooms, solar and UPS, and the disclaimer.") {
                 startActivity(Intent(this@SettingsActivity, HelpActivity::class.java))
             })
+            if (Feedback.enabled) {
+                addView(divider())
+                addView(link("Send feedback", "Tell us what worked and what didn't. Opens your email app.") {
+                    Feedback.open(this@SettingsActivity)
+                })
+            }
             addView(divider())
             addView(text("Privacy", 17f, R.attr.appText, bold = true), lp(top = 12))
-            addView(text("Everything stays on this phone. Kahraba or Not has no internet access; data only leaves if you tap Share.",
+            addView(text("Everything stays on this phone. Kahraba or Not has no internet access; data only leaves if you tap Share or Send feedback.",
                 14f, R.attr.appMuted), lp(top = 4))
             val version = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull() ?: ""
             addView(text("Version $version · Created by Aubrey Arenas", 14f, R.attr.appMuted), lp(top = 14))

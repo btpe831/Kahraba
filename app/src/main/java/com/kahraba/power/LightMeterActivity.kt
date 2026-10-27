@@ -67,7 +67,7 @@ class LightMeterActivity : ThemedActivity(), SensorEventListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_light_meter)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        setupHeader("Light meter")
         chart = findViewById(R.id.chart)
         luxValue = findViewById(R.id.luxValue)
         luxStats = findViewById(R.id.luxStats)
@@ -89,7 +89,7 @@ class LightMeterActivity : ThemedActivity(), SensorEventListener {
         buildRangeRow()
         recButton.setOnClickListener { if (recording) stopRecording() else startRecording() }
         findViewById<MaterialButton>(R.id.saveButton).setOnClickListener {
-            if (recT.isEmpty()) toast("Record something first") else createCsv.launch(fileName())
+            if (recT.isEmpty()) toast("Record something first") else launchSafely { createCsv.launch(fileName()) }
         }
         findViewById<MaterialButton>(R.id.shareButton).setOnClickListener { share() }
         pauseButton = findViewById(R.id.pauseButton)
@@ -105,10 +105,6 @@ class LightMeterActivity : ThemedActivity(), SensorEventListener {
         super.onDestroy()
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        finish()
-        return true
-    }
 
     override fun onSensorChanged(event: SensorEvent) {
         val v = event.values[0].toDouble()
@@ -244,11 +240,13 @@ class LightMeterActivity : ThemedActivity(), SensorEventListener {
         dir.listFiles()?.forEach { it.delete() }
         val file = File(dir, fileName()).apply { writeText(csv()) }
         val uri = FileProvider.getUriForFile(this, "$packageName.files", file)
-        startActivity(Intent.createChooser(
-            Intent(Intent.ACTION_SEND).setType("text/csv").putExtra(Intent.EXTRA_STREAM, uri)
-                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
-            "Share recording",
-        ))
+        launchSafely {
+            startActivity(Intent.createChooser(
+                Intent(Intent.ACTION_SEND).setType("text/csv").putExtra(Intent.EXTRA_STREAM, uri)
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
+                "Share recording",
+            ))
+        }
     }
 
     // ---- Chart range ----

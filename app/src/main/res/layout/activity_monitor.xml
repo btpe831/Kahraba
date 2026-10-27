@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/appBg">
@@ -9,15 +10,16 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingStart="20dp"
-        android:paddingTop="8dp"
+        android:paddingTop="16dp"
         android:paddingEnd="20dp"
-        android:paddingBottom="24dp">
+        android:paddingBottom="40dp">
+
+        <include layout="@layout/screen_header" />
 
         <LinearLayout
             android:id="@+id/stateBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/rounded_box"
             android:gravity="center"
             android:orientation="vertical"
             android:paddingTop="28dp"
@@ -28,15 +30,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:alpha="0.85"
-                android:text="Currently on"
+                android:letterSpacing="0.1"
+                android:textAllCaps="true"
                 android:textColor="#FFFFFF"
-                android:textSize="14sp" />
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/stateText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="UNKNOWN"
                 android:textColor="#FFFFFF"
                 android:textSize="40sp"
                 android:textStyle="bold" />
@@ -45,7 +48,7 @@
                 android:id="@+id/sinceText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:alpha="0.85"
+                android:alpha="0.9"
                 android:gravity="center"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
@@ -68,181 +71,249 @@
             android:id="@+id/startStop"
             style="@style/PrimaryButton"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="62dp"
             android:layout_marginTop="16dp"
             android:text="Start monitoring" />
 
-        <TextView
-            style="@style/SectionLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Live readings" />
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Card"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/battery"
+            style="@style/OutlinePill"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:id="@+id/detailText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:fontFamily="monospace"
-                android:lineSpacingExtra="4dp"
-                android:padding="18dp"
-                android:textColor="?attr/appText"
-                android:textSize="13sp" />
-        </com.google.android.material.card.MaterialCardView>
-
-        <TextView
-            style="@style/SectionLabel"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Room" />
+            android:layout_marginTop="6dp"
+            android:text="Allow running in the background" />
 
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Card"
+        <com.kahraba.power.NotchCard
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            app:notchTitle="Live readings">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingStart="18dp"
-                android:paddingTop="10dp"
-                android:paddingEnd="12dp"
-                android:paddingBottom="14dp">
+                android:orientation="vertical">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Select room"
-                        android:textColor="?attr/appText"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:orientation="vertical">
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/monitorRoomButton"
-                        style="@style/Widget.Material3.Button.TonalButton"
-                        android:layout_width="wrap_content"
+                        <TextView android:id="@+id/monLabel1" style="@style/StatLabel" />
+                        <TextView android:id="@+id/monValue1" style="@style/StatValue" android:textSize="24sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="None" />
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView android:id="@+id/monLabel2" style="@style/StatLabel" />
+                        <TextView android:id="@+id/monValue2" style="@style/StatValue" android:textSize="24sp" />
+                    </LinearLayout>
                 </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView android:id="@+id/monLabel3" style="@style/StatLabel" />
+                        <TextView android:id="@+id/monValue3" style="@style/StatValue" android:textSize="24sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView android:id="@+id/monLabel4" style="@style/StatLabel" />
+                        <TextView android:id="@+id/monValue4" style="@style/StatValue" android:textSize="24sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/detailText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:lineSpacingExtra="2dp"
+                    android:textColor="?attr/appMuted"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </com.kahraba.power.NotchCard>
+
+        <com.kahraba.power.NotchCard
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            app:notchTitle="Room">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/monitorRoomInfo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
+                    android:gravity="center"
                     android:lineSpacingExtra="2dp"
+                    android:textColor="?attr/appText"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/monitorRoomButton"
+                    style="@style/OutlinePill"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="6dp"
+                    android:text="None" />
+            </LinearLayout>
+        </com.kahraba.power.NotchCard>
+
+        <com.kahraba.power.NotchCard
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            app:notchTitle="Teach it">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:lineSpacingExtra="2dp"
+                    android:text="Only when you know for sure which one is on. Then leave the phone still under the halogen light for 2 minutes."
+                    android:textColor="?attr/appText"
+                    android:textSize="14sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/setKahraba"
+                        style="@style/OutlinePill"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:text="It's kahraba" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/setMoteur"
+                        style="@style/OutlinePill"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:text="It's moteur" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.kahraba.power.NotchCard>
+
+        <com.kahraba.power.NotchCard
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            app:notchTitle="Beeps">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/testKahraba"
+                        style="@style/OutlinePill"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:text="Test kahraba" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/testMoteur"
+                        style="@style/OutlinePill"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:text="Test moteur" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/silence"
+                    style="@style/OutlinePill"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Stop beeping" />
+            </LinearLayout>
+        </com.kahraba.power.NotchCard>
+
+        <com.kahraba.power.NotchCard
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            app:notchTitle="More">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/openLog"
+                    style="@style/OutlinePill"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Switch log" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/shareData"
+                    style="@style/OutlinePill"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Share recordings" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:lineSpacingExtra="2dp"
+                    android:text="Recordings are the last 7 days of light readings, as CSV files. Share them to help tune the app."
                     android:textColor="?attr/appMuted"
                     android:textSize="13sp" />
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+        </com.kahraba.power.NotchCard>
 
-        <TextView
-            style="@style/SectionLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Teach it" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_marginBottom="8dp"
-            android:text="Only when you're sure (lamp post off = kahraba, green = moteur). Then leave the phone still under the halogen light for 2 minutes."
-            android:textColor="?attr/appMuted"
-            android:textSize="14sp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/setKahraba"
-                style="@style/TonalButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="6dp"
-                android:layout_weight="1"
-                android:text="It's kahraba" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/setMoteur"
-                style="@style/TonalButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:text="It's moteur" />
-        </LinearLayout>
-
-        <TextView
-            style="@style/SectionLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="More" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/openLog"
-            style="@style/TonalButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Switch log" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/testKahraba"
-                style="@style/TonalButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="6dp"
-                android:layout_weight="1"
-                android:text="Test kahraba beep" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/testMoteur"
-                style="@style/TonalButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:text="Test moteur beep" />
-        </LinearLayout>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/silence"
-            style="@style/TonalButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Stop beeping" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/shareData"
-            style="@style/TonalButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Share recordings" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/battery"
-            style="@style/TonalButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Allow running in background" />
     </LinearLayout>
 </ScrollView>

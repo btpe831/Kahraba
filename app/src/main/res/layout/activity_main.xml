@@ -971,6 +971,16 @@
                 android:textColor="?attr/appMuted"
                 android:textSize="13sp" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/feedbackButton"
+                style="@style/OutlinePill"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="18dp"
+                android:text="Send feedback"
+                android:visibility="gone" />
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

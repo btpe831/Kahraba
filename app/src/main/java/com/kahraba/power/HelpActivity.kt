@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.text.Html
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 
 /** How to use the app, which lights work, what breaks it, and the disclaimer. */
 class HelpActivity : ThemedActivity() {
@@ -12,7 +11,7 @@ class HelpActivity : ThemedActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_help)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        setupHeader("How to use the app")
         val container = findViewById<LinearLayout>(R.id.helpContainer)
         for ((title, body) in SECTIONS) {
             val card = layoutInflater.inflate(R.layout.item_help_section, container, false)
@@ -24,10 +23,6 @@ class HelpActivity : ThemedActivity() {
         Prefs.sp(this).edit().putBoolean(Prefs.HELP_SEEN, true).apply()
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        finish()
-        return true
-    }
 
     companion object {
         private val SECTIONS = listOf(
@@ -48,14 +43,14 @@ class HelpActivity : ThemedActivity() {
                 <b>Set up a room</b> (the <b>Set up a room</b> card on the main screen walks you through it):
                 1. Tap the room button under <b>Checking in</b> → <b>Add a room</b> and name it (Kitchen, Bathroom…).
                 2. Always check from the <b>same place</b> in that room, under the <b>same light</b> (a bit of tape helps).
-                3. Do a check when you <b>know</b> it's kahraba (e.g. the neighbourhood indicator light is off) and tap <b>It was kahraba</b>.
+                3. Do a check when you <b>know for sure</b> it's kahraba and tap <b>It was kahraba</b>.
                 4. Do one when you know it's moteur and tap <b>It was moteur</b>. (A check that sees a wobble there counts too.)
                 After that, checks in that room can say <b>Kahraba</b> (4 short beeps) or catch a calm <b>Moteur</b>, usually within about 15 seconds.
                 <b>Tips:</b>
                 • Each room learns on its own. Pick the right room before each check.
                 • If the brightness doesn't match the room, you get “No flicker” instead of a guess.
                 • Keep the other lights in the room as they were when you set it up, and avoid daylight.
-                • Moved the lamp or changed the bulb? Select room → Rename or delete → delete it, and set it up again.
+                • Moved the lamp or changed the bulb? Tap the room button → Rename or delete → delete it, and set it up again.
                 • The always-on monitor can use the same rooms, so teaching a room once helps both.
                 • Rooms are learned per phone: each phone's light sensor reads differently.
                 • The <b>How right is it?</b> card keeps score of the results you confirm, so you can see how much to trust the app in your home.
@@ -67,7 +62,7 @@ class HelpActivity : ThemedActivity() {
                 Your phone's light sensor watches for that wobble:
                 &nbsp;&nbsp;• A wobble that repeats or keeps going → <b>Moteur</b>. A single dip doesn't count: switching on a kettle or heater dips the voltage on kahraba too.
                 &nbsp;&nbsp;• 25 seconds with no wobble → <b>No flicker</b> (probably kahraba)
-                <b>Why “No flicker” isn't a sure Kahraba:</b> when few people are using it (often at night), the moteur can stay perfectly steady for many minutes. The phone's light sensor also only notices changes bigger than about 8%. So a wobble proves moteur, but a steady light can be either. To be sure, check the lamp post or your voltage meter (kahraba usually reads higher, e.g. 234 V vs 213 V).
+                <b>Why “No flicker” isn't a sure Kahraba:</b> when few people are using it (often at night), the moteur can stay perfectly steady for many minutes. The phone's light sensor also only notices changes bigger than about 8%. So a wobble proves moteur, but a steady light can be either. To be sure, use a learned room (see “Rooms”) or a voltage meter (kahraba usually reads higher, e.g. 234 V vs 213 V).
             """,
 
             "Which lights work" to """
@@ -78,7 +73,7 @@ class HelpActivity : ThemedActivity() {
                 <b>✗ Energy-saving bulbs (CFL, the twisted “neon” type)</b> – have electronics inside like LEDs; usually hide the wobble.
                 <b>? Fluorescent tubes (“neon”)</b> – old tubes that flicker or hum when switching on may work; modern ones usually don't.
                 <b>✗ Dimmed lights</b> – dimmer switches add their own flicker. Use full brightness.
-                <b>Not sure about a light?</b> Test it once while you know you're on the moteur (e.g. your neighbourhood's indicator light is on). If the check says <b>Moteur</b>, that light works. If it says Kahraba, don't use it.
+                <b>Not sure about a light?</b> Test it once while you know for sure you're on the moteur. If the check says <b>Moteur</b>, that light works. If it says Kahraba, don't use it.
             """,
 
             "Distance and light level" to """
@@ -110,7 +105,8 @@ class HelpActivity : ThemedActivity() {
             """,
 
             "Your results" to """
-                <b>Recent</b> shows your last checks. <b>Tap one to fix it</b> if you know it was wrong, or to delete it. Fixed checks are marked “corrected”.
+                <b>Recent checks</b> shows your last checks; the list button in the bottom bar shows all of them. <b>Tap one to fix it</b> if you know it was wrong, or to delete it. Checks you confirmed or fixed are marked ✓.
+                <b>How right is it?</b> counts how often each result was right, among the checks you confirmed.
                 <b>Can't tell</b> means the light was too dim, the phone was moved, or there was no light reading. Nothing is guessed.
                 Tip: a wrong <b>Moteur</b> result is rare (kahraba doesn't wobble), but a shadow or moving the phone can cause one. “No flicker” on the moteur happens when the moteur is calm, or the light can't show the wobble (LED, too dim, inverter, UPS).
             """,
@@ -120,7 +116,7 @@ class HelpActivity : ThemedActivity() {
                 • Plug the phone into a <b>wall socket</b> (not a UPS) and leave it face-up under a halogen light. The screen can be off.
                 • A power cut is seen through the charger and means the moteur took over.
                 • It says Kahraba is back when the light gets clearly <b>brighter</b> (no blackout) and stays steady for 2 minutes – kahraba's higher voltage makes the bulb brighter. Steady light alone is not enough, because a calm moteur is steady too.
-                • Under <b>Select room</b>, pick the room the phone is in, then tap “It's kahraba” and “It's moteur” once each (when you're sure) so it learns how bright that room is on each. If quick checks already taught that room, it knows straight away. Then it can tell kahraba from moteur even when the light is steady. Keep the phone in the exact same place.
+                • Under <b>Room</b>, pick the room the phone is in, then tap “It's kahraba” and “It's moteur” once each (when you're sure) so it learns how bright that room is on each. If quick checks already taught that room, it knows straight away. Then it can tell kahraba from moteur even when the light is steady. Keep the phone in the exact same place.
                 • Keep other lights the same: switching a lamp on can look like the brightness change.
                 • Every switch is logged with its time, and it beeps on each change. Night silence and beep volume are in Settings.
                 • When the monitor is off it shows “Off”. After you start it, it shows “Not sure yet” until it sees a wobble or a power cut (moteur), matches a learned level, or you tap “It's kahraba” / “It's moteur”.
@@ -130,7 +126,7 @@ class HelpActivity : ThemedActivity() {
             """,
 
             "Privacy" to """
-                Everything stays on this phone. Kahraba or Not has <b>no internet access</b>. Nothing is sent anywhere unless you tap Share yourself. Uninstalling the app deletes all its data.
+                Everything stays on this phone. Kahraba or Not has <b>no internet access</b>. Nothing is sent anywhere unless you tap Share or Send feedback yourself. Uninstalling the app deletes all its data.
             """,
 
             "Disclaimer" to """

@@ -136,7 +136,7 @@ class PowerDetector(
         resetHistory(motionUntilMs)
     }
 
-    /** The user says which source it is (e.g. from the lamp post). */
+    /** The user says which source it is (when they know for sure). */
     fun setManual(nowMs: Long, to: Source): Transition {
         val t = Transition(nowMs, source, to, "Set by you", manual = true)
         source = to

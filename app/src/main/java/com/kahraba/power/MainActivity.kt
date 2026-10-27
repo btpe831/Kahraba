@@ -124,6 +124,10 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             android.widget.Toast.makeText(this, "You can turn it back on in Settings › Cards", android.widget.Toast.LENGTH_LONG).show()
             renderSetup()
         }
+        findViewById<View>(R.id.feedbackButton).apply {
+            visibility = if (Feedback.enabled) View.VISIBLE else View.GONE
+            setOnClickListener { Feedback.open(this@MainActivity) }
+        }
         findViewById<View>(R.id.footerNote).setOnClickListener { startActivity(Intent(this, HelpActivity::class.java)) }
         findViewById<View>(R.id.barSettings).setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
         findViewById<View>(R.id.barHistory).setOnClickListener { showAllChecks() }
@@ -638,7 +642,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         refreshAll()
     }
 
-    /** Tap a check to fix it (e.g. it said kahraba but the lamp post was green) or delete it. */
+    /** Tap a check to fix it (e.g. it said kahraba but it was moteur) or delete it. */
     private fun editEntry(e: CheckHistory.Entry) {
         val whenText = SimpleDateFormat("EEE HH:mm", Locale.US).format(Date(e.timeMs))
         MaterialAlertDialogBuilder(this)
