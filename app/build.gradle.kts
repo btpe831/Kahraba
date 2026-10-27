@@ -21,18 +21,22 @@ android {
     }
 
     signingConfigs {
-        // A fixed key kept in the repo so updates install over the previous version.
-        getByName("debug") {
-            storeFile = file("debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
+        // The release key. The file is encrypted; its password is only in the SIGNING_PASSWORD
+        // secret on GitHub, so only GitHub Actions can sign updates. Every update must use this
+        // same key, or phones refuse to install it over the previous version.
+        create("release") {
+            storeFile = file("release-key.p12")
+            storeType = "pkcs12"
+            storePassword = System.getenv("SIGNING_PASSWORD")
+            keyAlias = "kahraba"
+            keyPassword = System.getenv("SIGNING_PASSWORD")
         }
     }
 
     buildTypes {
-        debug {
-            signingConfig = signingConfigs.getByName("debug")
+        release {
+            isMinifyEnabled = false
+            if (System.getenv("SIGNING_PASSWORD") != null) signingConfig = signingConfigs.getByName("release")
         }
     }
 

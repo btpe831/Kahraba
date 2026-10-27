@@ -1,58 +1,55 @@
 # Kahraba or Not
 
-An Android app that answers "ijit el kahraba?": is the house on **kahraba** (EDL grid) or the **moteur**
-(neighbourhood generator), and logs every switch.
+An Android app for homes in Lebanon: is the house on **kahraba** (EDL, the state grid) or the
+**moteur** (the neighbourhood generator)? The switch back to kahraba is often silent. This app
+tells you, using your phone's light sensor and a halogen bulb.
+
+**[Download the latest version](https://github.com/btpe831/Kahraba/releases/latest)** (the `.apk` file under Assets)
+
+## Install
+
+1. On the Android phone, open the link above and tap `KahrabaOrNot-x.y.z.apk`.
+2. Open the file. Android warns about apps from outside the Play Store; allow
+   "Install unknown apps" for your browser if asked.
+3. Updates: install the newer `.apk` the same way. Your data stays.
+
+## What you need
+
+- An Android phone with a light sensor (almost all have one).
+- A **halogen** or old-style **filament** bulb. LED bulbs smooth out the power and hide the
+  difference, so they don't work.
 
 ## How it works
 
-- **Power cuts:** the phone sits on its charger. A short loss of charging is a power cut, and in
-  Lebanon a cut means the moteur took over.
-- **Silent switch back to kahraba:** halogen bulbs wobble a lot on the moteur and stay steady on
-  kahraba. The light sensor watches for that. After the light has been steady for a while
-  (2 minutes by default), the app says kahraba is back.
+A halogen bulb's brightness follows the voltage. On the moteur, the voltage wobbles as the
+engine speeds up and slows down, and so does the light. Kahraba is steadier and usually a bit
+higher, so the same bulb glows steady and about 25% brighter.
 
-## Quick check (main screen)
+- **Quick check:** lay the phone face-up under the bulb. A wobble means moteur. To say "kahraba"
+  for sure, the app learns how bright a room is on each source (two checks to set up).
+- **Always-on monitor:** for a spare phone left on its charger under a light. A power cut means
+  the moteur took over; a jump in brightness means kahraba is back. It beeps on each switch.
+- **How right is it?** The app keeps score of the results you confirm, so you can see how far to
+  trust it in your home.
+- Also: a light meter with CSV export, an amps calculator for your moteur subscription, a
+  calendar with notes, backup and restore.
 
-Tap **Check now**, lay the phone face-up under a halogen light and don't touch it. It beeps the
-answer straight away: **4 short beeps = kahraba**, **1 long beep = moteur**. Moteur is usually
-found within a few seconds; kahraba needs 25 seconds of steady light.
+## Privacy
 
-## Always-on monitor (secondary)
+The app has **no internet permission**: nothing you do in it leaves your phone. Backups are files
+you save yourself.
 
-Alerts:
+## Is this the real app?
 
-- Kahraba back: 4 quick beeps, pause, 4 beeps, pause, 4 beeps, played twice.
-- Moteur took over: a 3-second beep, repeated after 1 and 2 minutes.
-- Alerts play on the alarm channel, so they sound when the phone is on silent.
-  Night silence can be turned on in Settings.
+Every release is signed with the same key. Its certificate SHA-256 is:
 
-## Features
+```
+77:E9:3F:A7:E7:C9:4C:4E:53:04:DA:05:50:BC:84:44:26:94:97:7A:96:50:E5:2D:92:6B:AB:F0:FE:5F:67:76
+```
 
-- Always-on monitoring in the background (screen can be off).
-- "It's kahraba" / "It's moteur" buttons: tell the app when you're sure (e.g. from the lamp post)
-  and it learns what each source looks like over 2 minutes.
-- Switch log with how long each state lasted.
-- Per-second light recordings (last 7 days) that can be shared for tuning.
+## Disclaimer
 
-## Help
+The app makes an educated guess from the light. It can be wrong. Don't rely on it for anything
+where a wrong answer is dangerous or costly.
 
-The app has a full guide (the ? button, also shown on first launch): quick start, how it works,
-which bulbs work, distance and light level, when it won't work (solar, UPS, stabilisers),
-privacy, and a disclaimer.
-
-## Limits
-
-- Needs a halogen or old-style filament bulb. Most LED and energy-saving bulbs hide the flicker.
-- Doesn't work if the lights run through a solar inverter or UPS: they output smooth power whatever
-  feeds them, so every check would say kahraba.
-
-## Setup
-
-1. Install the APK from the latest release on GitHub.
-2. Plug the phone into a wall socket (not the UPS) and lay it face-up under a halogen light.
-3. Tap **Start monitoring** and **Allow running in background**.
-
-## Build
-
-GitHub Actions builds and tests the app on every push and publishes the APK as a release.
-Locally: `./gradlew testDebugUnitTest assembleDebug`.
+Created by Aubrey Arenas.

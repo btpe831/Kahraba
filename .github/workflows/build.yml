@@ -21,17 +21,27 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Test and build
+      - name: Test and build (signed with the release key)
+        env:
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: |
+          if [ -z "$SIGNING_PASSWORD" ]; then
+            echo "::error::Add the SIGNING_PASSWORD secret (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
           chmod +x gradlew
-          ./gradlew --no-daemon testDebugUnitTest assembleDebug
+          ./gradlew --no-daemon testDebugUnitTest assembleRelease
 
       - name: Read the app version
         id: version
         run: echo "name=$(grep '^appVersion=' gradle.properties | cut -d= -f2)" >> "$GITHUB_OUTPUT"
 
       - name: Name the APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk "KahrabaOrNot-${{ steps.version.outputs.name }}.apk"
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk "KahrabaOrNot-${{ steps.version.outputs.name }}.apk"
+          # Stop here if it isn't signed with the release key.
+          "$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner" verify --print-certs KahrabaOrNot-*.apk \
+            | grep -i "SHA-256 digest: 77e93fa7e7c94c4e5304da0550bc84442694977a9650e52d926babf0fe5f6776"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -48,3 +58,5 @@ jobs:
           files: KahrabaOrNot-*.apk
           body: |
             Install on the Android phone: tap the .apk file below, then allow "Install unknown apps" if asked.
+
+            Signing certificate SHA-256: `77:E9:3F:A7:E7:C9:4C:4E:53:04:DA:05:50:BC:84:44:26:94:97:7A:96:50:E5:2D:92:6B:AB:F0:FE:5F:67:76`
