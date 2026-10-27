@@ -1,4 +1,4 @@
-package com.karaba.power
+package com.kahraba.power
 
 import android.os.Bundle
 import android.util.TypedValue

@@ -1,4 +1,4 @@
-package com.karaba.power
+package com.kahraba.power
 
 /** Live values shared between the background service and the screen (same process). */
 object MonitorState {

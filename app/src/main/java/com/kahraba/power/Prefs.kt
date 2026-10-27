@@ -1,4 +1,4 @@
-package com.karaba.power
+package com.kahraba.power
 
 import android.content.Context
 import android.content.SharedPreferences

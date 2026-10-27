@@ -1,4 +1,4 @@
-package com.karaba.power
+package com.kahraba.power
 
 import android.content.Intent
 import android.os.Bundle
@@ -17,7 +17,7 @@ class LogActivity : ThemedActivity() {
         findViewById<Button>(R.id.shareLog).setOnClickListener {
             val send = Intent(Intent.ACTION_SEND)
                 .setType("text/plain")
-                .putExtra(Intent.EXTRA_SUBJECT, "Ijit switch log")
+                .putExtra(Intent.EXTRA_SUBJECT, "Kahraba or Not switch log")
                 .putExtra(Intent.EXTRA_TEXT, EventLog.formatted(this))
             startActivity(Intent.createChooser(send, "Share log"))
         }

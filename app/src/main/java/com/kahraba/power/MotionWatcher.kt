@@ -1,4 +1,4 @@
-package com.karaba.power
+package com.kahraba.power
 
 import android.hardware.Sensor
 import android.hardware.SensorEvent

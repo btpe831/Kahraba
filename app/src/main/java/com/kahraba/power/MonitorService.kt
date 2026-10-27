@@ -1,4 +1,4 @@
-package com.karaba.power
+package com.kahraba.power
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -23,7 +23,7 @@ import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import com.karaba.power.Prefs.monitoring
+import com.kahraba.power.Prefs.monitoring
 import kotlin.math.ceil
 
 /**
@@ -91,7 +91,7 @@ class MonitorService : Service(), SensorEventListener {
         Prefs.sp(this).registerOnSharedPreferenceChangeListener(prefListener)
 
         wakeLock = (getSystemService(POWER_SERVICE) as PowerManager)
-            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "karaba:monitor")
+            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "kahraba:monitor")
             .apply { acquire() }
 
         MonitorState.running = true
@@ -300,12 +300,12 @@ class MonitorService : Service(), SensorEventListener {
     }
 
     companion object {
-        const val ACTION_START = "com.karaba.power.START"
-        const val ACTION_STOP = "com.karaba.power.STOP"
-        const val ACTION_SET = "com.karaba.power.SET"
-        const val ACTION_TEST_KAHRABA = "com.karaba.power.TEST_KAHRABA"
-        const val ACTION_TEST_MOTEUR = "com.karaba.power.TEST_MOTEUR"
-        const val ACTION_SILENCE = "com.karaba.power.SILENCE"
+        const val ACTION_START = "com.kahraba.power.START"
+        const val ACTION_STOP = "com.kahraba.power.STOP"
+        const val ACTION_SET = "com.kahraba.power.SET"
+        const val ACTION_TEST_KAHRABA = "com.kahraba.power.TEST_KAHRABA"
+        const val ACTION_TEST_MOTEUR = "com.kahraba.power.TEST_MOTEUR"
+        const val ACTION_SILENCE = "com.kahraba.power.SILENCE"
         const val EXTRA_SOURCE = "source"
         const val EXTRA_CALIBRATE = "calibrate"
 

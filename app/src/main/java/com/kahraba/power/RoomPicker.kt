@@ -1,4 +1,4 @@
-package com.karaba.power
+package com.kahraba.power
 
 import android.app.Activity
 import android.widget.EditText

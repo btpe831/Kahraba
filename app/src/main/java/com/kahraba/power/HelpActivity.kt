@@ -1,4 +1,4 @@
-package com.karaba.power
+package com.kahraba.power
 
 import android.os.Bundle
 import android.text.Html
@@ -6,7 +6,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
-/** How to use Ijit, which lights work, what breaks it, and the disclaimer. */
+/** How to use the app, which lights work, what breaks it, and the disclaimer. */
 class HelpActivity : ThemedActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -101,7 +101,7 @@ class HelpActivity : ThemedActivity() {
                 • If you get “Can't tell”, move closer to the bulb and try again.
             """,
 
-            "When Ijit won't work" to """
+            "When the app won't work" to """
                 <b>Solar inverters and battery systems.</b> If your lights run through an inverter (Deye, Growatt, etc.), the inverter makes its own smooth power whatever feeds it. Every check would say Kahraba. Use your inverter's screen or app instead: kahraba usually shows a steadier frequency (close to 50.0 Hz) and often a higher voltage than the moteur.
                 <b>UPS.</b> Same problem: a light plugged into a UPS gets smoothed power. Use a light on the normal house wiring.
                 <b>Voltage stabilisers.</b> A whole-house stabiliser (regulator) may smooth out the wobble. If checks always say Kahraba even when you know it's the moteur, this may be why.
@@ -129,15 +129,15 @@ class HelpActivity : ThemedActivity() {
             """,
 
             "Privacy" to """
-                Everything stays on this phone. Ijit has <b>no internet access</b>. Nothing is sent anywhere unless you tap Share yourself. Uninstalling the app deletes all its data.
+                Everything stays on this phone. Kahraba or Not has <b>no internet access</b>. Nothing is sent anywhere unless you tap Share yourself. Uninstalling the app deletes all its data.
             """,
 
             "Disclaimer" to """
-                Ijit gives an <b>estimate</b> based on how a light bulb behaves. It can be wrong, and results depend on your bulbs, wiring, generator and phone. It is provided as-is, without any guarantee of accuracy.
-                • <b>Never use Ijit for safety decisions.</b> It cannot tell you whether wires are live or safe to touch. Always treat wiring as live, and leave electrical work to a qualified electrician.
+                Kahraba or Not gives an <b>estimate</b> based on how a light bulb behaves. It can be wrong, and results depend on your bulbs, wiring, generator and phone. It is provided as-is, without any guarantee of accuracy.
+                • <b>Never use this app for safety decisions.</b> It cannot tell you whether wires are live or safe to touch. Always treat wiring as live, and leave electrical work to a qualified electrician.
                 • Don't rely on it for medical equipment or anything where a wrong answer could cause harm or damage.
                 • Halogen bulbs get very hot. Keep the phone and your hands away from them.
-                • Ijit is not affiliated with Électricité du Liban (EDL) or any generator provider.
+                • Kahraba or Not is not affiliated with Électricité du Liban (EDL) or any generator provider.
                 Use at your own risk.
             """,
         )

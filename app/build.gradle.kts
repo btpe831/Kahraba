@@ -3,19 +3,21 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
-// GitHub Actions gives every build a rising number, so each APK installs over the last one.
+// The version people see (1.1, 1.2...) is set in gradle.properties. GitHub Actions gives every
+// build a rising number, used as the internal version code so each APK installs over the last.
 val buildNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
+val appVersion = providers.gradleProperty("appVersion").get()
 
 android {
-    namespace = "com.karaba.power"
+    namespace = "com.kahraba.power"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.karaba.power"
+        applicationId = "com.kahraba.power"
         minSdk = 26
         targetSdk = 34
         versionCode = buildNumber
-        versionName = "1.0.$buildNumber"
+        versionName = appVersion
     }
 
     signingConfigs {

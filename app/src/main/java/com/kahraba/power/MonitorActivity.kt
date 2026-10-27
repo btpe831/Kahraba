@@ -1,4 +1,4 @@
-package com.karaba.power
+package com.kahraba.power
 
 import android.Manifest
 import android.content.Intent
@@ -23,7 +23,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import com.karaba.power.Prefs.monitoring
+import com.kahraba.power.Prefs.monitoring
 import java.io.File
 
 /** The secondary mode: always-on monitoring with the phone left under a light. */

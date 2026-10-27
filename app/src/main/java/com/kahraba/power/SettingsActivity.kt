@@ -1,4 +1,4 @@
-package com.karaba.power
+package com.kahraba.power
 
 import android.app.TimePickerDialog
 import android.content.Intent
@@ -126,12 +126,12 @@ class SettingsActivity : ThemedActivity() {
         // ABOUT
         section("About")
         body.addView(card {
-            addView(link("How to use Ijit", "Which bulbs work, distance, rooms, solar and UPS, and the disclaimer.") {
+            addView(link("How to use the app", "Which bulbs work, distance, rooms, solar and UPS, and the disclaimer.") {
                 startActivity(Intent(this@SettingsActivity, HelpActivity::class.java))
             })
             addView(divider())
             addView(text("Privacy", 17f, R.attr.appText, bold = true), lp(top = 12))
-            addView(text("Everything stays on this phone. Ijit has no internet access; data only leaves if you tap Share.",
+            addView(text("Everything stays on this phone. Kahraba or Not has no internet access; data only leaves if you tap Share.",
                 14f, R.attr.appMuted), lp(top = 4))
             val version = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull() ?: ""
             addView(text("Version $version", 14f, R.attr.appMuted), lp(top = 14))

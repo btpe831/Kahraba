@@ -201,7 +201,7 @@
                 android:textSize="12sp" />
 
             <!-- TODAY: date, live clock and calendar -->
-            <com.karaba.power.NotchCard
+            <com.kahraba.power.NotchCard
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
@@ -321,10 +321,10 @@
                             android:textSize="13sp" />
                     </LinearLayout>
                 </LinearLayout>
-            </com.karaba.power.NotchCard>
+            </com.kahraba.power.NotchCard>
 
             <!-- ROOM -->
-            <com.karaba.power.NotchCard
+            <com.kahraba.power.NotchCard
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="22dp"
@@ -367,10 +367,10 @@
                         android:textColor="?attr/appMuted"
                         android:textSize="14sp" />
                 </LinearLayout>
-            </com.karaba.power.NotchCard>
+            </com.kahraba.power.NotchCard>
 
             <!-- RECENT CHECKS -->
-            <com.karaba.power.NotchCard
+            <com.kahraba.power.NotchCard
                 android:id="@+id/recentCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -386,17 +386,16 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical" />
-            </com.karaba.power.NotchCard>
+            </com.kahraba.power.NotchCard>
 
             <!-- ALWAYS-ON MONITOR -->
-            <com.karaba.power.NotchCard
+            <com.kahraba.power.NotchCard
                 android:id="@+id/monitorCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="22dp"
                 android:clickable="true"
                 android:focusable="true"
-                app:notchChevron="true"
                 app:notchTitle="Always-on monitor">
 
                 <LinearLayout
@@ -427,17 +426,16 @@
                         android:src="@drawable/ic_chevron"
                         app:tint="?attr/appAccent" />
                 </LinearLayout>
-            </com.karaba.power.NotchCard>
+            </com.kahraba.power.NotchCard>
 
             <!-- LIGHT METER -->
-            <com.karaba.power.NotchCard
+            <com.kahraba.power.NotchCard
                 android:id="@+id/meterCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="22dp"
                 android:clickable="true"
                 android:focusable="true"
-                app:notchChevron="true"
                 app:notchTitle="Light meter">
 
                 <LinearLayout
@@ -461,7 +459,7 @@
                         android:src="@drawable/ic_chevron"
                         app:tint="?attr/appAccent" />
                 </LinearLayout>
-            </com.karaba.power.NotchCard>
+            </com.kahraba.power.NotchCard>
 
             <TextView
                 android:id="@+id/footerNote"

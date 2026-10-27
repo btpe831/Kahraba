@@ -15,7 +15,7 @@
         android:paddingBottom="32dp">
 
         <!-- Digital readout -->
-        <com.karaba.power.NotchCard
+        <com.kahraba.power.NotchCard
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:notchTitle="Live">
@@ -62,10 +62,10 @@
                     android:textColor="?attr/appMuted"
                     android:textSize="14sp" />
             </LinearLayout>
-        </com.karaba.power.NotchCard>
+        </com.kahraba.power.NotchCard>
 
         <!-- Chart -->
-        <com.karaba.power.NotchCard
+        <com.kahraba.power.NotchCard
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="22dp"
@@ -76,7 +76,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <com.karaba.power.LuxChart
+                <com.kahraba.power.LuxChart
                     android:id="@+id/chart"
                     android:layout_width="match_parent"
                     android:layout_height="220dp" />
@@ -88,10 +88,10 @@
                     android:layout_marginTop="12dp"
                     android:orientation="horizontal" />
             </LinearLayout>
-        </com.karaba.power.NotchCard>
+        </com.kahraba.power.NotchCard>
 
         <!-- Recording -->
-        <com.karaba.power.NotchCard
+        <com.kahraba.power.NotchCard
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="22dp"
@@ -152,6 +152,6 @@
                     android:textColor="?attr/appMuted"
                     android:textSize="13sp" />
             </LinearLayout>
-        </com.karaba.power.NotchCard>
+        </com.kahraba.power.NotchCard>
     </LinearLayout>
 </ScrollView>

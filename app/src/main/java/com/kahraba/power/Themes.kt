@@ -1,4 +1,4 @@
-package com.karaba.power
+package com.kahraba.power
 
 /** The colour themes (generated): key, name, description, light?, swatch background and dot. */
 object Themes {

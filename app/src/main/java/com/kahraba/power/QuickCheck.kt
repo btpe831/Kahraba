@@ -1,4 +1,4 @@
-package com.karaba.power
+package com.kahraba.power
 
 /**
  * A one-off check under a halogen bulb that stops as soon as it is sure.

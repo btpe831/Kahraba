@@ -1,4 +1,4 @@
-package com.karaba.power
+package com.kahraba.power
 
 import android.content.Intent
 import android.graphics.drawable.GradientDrawable
@@ -24,7 +24,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.progressindicator.LinearProgressIndicator
-import com.karaba.power.Prefs.monitoring
+import com.kahraba.power.Prefs.monitoring
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -298,7 +298,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     private fun showLastResult() {
         val last = CheckHistory.read(this).firstOrNull { !it.fromMonitor }
         if (last == null) {
-            showHero(R.color.idle, R.drawable.ic_bolt, "Ijit?", "Tap to check", "Kahraba or moteur")
+            showHero(R.color.idle, R.drawable.ic_bolt, "Kahraba or not?", "Tap to check", "Lay the phone under a halogen light")
         } else {
             showResult(last, null)
         }
@@ -669,7 +669,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             if (last == null) {
                 color = ContextCompat.getColor(this, R.color.idle)
                 icon = R.drawable.ic_bolt
-                barLabel.text = "Ijit"
+                barLabel.text = "Kahraba or Not"
                 barStatus.text = "Tap Check now"
             } else {
                 color = ContextCompat.getColor(this, colorFor(last.verdict))
