@@ -407,7 +407,8 @@ class SettingsActivity : ThemedActivity() {
 
     private fun text(s: String, size: Float, colorAttr: Int, bold: Boolean = false) = TextView(this).apply {
         text = s
-        textSize = size
+        // Settings text runs 2 points smaller than the sizes given, to keep this screen compact.
+        textSize = size - 2f
         setTextColor(color(colorAttr))
         if (bold) setTypeface(typeface, Typeface.BOLD)
     }
