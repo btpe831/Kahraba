@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base theme. A Palette overlay (palettes.xml) sets the colours and font for the chosen theme. -->
+    <style name="AppTheme" parent="Theme.Material3.DayNight">
+        <item name="colorPrimary">@color/t_lamplight_accent</item>
+        <item name="colorOnPrimary">@color/t_lamplight_onaccent</item>
+        <item name="android:colorBackground">@color/t_lamplight_bg</item>
+        <item name="colorSurface">@color/t_lamplight_surface</item>
+        <item name="colorOnSurface">@color/t_lamplight_text</item>
+        <item name="appBg">@color/t_lamplight_bg</item>
+        <item name="appSurface">@color/t_lamplight_surface</item>
+        <item name="appSurfaceAlt">@color/t_lamplight_alt</item>
+        <item name="appBorder">@color/t_lamplight_border</item>
+        <item name="appAccent">@color/t_lamplight_accent</item>
+        <item name="appOnAccent">@color/t_lamplight_onaccent</item>
+        <item name="appInk">@color/t_lamplight_accent</item>
+        <item name="appOnInk">@color/t_lamplight_onaccent</item>
+        <item name="appText">@color/t_lamplight_text</item>
+        <item name="appMuted">@color/t_lamplight_muted</item>
+        <item name="appOutline">@color/t_lamplight_outline</item>
+        <item name="appRing">@color/t_lamplight_ring</item>
+        <item name="appIsLight">false</item>
+        <item name="android:fontFamily">serif</item>
+        <item name="fontFamily">serif</item>
+        <item name="bottomSheetDialogTheme">@style/AppBottomSheet</item>
+    </style>
+
+    <style name="AppTheme.Main" parent="AppTheme">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppBottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/AppBottomSheetStyle</item>
+    </style>
+
+    <style name="AppBottomSheetStyle" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="backgroundTint">?attr/appSurface</item>
+    </style>
+
+    <!-- Rounded card with a thin border, like an almanac page. -->
+    <style name="Card" parent="Widget.Material3.CardView.Outlined">
+        <item name="cardCornerRadius">26dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="strokeColor">?attr/appBorder</item>
+        <item name="cardBackgroundColor">?attr/appSurface</item>
+    </style>
+
+    <style name="SectionLabel">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/appAccent</item>
+        <item name="android:letterSpacing">0.14</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:layout_marginTop">28dp</item>
+        <item name="android:layout_marginBottom">10dp</item>
+        <item name="android:layout_marginStart">4dp</item>
+    </style>
+
+    <!-- Small caps label and big number, like the weather app's Comfort card. -->
+    <style name="StatLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">?attr/appMuted</item>
+    </style>
+
+    <style name="StatValue">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">30sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/appText</item>
+    </style>
+
+    <style name="TonalButton" parent="Widget.Material3.Button.TonalButton">
+        <item name="android:minHeight">52dp</item>
+        <item name="cornerRadius">26dp</item>
+    </style>
+
+    <style name="PrimaryButton" parent="Widget.Material3.Button">
+        <item name="android:minHeight">56dp</item>
+        <item name="cornerRadius">28dp</item>
+        <item name="android:textSize">17sp</item>
+        <item name="backgroundTint">?attr/appAccent</item>
+        <item name="android:textColor">?attr/appOnAccent</item>
+    </style>
+
+    <style name="OutlinePill" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="cornerRadius">24dp</item>
+        <item name="strokeColor">?attr/appBorder</item>
+        <item name="android:textColor">?attr/appText</item>
+    </style>
+</resources>

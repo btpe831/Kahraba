@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#0E1014</color>
+    <color name="surface">#181B21</color>
+    <color name="surface_alt">#22262E</color>
+    <color name="ink">#F3F4F6</color>
+    <color name="on_ink">#111827</color>
+    <color name="text">#F3F4F6</color>
+    <color name="muted">#9CA3AF</color>
+    <color name="outline">#2A2F38</color>
+    <color name="checking">#2B3442</color>
+    <color name="note_bg">#3A2A0C</color>
+    <color name="note_text">#FDE68A</color>
+</resources>
