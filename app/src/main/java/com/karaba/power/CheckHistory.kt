@@ -13,7 +13,8 @@ import android.content.Context
  */
 object CheckHistory {
     private const val KEY = "check_history"
-    private const val KEEP = 50
+    /** Enough for several months of checks in the calendar. */
+    private const val KEEP = 1000
     /** How many recent results per source are used to learn the spot's brightness. */
     private const val LEARN_FROM = 5
 

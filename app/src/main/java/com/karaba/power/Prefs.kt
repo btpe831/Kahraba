@@ -23,7 +23,6 @@ object Prefs {
     private const val CURRENT_SPOT = "current_spot"
     private const val MONITOR_ROOM = "monitor_room"
     const val COLOR_THEME = "color_theme"
-    const val APPEARANCE = "appearance"
 
     private const val SOURCE = "state_source"
     private const val SINCE = "state_since"
@@ -54,21 +53,19 @@ object Prefs {
         else -> 1.0
     }
 
-    fun colorTheme(ctx: Context): String = sp(ctx).getString(COLOR_THEME, "graphite") ?: "graphite"
+    /** The chosen theme (older theme names fall back to the default). */
+    fun colorTheme(ctx: Context): String = Themes.byKey(sp(ctx).getString(COLOR_THEME, Themes.DEFAULT)).key
 
-    fun paletteStyle(ctx: Context): Int = when (colorTheme(ctx)) {
-        "ocean" -> R.style.Palette_Ocean
-        "lavender" -> R.style.Palette_Lavender
-        "rose" -> R.style.Palette_Rose
-        "sand" -> R.style.Palette_Sand
-        else -> R.style.Palette_Graphite
+    fun setColorTheme(ctx: Context, key: String) {
+        sp(ctx).edit().putString(COLOR_THEME, key).apply()
     }
 
-    fun nightMode(ctx: Context): Int = when (sp(ctx).getString(APPEARANCE, "system")) {
-        "light" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
-        "dark" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
-        else -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-    }
+    fun paletteStyle(ctx: Context): Int = Themes.byKey(colorTheme(ctx)).style
+
+    /** Each theme is either light or dark, so the rest of the system UI follows it. */
+    fun nightMode(ctx: Context): Int =
+        if (Themes.byKey(colorTheme(ctx)).light) androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+        else androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
 
     /** Saved spot names, e.g. "Kitchen", "Bathroom". */
     fun spots(ctx: Context): List<String> =

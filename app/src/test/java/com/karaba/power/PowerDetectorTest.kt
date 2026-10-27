@@ -319,4 +319,20 @@ class PowerDetectorTest {
         println("At a learned spot: kahraba ${onKahraba.size}/${onKahraba.size}, busy moteur " +
             "${onBusyMoteur.size}/${onBusyMoteur.size}, calm moteur ${onCalmMoteur.size}/${onCalmMoteur.size} right")
     }
+
+    @Test
+    fun movingTheMonitorPhoneIsNotKahraba() {
+        // Calm moteur, then the phone is picked up and put down somewhere brighter.
+        val r = Run(PowerDetector())
+        r.d.setManual(0, Source.MOTEUR)
+        r.run(10 * min) { calmMoteur(it) }
+        r.d.onMotion(r.t)
+        r.run(10 * min) { kahraba(it) }                   // +24% brighter, but only because it moved
+        assertEquals(Source.MOTEUR, r.d.source)
+        // Power cuts are still caught while paused.
+        r.d.onMotion(r.t)
+        r.run(3_000, plugged = false) { 0.0 }
+        r.run(1_000) { calmMoteur(it) }
+        assertEquals(1, r.transitions.count { it.reason.startsWith("Power cut") })
+    }
 }

@@ -39,7 +39,7 @@ class HelpActivity : ThemedActivity() {
                 &nbsp;&nbsp;• <b>1 long beep = Moteur</b> (usually within a few seconds)
                 &nbsp;&nbsp;• <b>4 short beeps = Kahraba</b> – only in a learned room (see “Rooms”)
                 &nbsp;&nbsp;• <b>2 short beeps = No flicker</b> (after 25 seconds) – probably kahraba, but not certain
-                Don't touch the phone or lean over it until it beeps.
+                Don't touch the phone or lean over it until it beeps. If the phone is moved, the check stops – just put it down and try again.
             """,
 
             "Rooms: how to get a sure “Kahraba”" to """
@@ -125,6 +125,7 @@ class HelpActivity : ThemedActivity() {
                 • When the monitor is off it shows “Off”. After you start it, it shows “Not sure yet” until it sees a wobble or a power cut (moteur), matches a learned level, or you tap “It's kahraba” / “It's moteur”.
                 • Tap “It's kahraba” or “It's moteur” when you're sure, so it learns your setup.
                 • Unplugging the phone yourself looks like a power cut.
+                • If the phone is picked up or moved, it stops judging the light until the phone has been still for 10 seconds (power cuts are still noticed). A move is never mistaken for kahraba coming back.
             """,
 
             "Privacy" to """

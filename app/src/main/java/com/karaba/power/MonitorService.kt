@@ -39,6 +39,7 @@ class MonitorService : Service(), SensorEventListener {
     private lateinit var beeper: Beeper
     private lateinit var data: DataLogger
     private var wakeLock: PowerManager.WakeLock? = null
+    private var motion: MotionWatcher? = null
 
     private var latestLux: Double? = null
     private var plugged: Boolean? = null
@@ -85,6 +86,8 @@ class MonitorService : Service(), SensorEventListener {
         if (light != null) sensors.registerListener(this, light, SensorManager.SENSOR_DELAY_FASTEST, handler)
 
         registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED), null, handler)
+        motion = MotionWatcher(sensors) { detector.onMotion(System.currentTimeMillis()) }
+        motion?.start(handler)
         Prefs.sp(this).registerOnSharedPreferenceChangeListener(prefListener)
 
         wakeLock = (getSystemService(POWER_SERVICE) as PowerManager)
@@ -126,6 +129,7 @@ class MonitorService : Service(), SensorEventListener {
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
         runCatching { sensors.unregisterListener(this) }
+        runCatching { motion?.stop() }
         runCatching { unregisterReceiver(batteryReceiver) }
         Prefs.sp(this).unregisterOnSharedPreferenceChangeListener(prefListener)
         beeper.shutdown()

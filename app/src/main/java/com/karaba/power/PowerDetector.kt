@@ -88,12 +88,22 @@ class PowerDetector(
 
     private var darkStartMs: Long? = null
     private var darkBaseline = 0.0
+    /** While the phone is being moved, light changes mean nothing. */
+    private var motionUntilMs = 0L
 
     fun tick(nowMs: Long, lux: Double?, isPlugged: Boolean?): List<Transition> {
         val out = mutableListOf<Transition>()
         if (historyStartMs < 0) historyStartMs = nowMs
 
         handleCharger(nowMs, isPlugged, out)
+
+        if (nowMs < motionUntilMs) {
+            // Power cuts are still watched through the charger; the light is ignored.
+            flickerPct = null
+            lightStatus = "Phone moved – paused until it's still"
+            if (nowMs - lastEvalMs >= 1000) lastEvalMs = nowMs
+            return out
+        }
 
         if (lux != null) {
             if (!everPlugged) handleLightCut(nowMs, lux, out)
@@ -113,7 +123,17 @@ class PowerDetector(
      * short dips that fall between ticks, so they count as wobble.
      */
     fun addReading(nowMs: Long, lux: Double) {
-        samples.addLast(Sample(nowMs, lux))
+        if (nowMs >= motionUntilMs) samples.addLast(Sample(nowMs, lux))
+    }
+
+    /**
+     * The phone moved. Pause judging the light until it has been still for [MOTION_PAUSE_MS], and
+     * forget the light seen so far: from a new position the brightness isn't comparable, so a move
+     * can never be mistaken for kahraba coming back.
+     */
+    fun onMotion(nowMs: Long) {
+        motionUntilMs = nowMs + MOTION_PAUSE_MS
+        resetHistory(motionUntilMs)
     }
 
     /** The user says which source it is (e.g. from the lamp post). */
@@ -299,6 +319,8 @@ class PowerDetector(
 
     companion object {
         const val FLICKER_WINDOW_MS = 4_000L
+        /** How long the phone must be still after a move before the light is judged again. */
+        const val MOTION_PAUSE_MS = 10_000L
         /** Minutes before the steady stretch used as the "before" brightness. */
         const val REFERENCE_MINUTES = 3.0
         const val SAMPLE_KEEP_MS = 30_000L

@@ -1,217 +1,403 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/appBg"
-    android:fillViewport="true">
+    android:background="?attr/appBg">
 
-    <LinearLayout
+    <ScrollView
+        android:id="@+id/scroll"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingStart="20dp"
-        android:paddingTop="12dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="24dp">
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="120dp">
 
-        <!-- Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Ijit"
-                    android:textColor="?attr/appText"
-                    android:textSize="26sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Kahraba or moteur"
-                    android:textColor="?attr/appMuted"
-                    android:textSize="14sp" />
-            </LinearLayout>
-
-            <ImageButton
-                android:id="@+id/helpButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Help"
-                android:src="@drawable/ic_help"
-                app:tint="?attr/appMuted" />
-
-            <ImageButton
-                android:id="@+id/settingsButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Settings"
-                android:src="@drawable/ic_settings"
-                app:tint="?attr/appMuted" />
-        </LinearLayout>
-
-        <!-- Status orb with progress ring -->
-        <FrameLayout
-            android:layout_width="272dp"
-            android:layout_height="272dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="28dp">
-
-            <com.google.android.material.progressindicator.CircularProgressIndicator
-                android:id="@+id/ring"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:max="1000"
-                android:visibility="invisible"
-                app:indicatorColor="?attr/appRing"
-                app:indicatorSize="272dp"
-                app:trackColor="?attr/appOutline"
-                app:trackCornerRadius="4dp"
-                app:trackThickness="8dp" />
-
-            <LinearLayout
-                android:id="@+id/orb"
-                android:layout_width="236dp"
-                android:layout_height="236dp"
-                android:layout_gravity="center"
-                android:background="@drawable/orb"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <ImageView
-                    android:id="@+id/orbIcon"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/ic_bolt"
-                    app:tint="#FFFFFF" />
-
-                <TextView
-                    android:id="@+id/orbTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:textColor="#FFFFFF"
-                    android:textSize="30sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/orbSub"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:alpha="0.85"
-                    android:gravity="center"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp" />
-            </LinearLayout>
-        </FrameLayout>
-
-        <TextView
-            android:id="@+id/statusLine"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:gravity="center"
-            android:minLines="2"
-            android:textColor="?attr/appMuted"
-            android:textSize="15sp" />
-
-        <!-- Shown after a check, to confirm what it really was (teaches the room). -->
-        <LinearLayout
-            android:id="@+id/confirmRow"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:orientation="vertical"
-            android:visibility="gone">
+            android:paddingStart="16dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="16dp">
 
-            <TextView
-                android:id="@+id/confirmPrompt"
+            <!-- NOW: the big status card -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:id="@+id/hero"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="bottom"
+                    android:minHeight="300dp"
+                    android:orientation="vertical"
+                    android:padding="22dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_place" />
+
+                        <TextView
+                            android:id="@+id/heroRoom"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:shadowColor="#66000000"
+                            android:shadowRadius="6"
+                            android:textColor="#FFFFFF"
+                            android:textSize="22sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/heroTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:includeFontPadding="false"
+                        android:shadowColor="#66000000"
+                        android:shadowRadius="8"
+                        android:textColor="#FFFFFF"
+                        android:textSize="64sp" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/heroIcon"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_bolt" />
+
+                        <TextView
+                            android:id="@+id/heroSub"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:shadowColor="#66000000"
+                            android:shadowRadius="6"
+                            android:textColor="#FFFFFF"
+                            android:textSize="26sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/heroMeta"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:letterSpacing="0.12"
+                        android:textAllCaps="true"
+                        android:textColor="#F2FFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/heroProgress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:max="1000"
+                        android:visibility="gone"
+                        app:indicatorColor="#FFFFFF"
+                        app:trackColor="#40FFFFFF"
+                        app:trackCornerRadius="3dp"
+                        app:trackThickness="5dp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|center_horizontal"
+                    android:background="@drawable/tab_pill"
+                    android:letterSpacing="0.16"
+                    android:paddingStart="20dp"
+                    android:paddingTop="5dp"
+                    android:paddingEnd="20dp"
+                    android:paddingBottom="5dp"
+                    android:text="NOW"
+                    android:textColor="?attr/appAccent"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/checkButton"
+                style="@style/PrimaryButton"
+                android:layout_width="match_parent"
+                android:layout_height="62dp"
+                android:layout_marginTop="16dp"
+                android:text="Check now"
+                android:textSize="19sp"
+                app:cornerRadius="31dp" />
+
+            <!-- Shown after a check, to confirm what it really was (teaches the room). -->
+            <LinearLayout
+                android:id="@+id/confirmRow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/confirmPrompt"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="Know for sure? Confirm it:"
+                    android:textColor="?attr/appMuted"
+                    android:textSize="14sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/confirmKahraba"
+                        style="@style/OutlinePill"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:text="It was kahraba" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/confirmMoteur"
+                        style="@style/OutlinePill"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:text="It was moteur" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
                 android:gravity="center"
-                android:text="Know for sure? Confirm it:"
+                android:lineSpacingExtra="2dp"
+                android:text="Lay the phone face-up close to a halogen light.\n1 long beep = moteur  ·  4 short = kahraba  ·  2 short = no flicker"
                 android:textColor="?attr/appMuted"
                 android:textSize="13sp" />
 
-            <LinearLayout
+            <!-- TODAY: date, live clock and calendar -->
+            <com.karaba.power.NotchCard
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:orientation="horizontal">
+                android:layout_marginTop="24dp"
+                app:notchTitle="Today">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/confirmKahraba"
-                    style="@style/TonalButton"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
-                    android:layout_weight="1"
-                    android:text="It was kahraba" />
+                    android:orientation="vertical">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/confirmMoteur"
-                    style="@style/TonalButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:layout_weight="1"
-                    android:text="It was moteur" />
-            </LinearLayout>
-        </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/checkButton"
-            style="@style/PrimaryButton"
-            android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:layout_marginTop="16dp"
-            android:text="Check now"
-            android:textSize="18sp"
-            app:cornerRadius="32dp" />
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:gravity="center"
-            android:lineSpacingExtra="2dp"
-            android:text="Lay the phone face-up close to a halogen light.\n1 long beep = moteur  ·  4 short = kahraba  ·  2 short = no flicker"
-            android:textColor="?attr/appMuted"
-            android:textSize="13sp" />
+                            <TextView
+                                android:id="@+id/dayName"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="?attr/appText"
+                                android:textSize="30sp"
+                                android:textStyle="bold" />
 
-        <!-- Room -->
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Card"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp">
+                            <TextView
+                                android:id="@+id/dateText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="?attr/appMuted"
+                                android:textSize="17sp" />
+                        </LinearLayout>
 
-            <LinearLayout
+                        <TextView
+                            android:id="@+id/clockText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="?attr/appText"
+                            android:textSize="34sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="16dp"
+                        android:background="?attr/appOutline" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/calModeText"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Show always-on monitor"
+                            android:textColor="?attr/appMuted"
+                            android:textSize="14sp" />
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/calMonitorSwitch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/calWeekdays"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:orientation="horizontal" />
+
+                    <LinearLayout
+                        android:id="@+id/calGrid"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
+                    <TextView
+                        android:id="@+id/calLegend"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:textColor="?attr/appMuted"
+                        android:textSize="13sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_lock"
+                            app:tint="?attr/appMuted" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="Tap a day to add a note. Notes stay on this phone only."
+                            android:textColor="?attr/appMuted"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.karaba.power.NotchCard>
+
+            <!-- ROOM -->
+            <com.karaba.power.NotchCard
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingStart="18dp"
-                android:paddingTop="10dp"
-                android:paddingEnd="12dp"
-                android:paddingBottom="14dp">
+                android:layout_marginTop="22dp"
+                app:notchTitle="Room">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Select room"
+                            android:textColor="?attr/appText"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/spotButton"
+                            style="@style/OutlinePill"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="None" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/spotInfo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:lineSpacingExtra="2dp"
+                        android:textColor="?attr/appMuted"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </com.karaba.power.NotchCard>
+
+            <!-- RECENT CHECKS -->
+            <com.karaba.power.NotchCard
+                android:id="@+id/recentCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:paddingStart="4dp"
+                android:paddingTop="26dp"
+                android:paddingEnd="4dp"
+                android:paddingBottom="10dp"
+                app:notchTitle="Recent checks">
+
+                <LinearLayout
+                    android:id="@+id/historyList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </com.karaba.power.NotchCard>
+
+            <!-- ALWAYS-ON MONITOR -->
+            <com.karaba.power.NotchCard
+                android:id="@+id/monitorCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:clickable="true"
+                android:focusable="true"
+                app:notchChevron="true"
+                app:notchTitle="Always-on monitor">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -219,120 +405,118 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Select room"
-                        android:textColor="?attr/appText"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/spotButton"
-                        style="@style/Widget.Material3.Button.TonalButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="None" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/spotInfo"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
-                    android:lineSpacingExtra="2dp"
-                    android:textColor="?attr/appMuted"
-                    android:textSize="13sp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Recent checks -->
-        <TextView
-            style="@style/SectionLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Recent  ·  tap to fix" />
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Card"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <LinearLayout
-                android:id="@+id/historyList"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp" />
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Always-on monitor -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/monitorCard"
-            style="@style/Card"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:clickable="true"
-            android:focusable="true">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="18dp">
-
-                <View
-                    android:id="@+id/monitorDot"
-                    android:layout_width="10dp"
-                    android:layout_height="10dp"
-                    android:background="@drawable/dot" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Always-on monitor"
-                        android:textColor="?attr/appText"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                    <View
+                        android:id="@+id/monitorDot"
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:background="@drawable/dot" />
 
                     <TextView
                         android:id="@+id/monitorSub"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:textColor="?attr/appMuted"
-                        android:textSize="14sp" />
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:textColor="?attr/appText"
+                        android:textSize="16sp" />
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_chevron"
+                        app:tint="?attr/appAccent" />
                 </LinearLayout>
+            </com.karaba.power.NotchCard>
 
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/ic_chevron"
-                    app:tint="?attr/appMuted" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            <TextView
+                android:id="@+id/footerNote"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="22dp"
+                android:layout_marginEnd="4dp"
+                android:lineSpacingExtra="2dp"
+                android:text="Doesn't work with LED bulbs, or if your lights run through a solar inverter or UPS. Tap here for the full guide."
+                android:textColor="?attr/appMuted"
+                android:textSize="13sp" />
+        </LinearLayout>
+    </ScrollView>
 
-        <TextView
-            android:layout_width="match_parent"
+    <!-- Sticky bottom bar -->
+    <LinearLayout
+        android:id="@+id/bottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingTop="30dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="18dp">
+
+        <FrameLayout
+            android:id="@+id/barTile"
+            android:layout_width="60dp"
+            android:layout_height="60dp">
+
+            <ImageView
+                android:id="@+id/barIcon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_bolt" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginEnd="4dp"
-            android:lineSpacingExtra="2dp"
-            android:text="Note: doesn't work with LED bulbs, or if your lights run through a solar inverter or UPS. Tap ? at the top for the full guide."
-            android:textColor="?attr/appMuted"
-            android:textSize="12sp" />
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/barLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:letterSpacing="0.16"
+                android:maxLines="1"
+                android:textAllCaps="true"
+                android:textColor="?attr/appText"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/barStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="?attr/appText"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/barHistory"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/circle_button"
+            android:contentDescription="All checks"
+            android:src="@drawable/ic_list"
+            app:tint="?attr/appAccent" />
+
+        <ImageButton
+            android:id="@+id/barSettings"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/circle_button"
+            android:contentDescription="Settings"
+            android:src="@drawable/ic_settings"
+            app:tint="?attr/appAccent" />
     </LinearLayout>
-</ScrollView>
+</FrameLayout>
