@@ -565,15 +565,19 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     // ---- Room, recent checks, monitor ----
 
+    /** The compact room picker above the Check button: the room and a one-line status. */
     private fun renderSpot() {
         val room = Prefs.currentSpot(this)
-        spotButton.text = room.ifEmpty { "None" }
-        spotInfo.text = RoomPicker.describe(
-            this, room,
-            "Optional. Choose the room you're checking in, and always put the phone in the same place under " +
-                "the same light. Once the app has learned that room, it can tell kahraba and moteur apart, " +
-                "even when the moteur is steady.",
-        )
+        spotButton.text = (room.ifEmpty { "Choose" }) + "  ▾"
+        val (k, m) = CheckHistory.spotLevels(this, room)
+        spotInfo.text = when {
+            room.isEmpty() -> "No room · pick one for sure kahraba results"
+            k != null && m != null && k > m * QuickCheck.LEVEL_GAP -> "$room · learned ✓"
+            k != null && m != null -> "$room · kahraba and moteur look alike here"
+            k == null && m == null -> "$room · not learned yet"
+            k == null -> "$room · needs one confirmed kahraba"
+            else -> "$room · needs one moteur check"
+        }
     }
 
     private fun renderHistory() {
