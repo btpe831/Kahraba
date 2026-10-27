@@ -9,7 +9,7 @@ import android.widget.Toast
 /** "Send feedback": opens the email app with the app version and phone details filled in. */
 object Feedback {
     /** Where feedback goes. Empty hides every "Send feedback" button. */
-    const val EMAIL = ""
+    const val EMAIL = "aubs115@duck.com"
 
     val enabled get() = EMAIL.isNotBlank()
 
