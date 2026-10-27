@@ -14,6 +14,7 @@
     <color name="kahraba">#059669</color>
     <color name="moteur">#D97706</color>
     <color name="no_power">#475569</color>
+    <color name="over_limit">#DC2626</color>
     <color name="idle">#64748B</color>
     <color name="checking">#334155</color>
     <color name="ring">#FACC15</color>

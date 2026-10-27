@@ -111,6 +111,7 @@ object Prefs {
         "card_room" to "Room",
         "card_recent" to "Recent checks",
         "card_monitor" to "Always-on monitor",
+        "card_amps" to "Amps calculator",
         "card_meter" to "Light meter",
     )
 

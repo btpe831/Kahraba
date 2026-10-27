@@ -176,6 +176,10 @@ class SettingsActivity : ThemedActivity() {
         // TOOLS
         section("Tools")
         body.addView(card {
+            addView(link("Amps calculator", "Watts to amps, and what fits in your moteur subscription.") {
+                startActivity(Intent(this@SettingsActivity, AmpsActivity::class.java))
+            })
+            addView(divider())
             addView(link("Light meter", "Live lux, a chart, and recordings you can save as CSV.") {
                 startActivity(Intent(this@SettingsActivity, LightMeterActivity::class.java))
             })

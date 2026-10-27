@@ -36,6 +36,11 @@
             android:parentActivityName=".MainActivity" />
 
         <activity
+            android:name=".AmpsActivity"
+            android:label="Amps calculator"
+            android:theme="@style/AppTheme.Main" />
+
+        <activity
             android:name=".LightMeterActivity"
             android:label="Light meter"
             android:parentActivityName=".MainActivity" />

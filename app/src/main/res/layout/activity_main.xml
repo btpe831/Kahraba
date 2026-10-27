@@ -751,6 +751,39 @@
                 </LinearLayout>
             </com.kahraba.power.NotchCard>
 
+            <!-- AMPS CALCULATOR -->
+            <com.kahraba.power.NotchCard
+                android:id="@+id/ampsCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:clickable="true"
+                android:focusable="true"
+                app:notchTitle="Amps calculator">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Watts to amps: will the kettle and heater fit in your 10 A subscription?"
+                        android:textColor="?attr/appText"
+                        android:textSize="16sp" />
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_chevron"
+                        app:tint="?attr/appAccent" />
+                </LinearLayout>
+            </com.kahraba.power.NotchCard>
+
             <!-- LIGHT METER -->
             <com.kahraba.power.NotchCard
                 android:id="@+id/meterCard"
