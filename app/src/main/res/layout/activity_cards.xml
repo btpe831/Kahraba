@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:lineSpacingExtra="2dp"
-        android:text="Drag ≡ (or press and hold a card) to move it. Switch a card off to hide it."
+        android:text="Switch a card off to hide it. Drag ≡ to move it. You can also press and hold a card on the main screen and drag it up or down."
         android:textColor="?attr/appMuted"
         android:textSize="14sp" />
 

@@ -145,6 +145,11 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             renderCalendar()
         }
         styleBottomBar()
+        // Press and hold a card, then drag it up or down: save the new order.
+        findViewById<ReorderLayout>(R.id.cardStack).onReordered = { views ->
+            val keyOf = cardIds.entries.associate { (key, id) -> id to key }
+            Prefs.setCardOrder(this, views.mapNotNull { keyOf[it.id] })
+        }
         findViewById<TextView>(R.id.definition).text = android.text.Html.fromHtml(
             "<b>Kahraba</b> (كهرباء) means electricity. In Lebanon, it usually means power from the state (EDL), " +
                 "as opposed to the <b>moteur</b>, the neighbourhood generator.",
@@ -725,18 +730,21 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     }
 
     /** Shows, hides and orders the cards as chosen in Settings > Cards > Arrange cards. */
+    /** Card setting keys and their views. */
+    private val cardIds = mapOf(
+        "card_timeline" to R.id.timelineCard, "card_today" to R.id.todayCard, "card_week" to R.id.weekCard,
+        "card_stats" to R.id.statsCard, "card_wobble" to R.id.wobbleCard, "card_advice" to R.id.adviceCard,
+        "card_facts" to R.id.factsCard,
+        "card_room" to R.id.roomCard, "card_recent" to R.id.recentCard, "card_accuracy" to R.id.accuracyCard,
+        "card_monitor" to R.id.monitorCard,
+        "card_meter" to R.id.meterCard, "card_amps" to R.id.ampsCard,
+    )
+
     private fun applyCardSettings() {
-        val ids = mapOf(
-            "card_timeline" to R.id.timelineCard, "card_today" to R.id.todayCard, "card_week" to R.id.weekCard,
-            "card_stats" to R.id.statsCard, "card_wobble" to R.id.wobbleCard, "card_advice" to R.id.adviceCard,
-            "card_facts" to R.id.factsCard,
-            "card_room" to R.id.roomCard, "card_recent" to R.id.recentCard, "card_accuracy" to R.id.accuracyCard,
-            "card_monitor" to R.id.monitorCard,
-            "card_meter" to R.id.meterCard, "card_amps" to R.id.ampsCard,
-        )
+        val ids = cardIds
         for ((key, id) in ids) findViewById<View>(id).visibility = if (Prefs.cardOn(this, key)) View.VISIBLE else View.GONE
 
-        // The order chosen in Arrange cards; only moves views when it changed.
+        // The saved order (from dragging a card, or Arrange cards); only moves views when it changed.
         val stack = findViewById<LinearLayout>(R.id.cardStack)
         val wanted = Prefs.cardOrder(this).mapNotNull { key -> ids[key]?.let { findViewById<View>(it) } }
         val now = (0 until stack.childCount).map { stack.getChildAt(it) }

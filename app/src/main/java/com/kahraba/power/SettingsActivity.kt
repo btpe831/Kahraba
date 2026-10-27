@@ -121,7 +121,7 @@ class SettingsActivity : ThemedActivity() {
         // CARDS
         section("Cards")
         body.addView(card {
-            addView(link("Arrange cards", "Show, hide and reorder the cards on the main screen.") {
+            addView(link("Arrange cards", "Show or hide cards. To move one, press and hold it on the main screen and drag.") {
                 startActivity(Intent(this@SettingsActivity, CardsActivity::class.java))
             })
         })

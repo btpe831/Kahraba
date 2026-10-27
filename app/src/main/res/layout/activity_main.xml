@@ -317,8 +317,8 @@
                 </LinearLayout>
             </com.kahraba.power.NotchCard>
 
-            <!-- Cards the user can reorder (Settings > Cards > Arrange cards). -->
-            <LinearLayout
+            <!-- Cards the user can reorder: press and hold one, then drag (or Settings > Cards). -->
+            <com.kahraba.power.ReorderLayout
                 android:id="@+id/cardStack"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -965,7 +965,7 @@
                             app:tint="?attr/appAccent" />
                     </LinearLayout>
                 </com.kahraba.power.NotchCard>
-            </LinearLayout>
+            </com.kahraba.power.ReorderLayout>
 
             <TextView
                 android:id="@+id/footerNote"

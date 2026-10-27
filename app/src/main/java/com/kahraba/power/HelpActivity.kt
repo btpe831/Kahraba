@@ -107,6 +107,7 @@ class HelpActivity : ThemedActivity() {
             "Your results" to """
                 <b>Recent checks</b> shows your last checks; the list button in the bottom bar shows all of them. <b>Tap one to fix it</b> if you know it was wrong, or to delete it. Checks you confirmed or fixed are marked ✓.
                 <b>How right is it?</b> counts how often each result was right, among the checks you confirmed.
+                <b>Move cards:</b> press and hold any card below the Check button, then drag it up or down. Hide cards in Settings › Cards.
                 <b>Can't tell</b> means the light was too dim, the phone was moved, or there was no light reading. Nothing is guessed.
                 Tip: a wrong <b>Moteur</b> result is rare (kahraba doesn't wobble), but a shadow or moving the phone can cause one. “No flicker” on the moteur happens when the moteur is calm, or the light can't show the wobble (LED, too dim, inverter, UPS).
             """,
