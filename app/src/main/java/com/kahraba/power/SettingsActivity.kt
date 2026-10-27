@@ -100,15 +100,6 @@ class SettingsActivity : ThemedActivity() {
         })
         body.addView(header)
 
-        // THEME
-        section("Theme")
-        val current = Prefs.colorTheme(this)
-        for (t in Themes.all) body.addView(themeRow(t, t.key == current), lp(top = 10))
-        body.addView(text(
-            "Your theme colours the whole app. Green always means kahraba and amber always means moteur, in every theme.",
-            14f, R.attr.appMuted,
-        ).apply { setPadding(px(4), px(14), px(4), 0) })
-
         // SOUND
         section("Sound")
         body.addView(card {
@@ -193,6 +184,15 @@ class SettingsActivity : ThemedActivity() {
             val version = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull() ?: ""
             addView(text("Version $version", 14f, R.attr.appMuted), lp(top = 14))
         })
+
+        // THEME
+        section("Theme")
+        val current = Prefs.colorTheme(this)
+        for (t in Themes.all) body.addView(themeRow(t, t.key == current), lp(top = 10))
+        body.addView(text(
+            "Your theme colours the whole app. Green always means kahraba and amber always means moteur, in every theme.",
+            14f, R.attr.appMuted,
+        ).apply { setPadding(px(4), px(14), px(4), 0) })
     }
 
     // ---- Theme rows ----
