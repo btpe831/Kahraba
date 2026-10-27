@@ -20,6 +20,28 @@
             android:paddingTop="8dp"
             android:paddingEnd="16dp">
 
+            <!-- Title and a dictionary-style subtitle -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="4dp"
+                android:text="Kahraba or Not"
+                android:textColor="?attr/appText"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/definition"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="2dp"
+                android:layout_marginEnd="4dp"
+                android:lineSpacingExtra="2dp"
+                android:textColor="?attr/appMuted"
+                android:textSize="13sp" />
+
             <!-- NOW: the big status card -->
             <FrameLayout
                 android:layout_width="match_parent"
@@ -832,6 +854,15 @@
                 android:text="Doesn't work with LED bulbs, or if your lights run through a solar inverter or UPS. Tap here for the full guide."
                 android:textColor="?attr/appMuted"
                 android:textSize="13sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:gravity="center"
+                android:text="Created by Aubrey Arenas"
+                android:textColor="?attr/appMuted"
+                android:textSize="12sp" />
         </LinearLayout>
     </ScrollView>
 

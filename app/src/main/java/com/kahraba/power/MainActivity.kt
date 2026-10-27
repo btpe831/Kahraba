@@ -135,6 +135,11 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             renderCalendar()
         }
         styleBottomBar()
+        findViewById<TextView>(R.id.definition).text = android.text.Html.fromHtml(
+            "<b>kahraba</b> (كهرباء) <i>n.</i> — electricity. In Lebanon: the state's, whenever it decides to show up. " +
+                "Not to be confused with <i>moteur</i>, the neighbourhood generator that never sleeps.",
+            android.text.Html.FROM_HTML_MODE_COMPACT,
+        )
 
         // Keep the always-on monitor running if it was on (e.g. after an update).
         if (monitoring && !MonitorState.running) MonitorService.send(this, MonitorService.ACTION_START)
