@@ -348,6 +348,6 @@ class PowerDetector(
         }
 
         fun formatClock(ms: Long): String =
-            java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).format(java.util.Date(ms))
+            java.text.SimpleDateFormat("h:mm a", java.util.Locale.US).format(java.util.Date(ms))
     }
 }

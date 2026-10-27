@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:paddingBottom="120dp">
+        android:paddingBottom="100dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -33,7 +33,7 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:gravity="bottom"
-                    android:minHeight="300dp"
+                    android:minHeight="230dp"
                     android:orientation="vertical"
                     android:padding="22dp">
 
@@ -44,8 +44,8 @@
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
+                            android:layout_width="17dp"
+                            android:layout_height="17dp"
                             android:importantForAccessibility="no"
                             android:src="@drawable/ic_place" />
 
@@ -57,7 +57,7 @@
                             android:shadowColor="#66000000"
                             android:shadowRadius="6"
                             android:textColor="#FFFFFF"
-                            android:textSize="22sp" />
+                            android:textSize="17sp" />
                     </LinearLayout>
 
                     <TextView
@@ -69,7 +69,7 @@
                         android:shadowColor="#66000000"
                         android:shadowRadius="8"
                         android:textColor="#FFFFFF"
-                        android:textSize="64sp" />
+                        android:textSize="46sp" />
 
                     <LinearLayout
                         android:layout_width="wrap_content"
@@ -80,8 +80,8 @@
 
                         <ImageView
                             android:id="@+id/heroIcon"
-                            android:layout_width="30dp"
-                            android:layout_height="30dp"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
                             android:importantForAccessibility="no"
                             android:src="@drawable/ic_bolt" />
 
@@ -93,7 +93,7 @@
                             android:shadowColor="#66000000"
                             android:shadowRadius="6"
                             android:textColor="#FFFFFF"
-                            android:textSize="26sp" />
+                            android:textSize="19sp" />
                     </LinearLayout>
 
                     <TextView
@@ -104,7 +104,7 @@
                         android:letterSpacing="0.12"
                         android:textAllCaps="true"
                         android:textColor="#F2FFFFFF"
-                        android:textSize="13sp"
+                        android:textSize="11sp"
                         android:textStyle="bold" />
 
                     <com.google.android.material.progressindicator.LinearProgressIndicator
@@ -196,9 +196,9 @@
                 android:layout_marginTop="10dp"
                 android:gravity="center"
                 android:lineSpacingExtra="2dp"
-                android:text="Lay the phone face-up close to a halogen light.\n1 long beep = moteur  ·  4 short = kahraba  ·  2 short = no flicker"
+                android:text="Lay the phone face-up close to a halogen light.\nBeeps: 1 long = moteur · 4 short = kahraba · 2 short = no flicker"
                 android:textColor="?attr/appMuted"
-                android:textSize="13sp" />
+                android:textSize="12sp" />
 
             <!-- TODAY: date, live clock and calendar -->
             <com.karaba.power.NotchCard
@@ -458,13 +458,13 @@
 
         <FrameLayout
             android:id="@+id/barTile"
-            android:layout_width="60dp"
-            android:layout_height="60dp">
+            android:layout_width="46dp"
+            android:layout_height="46dp">
 
             <ImageView
                 android:id="@+id/barIcon"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:layout_gravity="center"
                 android:importantForAccessibility="no"
                 android:src="@drawable/ic_bolt" />
@@ -473,7 +473,7 @@
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="14dp"
+            android:layout_marginStart="12dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -482,11 +482,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
-                android:letterSpacing="0.16"
+                android:letterSpacing="0.1"
                 android:maxLines="1"
                 android:textAllCaps="true"
-                android:textColor="?attr/appText"
-                android:textSize="13sp"
+                android:textColor="?attr/appMuted"
+                android:textSize="11sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -496,26 +496,30 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="?attr/appText"
-                android:textSize="22sp"
+                android:textSize="16sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
         <ImageButton
             android:id="@+id/barHistory"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
             android:background="@drawable/circle_button"
             android:contentDescription="All checks"
+            android:padding="11dp"
+            android:scaleType="fitCenter"
             android:src="@drawable/ic_list"
             app:tint="?attr/appAccent" />
 
         <ImageButton
             android:id="@+id/barSettings"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_marginStart="12dp"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:layout_marginStart="10dp"
             android:background="@drawable/circle_button"
             android:contentDescription="Settings"
+            android:padding="11dp"
+            android:scaleType="fitCenter"
             android:src="@drawable/ic_settings"
             app:tint="?attr/appAccent" />
     </LinearLayout>
