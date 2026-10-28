@@ -21,10 +21,15 @@ last_version = re.sub(r"^v|-build-\d+$", "", last_tag) if last_tag else ""
 publish = last_version != version
 
 # Each change since the last release: its title, and its description without the trailer lines.
-log = git("log", "--no-merges", "--format=%s%x1f%b%x1e", f"{last_tag}..HEAD" if last_tag else "-1")
+# Changes that only touch the release page itself (files under .github/) are left out.
+log = git("log", "--no-merges", "--format=%H%x1f%s%x1f%b%x1e", f"{last_tag}..HEAD" if last_tag else "-1")
 changes = []
 for entry in filter(None, (e.strip() for e in log.split("\x1e"))):
-    subject, _, body = entry.partition("\x1f")
+    sha, _, rest = entry.partition("\x1f")
+    files = git("diff-tree", "--no-commit-id", "--name-only", "-r", sha).splitlines()
+    if files and all(f.startswith(".github/") for f in files):
+        continue
+    subject, _, body = rest.partition("\x1f")
     subject = re.sub(r"\s*\(\d+\.\d+\.\d+\)$", "", subject.strip())
     lines = [l for l in body.splitlines() if not re.match(r"(Co-Authored-By|Claude-Session|Signed-off-by):", l, re.I)]
     changes.append((subject, "\n".join(lines).strip()))
