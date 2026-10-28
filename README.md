@@ -23,7 +23,7 @@ tells you, using your phone's light sensor and a halogen bulb.
 
 A halogen bulb's brightness follows the voltage. On the moteur, the voltage wobbles as the
 engine speeds up and slows down, and so does the light. Kahraba is steadier and usually a bit
-higher, so the same bulb glows steady and about 25% brighter.
+higher, so the same bulb glows steady and usually 10–25% brighter (it varies from day to day).
 
 - **Quick check:** lay the phone face-up under the bulb. A wobble means moteur. To say "kahraba"
   for sure, the app learns how bright a room is on each source (two checks to set up).

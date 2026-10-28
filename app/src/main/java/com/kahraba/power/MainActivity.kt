@@ -468,7 +468,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
                 if (e.corrected) "Confirmed by you" else "Grid power", meta)
             QuickCheck.Verdict.MOTEUR -> showHero(R.color.moteur, R.drawable.ic_moteur, "Moteur",
                 if (e.corrected) "Confirmed by you" else "Generator", meta)
-            QuickCheck.Verdict.NO_FLICKER -> showHero(R.color.idle, R.drawable.ic_bolt, "No flicker", "Probably kahraba", meta)
+            QuickCheck.Verdict.NO_FLICKER -> showHero(R.color.idle, R.drawable.ic_bolt, "No flicker", "Kahraba, or a calm moteur", meta)
             QuickCheck.Verdict.CANT_TELL -> showHero(R.color.idle, R.drawable.ic_bolt, "Can't tell",
                 detail?.substringBefore(".")?.take(40) ?: "Try again", meta)
         }
@@ -1209,8 +1209,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             noFlicker -> {
                 icon.setImageResource(R.drawable.ic_bolt)
                 icon.setColorFilter(ContextCompat.getColor(this, R.color.idle))
-                title.text = "Probably fine"
-                sub.text = "No flicker $since. Probably kahraba, but confirm before running several big appliances."
+                title.text = "Not sure yet"
+                sub.text = "No wobble $since, but a calm moteur looks the same. Confirm before running several big appliances."
             }
             else -> {
                 icon.setImageResource(R.drawable.ic_bolt)

@@ -6,7 +6,7 @@ package com.kahraba.power
  * - Wobble above the limit that repeats ([WOBBLES_NEEDED] separate times) or keeps going (longer
  *   than [SUSTAINED_WOBBLE_MS]) -> moteur. The moteur's engine keeps hunting; a single dip is more
  *   likely an appliance switching on, which dips the voltage on kahraba too.
- * - Steady light for [STEADY_NEEDED_MS] -> "no flicker": probably kahraba, but not proof. A busy
+ * - Steady light for [STEADY_NEEDED_MS] -> "no flicker": kahraba, or a calm moteur. A busy
  *   moteur wobbles within seconds, but at night a calm moteur stayed steady for 19 minutes, and
  *   the Pixel's sensor only reports changes of about 8% or more.
  * - At the user's spot, once its brightness on each source is learned ([kahrabaLevel], and
@@ -128,8 +128,8 @@ class QuickCheck(
                         } else ""
                         return Result(
                             Verdict.NO_FLICKER,
-                            "No wobble in ${STEADY_NEEDED_MS / 1000}s. Probably kahraba – but a calm moteur " +
-                                "(often at night) can look the same. Confirm it if you know for sure.$offSpot",
+                            "No wobble in ${STEADY_NEEDED_MS / 1000}s. Kahraba, or a calm moteur (often at night) – " +
+                                "a steady light can be either. Confirm it if you know for sure.$offSpot",
                             med,
                         )
                     }

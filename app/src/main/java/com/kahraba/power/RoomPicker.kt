@@ -92,8 +92,8 @@ object RoomPicker {
                 "This room is learned (kahraba ≈ ${k.toInt()} lux, moteur ≈ ${m.toInt()} lux). " +
                     "The app can now tell kahraba and moteur apart here."
             k != null && m != null ->
-                "Kahraba and moteur look almost the same here (${k.toInt()} and ${m.toInt()} lux). " +
-                    "Try a place closer to a halogen light."
+                "Kahraba and moteur look alike here (kahraba ${k.toInt()} lux, moteur up to ${m.toInt()} lux), " +
+                    "so checks go by the wobble instead. Kahraba's brightness varies from day to day."
             k == null && m == null ->
                 "This room isn't learned yet. Confirm it once when you know it's kahraba, and once when you know it's moteur."
             k == null -> "Almost there (moteur ≈ ${m!!.toInt()} lux). Now confirm it once when you know it's kahraba."

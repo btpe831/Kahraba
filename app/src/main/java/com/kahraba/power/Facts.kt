@@ -39,7 +39,7 @@ object Facts {
         "Older motors (fridges, ACs, pumps) can draw 3–5× their normal power for a moment as they start.",
         "Inverter appliances speed their motors up gently instead of switching hard on, so they avoid big start-up kicks.",
         "On a clear day at noon, sunlight delivers about 1,000 W on every square metre: one reason rooftop solar works so well here.",
-        "Kahraba often runs at a higher voltage than the moteur, so the same halogen bulb glows about 25% brighter on kahraba.",
+        "Kahraba often runs at a higher voltage than the moteur, so the same halogen bulb glows brighter on kahraba: usually 10–25%, depending on the day.",
     )
 
     private val order: List<Int> by lazy { all.indices.shuffled(Random(1964)) }

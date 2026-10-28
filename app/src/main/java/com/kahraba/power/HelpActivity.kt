@@ -33,13 +33,13 @@ class HelpActivity : ThemedActivity() {
                 4. Wait for the beep:
                 &nbsp;&nbsp;• <b>1 long beep = Moteur</b> (usually within about 10 seconds)
                 &nbsp;&nbsp;• <b>4 short beeps = Kahraba</b> – only in a learned room (see “Rooms”)
-                &nbsp;&nbsp;• <b>2 short beeps = No flicker</b> (after 25 seconds) – probably kahraba, but not certain
+                &nbsp;&nbsp;• <b>2 short beeps = No flicker</b> (after 25 seconds) – kahraba, or a calm moteur
                 Don't touch the phone or lean over it until it beeps. If the phone is moved, the check stops – just put it down and try again.
             """,
 
             "Rooms: how to get a sure “Kahraba”" to """
                 On its own, a check can prove <b>Moteur</b> (wobble) but not Kahraba, because a calm moteur can be steady too. Rooms solve this.
-                Kahraba's higher voltage makes a halogen about 25% brighter. Once the app knows how bright a room is on each source, it can tell them apart even when the light is steady.
+                Kahraba's higher voltage usually makes a halogen 10–25% brighter, and it varies from day to day. Once the app knows how bright a room is on each source, it can tell them apart even when the light is steady. If kahraba isn't clearly brighter (at least 15% above the brightest moteur seen there), the room shows “Kahraba and moteur look alike here” and checks go by the wobble instead.
                 <b>Set up a room</b> (the <b>Set up a room</b> card on the main screen walks you through it):
                 1. Tap the room button above <b>Check now</b> → <b>Add a room</b> and name it (Kitchen, Bathroom…).
                 2. Always check from the <b>same place</b> in that room, under the <b>same light</b> (a bit of tape helps).
@@ -58,10 +58,10 @@ class HelpActivity : ThemedActivity() {
 
             "How it works" to """
                 The moteur's voltage is never quite steady; it rises and falls as neighbours switch things on and off. A halogen bulb's brightness follows the voltage, so on the moteur the light <b>wobbles</b> slightly, often too little for your eyes to notice.
-                Kahraba is much steadier, so the light stays <b>flat</b>. Kahraba's voltage is usually higher too, so the same bulb shines about <b>25% brighter</b>.
+                Kahraba is much steadier, so the light stays <b>flat</b>. Kahraba's voltage is usually higher too, so the same bulb usually shines <b>10–25% brighter</b>; it varies from day to day.
                 Your phone's light sensor watches for that wobble:
                 &nbsp;&nbsp;• A wobble that repeats or keeps going → <b>Moteur</b>. A single dip doesn't count: switching on a kettle or heater dips the voltage on kahraba too.
-                &nbsp;&nbsp;• 25 seconds with no wobble → <b>No flicker</b> (probably kahraba)
+                &nbsp;&nbsp;• 25 seconds with no wobble → <b>No flicker</b> (kahraba, or a calm moteur)
                 <b>Why “No flicker” isn't a sure Kahraba:</b> when few people are using it (often at night), the moteur can stay perfectly steady for many minutes. The phone's light sensor also only notices changes bigger than about 8%. So a wobble proves moteur, but a steady light can be either. To be sure, use a learned room (see “Rooms”) or a voltage meter (kahraba usually reads higher, e.g. 234 V vs 213 V).
             """,
 
