@@ -28,9 +28,15 @@ for entry in filter(None, (e.strip() for e in log.split("\x1e"))):
     lines = [l for l in body.splitlines() if not re.match(r"(Co-Authored-By|Claude-Session|Signed-off-by):", l, re.I)]
     changes.append((subject, "\n".join(lines).strip()))
 
-parts = [f"## What's new in {version}", ""]
-for subject, body in changes:
-    parts += [f"### {subject}", ""] + ([body, ""] if body else [])
+# A hand-written note for a version (e.g. the first public one) replaces the list of changes.
+import os
+written = os.path.join(os.path.dirname(os.path.abspath(__file__)), "notes", f"{version}.md")
+if os.path.exists(written):
+    parts = [open(written).read().strip(), ""]
+else:
+    parts = [f"## What's new in {version}", ""]
+    for subject, body in changes:
+        parts += [f"### {subject}", ""] + ([body, ""] if body else [])
 parts += [
     "## Install",
     "",
