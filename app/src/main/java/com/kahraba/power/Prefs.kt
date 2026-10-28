@@ -200,6 +200,24 @@ object Prefs {
      * Saves a calibration result and sets the flicker limit between the two sources.
      * [noisePct] is the usual wobble seen on that source.
      */
+    /**
+     * Removes settings still holding the very first version's saved defaults (see [OldDefaults]).
+     * Runs once on each phone, and again after restoring a backup ([force]).
+     */
+    fun cleanUpOldDefaults(ctx: Context, force: Boolean = false) {
+        val p = sp(ctx)
+        if (!force && p.getBoolean(OLD_DEFAULTS_CLEANED, false)) return
+        val saved = listOf(MIN_LUX, STEADY_MINUTES, FLICKER_THRESHOLD).associateWith { key ->
+            runCatching { p.getString(key, null) }.getOrNull()
+        }
+        val calibrated = p.contains(CAL_KAHRABA) || p.contains(CAL_MOTEUR)
+        val edit = p.edit()
+        for (key in OldDefaults.toRemove(saved, calibrated)) edit.remove(key)
+        edit.putBoolean(OLD_DEFAULTS_CLEANED, true).apply()
+    }
+
+    private const val OLD_DEFAULTS_CLEANED = "old_defaults_cleaned"
+
     fun saveCalibration(ctx: Context, source: Source, noisePct: Double): Double {
         val key = if (source == Source.KAHRABA) CAL_KAHRABA else CAL_MOTEUR
         sp(ctx).edit().putFloat(key, noisePct.toFloat()).apply()

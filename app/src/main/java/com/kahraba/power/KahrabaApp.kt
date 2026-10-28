@@ -7,6 +7,7 @@ class KahrabaApp : Application() {
     override fun onCreate() {
         super.onCreate()
         useEnglishNumbers()
+        Prefs.cleanUpOldDefaults(this)
         AppCompatDelegate.setDefaultNightMode(Prefs.nightMode(this))
     }
 

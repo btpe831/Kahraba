@@ -81,6 +81,8 @@ object Backup {
         edit.putBoolean(Prefs.HELP_SEEN, true)
         Tour.markAllSeen(edit)
         edit.commit()
+        // Old backups can carry the first version's saved defaults.
+        Prefs.cleanUpOldDefaults(ctx, force = true)
         val files = root.optJSONObject("files")
         for (name in FILES) {
             val text = files?.optString(name, "") ?: ""
