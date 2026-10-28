@@ -229,36 +229,37 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         val scroll = findViewById<android.widget.ScrollView>(R.id.scroll)
         val stack = findViewById<LinearLayout>(R.id.cardStack)
         val firstCard = { (0 until stack.childCount).map { stack.getChildAt(it) }.firstOrNull { it.visibility == View.VISIBLE } }
-        /** Scrolls so the view sits about a third of the way down the screen. */
-        fun bringIntoView(v: View?) {
-            v ?: return
+        /** The scroll position that puts the view about a third of the way down the screen. */
+        fun scrollFor(v: View?): Int {
+            v ?: return scroll.scrollY
             val r = android.graphics.Rect()
             v.getDrawingRect(r)
             // Gives the view's position within the scrolled content (the scroll offset isn't included).
             scroll.offsetDescendantRectToMyCoords(v, r)
-            scroll.scrollTo(0, (r.top - scroll.height / 3).coerceAtLeast(0))
+            return (r.top - scroll.height / 3).coerceAtLeast(0)
         }
         val steps = listOf(
             TourOverlay.Step(
                 "Check now",
                 "Tap it, then lay the phone face-up under a halogen light. It beeps the answer: " +
                     "1 long beep = moteur, 4 short = kahraba.",
-                { checkButton }, { bringIntoView(checkButton) },
+                { checkButton }, { scrollFor(checkButton) },
             ),
             TourOverlay.Step(
                 "Your room",
                 "Choose the room you're in. After one check on each source there, the app can say kahraba for sure.",
-                { spotButton }, { bringIntoView(spotButton) },
+                { spotButton }, { scrollFor(spotButton) },
             ),
             TourOverlay.Step(
                 "Your cards",
                 "Press and hold any card, then drag it up or down to move it. Hide cards in Settings.",
-                firstCard, { bringIntoView(firstCard()) },
+                firstCard, { scrollFor(firstCard()) },
             ),
+            // The bottom bar is always on screen: no scrolling.
             TourOverlay.Step(
                 "All your checks",
                 "Tap a check to fix it if it was wrong. That's how the app learns, and how it keeps score.",
-                { findViewById(R.id.barHistory) }, { scroll.scrollTo(0, 0) },
+                { findViewById(R.id.barHistory) },
             ),
             TourOverlay.Step(
                 "Settings and help",
@@ -266,7 +267,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
                 { findViewById(R.id.barSettings) },
             ),
         )
-        val overlay = TourOverlay(this, steps) {
+        val overlay = TourOverlay(this, steps, scroll) {
             tour = null
             tourBack.isEnabled = false
             Tour.setTourSeen(this)
