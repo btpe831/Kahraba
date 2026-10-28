@@ -234,8 +234,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             v ?: return
             val r = android.graphics.Rect()
             v.getDrawingRect(r)
+            // Gives the view's position within the scrolled content (the scroll offset isn't included).
             scroll.offsetDescendantRectToMyCoords(v, r)
-            scroll.smoothScrollTo(0, (r.top + scroll.scrollY - scroll.height / 3).coerceAtLeast(0))
+            scroll.scrollTo(0, (r.top - scroll.height / 3).coerceAtLeast(0))
         }
         val steps = listOf(
             TourOverlay.Step(
@@ -257,7 +258,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             TourOverlay.Step(
                 "All your checks",
                 "Tap a check to fix it if it was wrong. That's how the app learns, and how it keeps score.",
-                { findViewById(R.id.barHistory) }, { scroll.smoothScrollTo(0, 0) },
+                { findViewById(R.id.barHistory) }, { scroll.scrollTo(0, 0) },
             ),
             TourOverlay.Step(
                 "Settings and help",

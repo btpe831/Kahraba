@@ -127,6 +127,8 @@ class TourOverlay(
                 t[0] - me[0] - pad, t[1] - me[1] - pad,
                 t[0] - me[0] + target.width + pad, t[1] - me[1] + target.height + pad,
             )
+            // Off screen (e.g. it couldn't be scrolled into view): highlight nothing.
+            if (hole.bottom <= 0 || hole.top >= height) hole.setEmpty()
         }
         // The tip goes below the highlight if it fits, otherwise above; centred if nothing is highlighted.
         bubble.measure(
@@ -135,11 +137,13 @@ class TourOverlay(
         )
         val h = bubble.measuredHeight
         val gap = 14 * dp
-        bubble.translationY = when {
+        val y = when {
             hole.isEmpty -> (height - h) / 2f
             hole.bottom + gap + h < height - gap -> hole.bottom + gap
-            else -> (hole.top - gap - h).coerceAtLeast(gap)
+            else -> hole.top - gap - h
         }
+        // Always fully on screen, so Next and Skip can be reached.
+        bubble.translationY = y.coerceIn(gap, (height - h - gap).coerceAtLeast(gap))
         bubble.visibility = VISIBLE
         invalidate()
     }
