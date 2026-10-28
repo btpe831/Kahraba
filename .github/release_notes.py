@@ -15,7 +15,8 @@ def git(*args):
     return subprocess.run(["git", *args], capture_output=True, text=True).stdout.strip()
 
 
-last_tag = git("describe", "--tags", "--abbrev=0", "HEAD")
+# The last release before this commit (HEAD^, so a re-run of this build doesn't find its own tag).
+last_tag = git("describe", "--tags", "--abbrev=0", "HEAD^")
 last_version = re.sub(r"^v|-build-\d+$", "", last_tag) if last_tag else ""
 publish = last_version != version
 
