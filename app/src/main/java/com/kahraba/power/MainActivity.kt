@@ -49,6 +49,14 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     private lateinit var heroSub: TextView
     private lateinit var heroMeta: TextView
     private lateinit var heroProgress: LinearProgressIndicator
+    private lateinit var heroChart: LuxChart
+
+    // The light during the latest check (5 readings a second), for the graph on the NOW card.
+    private val chartT = LongArray(CHART_MAX)
+    private val chartV = DoubleArray(CHART_MAX)
+    private var chartN = 0
+    /** The check the graph belongs to (its time), so it only shows with that result. */
+    private var chartCheckMs = 0L
     private lateinit var checkButton: MaterialButton
     private lateinit var confirmRow: View
     private lateinit var historyList: LinearLayout
@@ -92,6 +100,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         heroSub = findViewById(R.id.heroSub)
         heroMeta = findViewById(R.id.heroMeta)
         heroProgress = findViewById(R.id.heroProgress)
+        heroChart = findViewById(R.id.heroChart)
+        heroChart.windowSeconds = 30
+        heroChart.useColors(0xFFFFFFFF.toInt(), 0x40FFFFFF, 0xD9FFFFFF.toInt())
         checkButton = findViewById(R.id.checkButton)
         confirmRow = findViewById(R.id.confirmRow)
         historyList = findViewById(R.id.historyList)
@@ -330,6 +341,11 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         checkButton.text = "Cancel"
         heroProgress.setProgressCompat(0, false)
         heroProgress.visibility = View.VISIBLE
+        chartN = 0
+        chartCheckMs = 0L
+        heroChart.endLabel = "now"
+        heroChart.setData(chartT, chartV, 0)
+        heroChart.visibility = View.VISIBLE
         ui.post(sampler)
     }
 
@@ -345,6 +361,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
                 ui.postDelayed(this, 200)
                 return
             }
+            lux?.let { addChartPoint(now, it) }
             val result = lux?.let { q.add(now, it) }
                 ?: if (now - measureFromMs >= QuickCheck.MAX_MS) {
                     QuickCheck.Result(QuickCheck.Verdict.CANT_TELL, "No light readings – is a light on?")
@@ -393,6 +410,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             QuickCheck.Verdict.CANT_TELL -> {}
         }
         CheckHistory.add(this, result.verdict, result.lux, spot = Prefs.currentSpot(this), byLevel = result.byLevel)
+        // Keep the graph with this result.
+        chartCheckMs = CheckHistory.read(this).first().timeMs
+        heroChart.endLabel = "end"
         refreshAll()
         showResult(CheckHistory.read(this).first(), result.detail)
         // Ask to confirm, so the room can be learned (not for "can't tell": no usable reading).
@@ -412,8 +432,25 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     // ---- NOW card ----
 
+    private fun addChartPoint(t: Long, v: Double) {
+        if (chartN == CHART_MAX) {
+            // Full: drop the oldest half (the graph only shows the last 30 seconds).
+            val keep = CHART_MAX / 2
+            System.arraycopy(chartT, CHART_MAX - keep, chartT, 0, keep)
+            System.arraycopy(chartV, CHART_MAX - keep, chartV, 0, keep)
+            chartN = keep
+        }
+        chartT[chartN] = t
+        chartV[chartN] = v
+        chartN++
+        heroChart.setData(chartT, chartV, chartN)
+    }
+
     private fun showLastResult() {
         val last = CheckHistory.read(this).firstOrNull { !it.fromMonitor }
+        // The graph shows only with the check it was recorded for (not after a cancelled check).
+        heroChart.visibility =
+            if (check == null && last != null && last.timeMs == chartCheckMs && chartN > 1) View.VISIBLE else View.GONE
         if (last == null) {
             showHero(R.color.idle, R.drawable.ic_bolt, "Kahraba or not?", "Tap to check", "Lay the phone under a halogen light")
         } else {
@@ -1256,6 +1293,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     companion object {
         private const val SETTLE_MS = 3_000L
+        /** 2 minutes of readings at 5 a second; plenty for a check. */
+        private const val CHART_MAX = 600
         private const val CAL_MONITOR = "calendar_monitor"
         private const val SETUP_CARD = "card_setup"
     }

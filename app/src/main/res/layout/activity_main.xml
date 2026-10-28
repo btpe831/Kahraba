@@ -141,6 +141,14 @@
                         app:trackColor="#40FFFFFF"
                         app:trackCornerRadius="3dp"
                         app:trackThickness="5dp" />
+
+                    <!-- The last 30 seconds of light during a check, and after it -->
+                    <com.kahraba.power.LuxChart
+                        android:id="@+id/heroChart"
+                        android:layout_width="match_parent"
+                        android:layout_height="96dp"
+                        android:layout_marginTop="14dp"
+                        android:visibility="gone" />
                 </LinearLayout>
 
                 <TextView

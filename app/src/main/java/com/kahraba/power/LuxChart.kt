@@ -17,6 +17,10 @@ class LuxChart @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
     var windowSeconds = 60
         set(value) { field = value; invalidate() }
 
+    /** The label at the right end of the time axis ("now" while live, "end" for a finished check). */
+    var endLabel = "now"
+        set(value) { field = value; invalidate() }
+
     private var times = LongArray(0)
     private var values = DoubleArray(0)
     private var count = 0
@@ -35,6 +39,14 @@ class LuxChart @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
         typeface = TextView(context).typeface ?: Typeface.DEFAULT
     }
     private val path = Path()
+
+    /** Draw in these colours instead of the theme's (e.g. white on the coloured NOW card). */
+    fun useColors(lineColor: Int, gridColor: Int, labelColor: Int) {
+        line.color = lineColor
+        grid.color = gridColor
+        label.color = labelColor
+        invalidate()
+    }
 
     /** Replace the data (times in ms, newest last). */
     fun setData(t: LongArray, v: DoubleArray, n: Int) {
@@ -78,7 +90,7 @@ class LuxChart @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
             canvas.drawText(v.toInt().toString(), 0f, y + 4 * dp, label)
         }
         canvas.drawText("-${windowSeconds}s", left, height - 4 * dp, label)
-        canvas.drawText("now", right - label.measureText("now"), height - 4 * dp, label)
+        canvas.drawText(endLabel, right - label.measureText(endLabel), height - 4 * dp, label)
 
         path.reset()
         for (i in first until count) {
