@@ -216,7 +216,7 @@ class LightMeterActivity : ThemedActivity(), SensorEventListener {
     }
 
     private fun fileName(): String =
-        "ijit-light-" + SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date(recStartMs)) + ".csv"
+        "kahraba-light-" + SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date(recStartMs)) + ".csv"
 
     /** time_s (from the start), clock time and lux, one reading per line. */
     private fun csv(): String {

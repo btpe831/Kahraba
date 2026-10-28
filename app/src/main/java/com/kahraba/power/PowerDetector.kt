@@ -256,7 +256,7 @@ class PowerDetector(
             // 2) The steady level matches what was learned for this spot.
             val k = config.kahrabaLevel
             val m = config.moteurLevel
-            if (recent != null && k != null && m != null && k > m * 1.08) {
+            if (recent != null && k != null && m != null && k > m * QuickCheck.LEVEL_GAP) {
                 val mid = sqrt(k * m)
                 if (recent >= mid && recent <= k * 1.25) {
                     out += change(now, Source.KAHRABA, "Light matches your kahraba level (${recent.toInt()} lux)")

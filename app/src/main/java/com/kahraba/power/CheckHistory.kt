@@ -105,8 +105,12 @@ object CheckHistory {
 
     /**
      * What the spot's brightness looks like on each source, learned from checks at the spot:
-     * kahraba from checks the user confirmed; moteur from confirmed checks and from checks that
-     * saw a wobble (a wobble is proof of moteur).
+     * kahraba from checks the user confirmed (their typical level); moteur from confirmed checks
+     * and from checks that saw a wobble (a wobble is proof of moteur).
+     *
+     * For the moteur this is the brightest recent level, not the typical one: the moteur gets
+     * brighter as the evening goes on (28 Oct: it crept up to kahraba's level after 8 pm), so
+     * kahraba is only recognised when the light is clearly above anything the moteur has shown.
      */
     fun spotLevels(ctx: Context, spotName: String): Pair<Double?, Double?> {
         if (spotName.isEmpty()) return null to null
@@ -115,7 +119,7 @@ object CheckHistory {
             .take(LEARN_FROM).map { it.lux!! }
         val moteur = spot.filter { it.verdict == QuickCheck.Verdict.MOTEUR && (it.corrected || !it.byLevel) }
             .take(LEARN_FROM).map { it.lux!! }
-        return PowerDetector.median(kahraba) to PowerDetector.median(moteur)
+        return PowerDetector.median(kahraba) to moteur.maxOrNull()
     }
 
     /** Forget what was learned at a spot (deleting it). Results stay in the list. */

@@ -9,9 +9,9 @@ package com.kahraba.power
  * - Steady light for [STEADY_NEEDED_MS] -> "no flicker": probably kahraba, but not proof. A busy
  *   moteur wobbles within seconds, but at night a calm moteur stayed steady for 19 minutes, and
  *   the Pixel's sensor only reports changes of about 8% or more.
- * - At the user's spot, once its brightness on each source is learned ([kahrabaLevel],
- *   [moteurLevel]): 10 s of steady light at the kahraba level -> kahraba, at the moteur level ->
- *   moteur (a calm moteur is dimmer, ~213 V vs 234 V).
+ * - At the user's spot, once its brightness on each source is learned ([kahrabaLevel], and
+ *   [moteurLevel] = the brightest moteur seen) and kahraba is at least [LEVEL_GAP] brighter:
+ *   10 s of steady light at the kahraba level -> kahraba, at the moteur level -> moteur.
  * - After [MAX_MS] with neither -> can't tell (too dark, or the phone was moved).
  */
 class QuickCheck(
@@ -152,8 +152,11 @@ class QuickCheck(
         const val STEADY_NEEDED_MS = 25_000L
         /** Steady time needed when the spot's levels are known. */
         const val STEADY_LEVEL_MS = 10_000L
-        /** Kahraba must be at least this much brighter than moteur at the spot to use levels. */
-        const val LEVEL_GAP = 1.08
+        /**
+         * Kahraba must be at least this much brighter than the brightest moteur seen at the spot to
+         * use levels. On 28 Oct kahraba was only ~9% brighter, and the moteur later matched it.
+         */
+        const val LEVEL_GAP = 1.15
         const val MAX_MS = 40_000L
         /** Separate wobbles needed before calling moteur. */
         const val WOBBLES_NEEDED = 2
