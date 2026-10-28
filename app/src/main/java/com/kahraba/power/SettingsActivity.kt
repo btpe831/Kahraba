@@ -32,6 +32,9 @@ class SettingsActivity : ThemedActivity() {
 
     private val dp get() = resources.displayMetrics.density
     private lateinit var body: LinearLayout
+    private lateinit var scroll: ScrollView
+    /** A scroll position waiting to be restored after a theme change (kept if the screen is rebuilt again first). */
+    private var pendingScrollY = 0
 
     private val saveBackup = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
         if (uri != null) {
@@ -114,7 +117,7 @@ class SettingsActivity : ThemedActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
-        val scroll = ScrollView(this).apply { setBackgroundColor(color(R.attr.appBg)) }
+        scroll = ScrollView(this).apply { setBackgroundColor(color(R.attr.appBg)) }
         body = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(px(20), px(16), px(20), px(40))
@@ -122,6 +125,17 @@ class SettingsActivity : ThemedActivity() {
         scroll.addView(body)
         setContentView(scroll)
         build()
+        // Picking a theme rebuilds this screen in the new colours: stay where you were.
+        pendingScrollY = savedInstanceState?.getInt(SCROLL_Y, 0) ?: 0
+        if (pendingScrollY > 0) scroll.post {
+            scroll.scrollTo(0, pendingScrollY)
+            pendingScrollY = 0
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(SCROLL_Y, if (pendingScrollY > 0) pendingScrollY else scroll.scrollY)
     }
 
     private fun build() {
@@ -483,5 +497,9 @@ class SettingsActivity : ThemedActivity() {
         val v = TypedValue()
         theme.resolveAttribute(attr, v, true)
         return v.data
+    }
+
+    companion object {
+        private const val SCROLL_Y = "scroll_y"
     }
 }
