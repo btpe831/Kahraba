@@ -53,6 +53,10 @@
             android:label="Switch log" />
 
         <activity
+            android:name=".WelcomeActivity"
+            android:label="Welcome" />
+
+        <activity
             android:name=".CardsActivity"
             android:label="Arrange cards" />
 

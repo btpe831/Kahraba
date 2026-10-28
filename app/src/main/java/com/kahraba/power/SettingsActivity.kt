@@ -243,6 +243,13 @@ class SettingsActivity : ThemedActivity() {
             addView(link("How to use the app", "Which bulbs work, distance, rooms, solar and UPS, and the disclaimer.") {
                 startActivity(Intent(this@SettingsActivity, HelpActivity::class.java))
             })
+            addView(divider())
+            addView(link("Replay the tour", "The welcome screens and the tips on the main screen.") {
+                Tour.replay(this@SettingsActivity)
+                startActivity(Intent(this@SettingsActivity, MainActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP))
+                finish()
+            })
             if (Feedback.enabled) {
                 addView(divider())
                 addView(link("Send feedback", "Tell us what worked and what didn't. Opens your email app.") {

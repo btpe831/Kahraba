@@ -79,6 +79,7 @@ object Backup {
         }
         // Don't show the first-run guide again after moving.
         edit.putBoolean(Prefs.HELP_SEEN, true)
+        Tour.markAllSeen(edit)
         edit.commit()
         val files = root.optJSONObject("files")
         for (name in FILES) {

@@ -159,10 +159,11 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         // Keep the always-on monitor running if it was on (e.g. after an update).
         if (monitoring && !MonitorState.running) MonitorService.send(this, MonitorService.ACTION_START)
 
-        // First launch: show the guide before anything else.
-        if (savedInstanceState == null && !Prefs.sp(this).getBoolean(Prefs.HELP_SEEN, false)) {
-            startActivity(Intent(this, HelpActivity::class.java))
-        } else if (savedInstanceState == null && Prefs.autoCheck(this)) {
+        // Back closes the tour if it's showing.
+        onBackPressedDispatcher.addCallback(this, tourBack)
+
+        // First launch shows the welcome and tour (from onResume) instead of an automatic check.
+        if (savedInstanceState == null && Tour.welcomeSeen(this) && Tour.tourSeen(this) && Prefs.autoCheck(this)) {
             startCheck()
         }
     }
@@ -173,6 +174,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         lightSensor?.let { sensors.registerListener(this, it, SensorManager.SENSOR_DELAY_FASTEST) }
         refreshAll()
         ui.post(ticker)
+        showIntroIfNew()
     }
 
     override fun onPause() {
@@ -202,6 +204,76 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             if (++ticks % 30 == 0) renderHistoryCards()
             ui.postDelayed(this, 1000)
         }
+    }
+
+    // ---- First-run welcome and tour ----
+
+    private var tour: TourOverlay? = null
+    private val tourBack = object : androidx.activity.OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() { tour?.finish() }
+    }
+
+    /** New here: the welcome screens first, then a tour of this screen. */
+    private fun showIntroIfNew() {
+        if (check != null || tour != null) return
+        if (!Tour.welcomeSeen(this)) {
+            startActivity(Intent(this, WelcomeActivity::class.java))
+        } else if (!Tour.tourSeen(this)) {
+            // After the screen has been laid out, so the highlights land in the right place.
+            findViewById<View>(R.id.scroll).post { startTour() }
+        }
+    }
+
+    private fun startTour() {
+        if (tour != null || isFinishing) return
+        val scroll = findViewById<android.widget.ScrollView>(R.id.scroll)
+        val stack = findViewById<LinearLayout>(R.id.cardStack)
+        val firstCard = { (0 until stack.childCount).map { stack.getChildAt(it) }.firstOrNull { it.visibility == View.VISIBLE } }
+        /** Scrolls so the view sits about a third of the way down the screen. */
+        fun bringIntoView(v: View?) {
+            v ?: return
+            val r = android.graphics.Rect()
+            v.getDrawingRect(r)
+            scroll.offsetDescendantRectToMyCoords(v, r)
+            scroll.smoothScrollTo(0, (r.top + scroll.scrollY - scroll.height / 3).coerceAtLeast(0))
+        }
+        val steps = listOf(
+            TourOverlay.Step(
+                "Check now",
+                "Tap it, then lay the phone face-up under a halogen light. It beeps the answer: " +
+                    "1 long beep = moteur, 4 short = kahraba.",
+                { checkButton }, { bringIntoView(checkButton) },
+            ),
+            TourOverlay.Step(
+                "Your room",
+                "Choose the room you're in. After one check on each source there, the app can say kahraba for sure.",
+                { spotButton }, { bringIntoView(spotButton) },
+            ),
+            TourOverlay.Step(
+                "Your cards",
+                "Press and hold any card, then drag it up or down to move it. Hide cards in Settings.",
+                firstCard, { bringIntoView(firstCard()) },
+            ),
+            TourOverlay.Step(
+                "All your checks",
+                "Tap a check to fix it if it was wrong. That's how the app learns, and how it keeps score.",
+                { findViewById(R.id.barHistory) }, { scroll.smoothScrollTo(0, 0) },
+            ),
+            TourOverlay.Step(
+                "Settings and help",
+                "Sound, rooms, your area, backup, and the full guide.",
+                { findViewById(R.id.barSettings) },
+            ),
+        )
+        val overlay = TourOverlay(this, steps) {
+            tour = null
+            tourBack.isEnabled = false
+            Tour.setTourSeen(this)
+            scroll.smoothScrollTo(0, 0)
+        }
+        tour = overlay
+        tourBack.isEnabled = true
+        overlay.start(findViewById(android.R.id.content))
     }
 
     private fun refreshAll() {
