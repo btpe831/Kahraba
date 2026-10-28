@@ -6,17 +6,19 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.WindowCompat
 
-/** Base for every screen: applies the chosen theme and re-applies it if it changes. */
+/** Base for every screen: applies the chosen theme (its light or dark version) and re-applies it if it changes. */
 open class ThemedActivity : AppCompatActivity() {
     private var appliedTheme = ""
+    private var appliedDark = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         KahrabaApp.useEnglishNumbers()
         appliedTheme = Prefs.colorTheme(this)
-        theme.applyStyle(Prefs.paletteStyle(this), true)
+        appliedDark = Prefs.isDark(this)
+        theme.applyStyle(Themes.byKey(appliedTheme).variant(appliedDark).style, true)
         super.onCreate(savedInstanceState)
         val bg = TypedValue().also { theme.resolveAttribute(R.attr.appBg, it, true) }.data
-        val light = Themes.byKey(appliedTheme).light
+        val light = !appliedDark
         window.statusBarColor = bg
         window.navigationBarColor = bg
         WindowCompat.getInsetsController(window, window.decorView).apply {
@@ -40,7 +42,8 @@ open class ThemedActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (Prefs.colorTheme(this) != appliedTheme) {
+        // Theme or appearance changed elsewhere (or the phone switched dark mode while away).
+        if (Prefs.colorTheme(this) != appliedTheme || Prefs.isDark(this) != appliedDark) {
             AppCompatDelegate.setDefaultNightMode(Prefs.nightMode(this))
             recreate()
         }

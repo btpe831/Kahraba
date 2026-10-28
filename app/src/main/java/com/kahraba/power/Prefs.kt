@@ -60,12 +60,29 @@ object Prefs {
         sp(ctx).edit().putString(COLOR_THEME, key).apply()
     }
 
-    fun paletteStyle(ctx: Context): Int = Themes.byKey(colorTheme(ctx)).style
+    /** Settings > Appearance: "auto" (follow the phone's dark mode), "light" or "dark". */
+    const val APPEARANCE = "appearance"
 
-    /** Each theme is either light or dark, so the rest of the system UI follows it. */
-    fun nightMode(ctx: Context): Int =
-        if (Themes.byKey(colorTheme(ctx)).light) androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
-        else androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
+    fun appearance(ctx: Context): String = sp(ctx).getString(APPEARANCE, "auto") ?: "auto"
+
+    fun setAppearance(ctx: Context, value: String) {
+        sp(ctx).edit().putString(APPEARANCE, value).apply()
+    }
+
+    /** Whether to show the dark version of the theme on this screen ([ctx] should be an activity). */
+    fun isDark(ctx: Context): Boolean = when (appearance(ctx)) {
+        "light" -> false
+        "dark" -> true
+        else -> (ctx.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+            android.content.res.Configuration.UI_MODE_NIGHT_YES
+    }
+
+    /** The rest of the system UI (dialogs, pickers) follows the same choice. */
+    fun nightMode(ctx: Context): Int = when (appearance(ctx)) {
+        "light" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+        "dark" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
+        else -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+    }
 
     /** Saved spot names, e.g. "Kitchen", "Bathroom". */
     fun spots(ctx: Context): List<String> =

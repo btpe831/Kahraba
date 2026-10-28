@@ -2,23 +2,23 @@
 <resources>
     <!-- Base theme. A Palette overlay (palettes.xml) sets the colours and font for the chosen theme. -->
     <style name="AppTheme" parent="Theme.Material3.DayNight">
-        <item name="colorPrimary">@color/t_lamplight_accent</item>
-        <item name="colorOnPrimary">@color/t_lamplight_onaccent</item>
-        <item name="android:colorBackground">@color/t_lamplight_bg</item>
-        <item name="colorSurface">@color/t_lamplight_surface</item>
-        <item name="colorOnSurface">@color/t_lamplight_text</item>
-        <item name="appBg">@color/t_lamplight_bg</item>
-        <item name="appSurface">@color/t_lamplight_surface</item>
-        <item name="appSurfaceAlt">@color/t_lamplight_alt</item>
-        <item name="appBorder">@color/t_lamplight_border</item>
-        <item name="appAccent">@color/t_lamplight_accent</item>
-        <item name="appOnAccent">@color/t_lamplight_onaccent</item>
-        <item name="appInk">@color/t_lamplight_accent</item>
-        <item name="appOnInk">@color/t_lamplight_onaccent</item>
-        <item name="appText">@color/t_lamplight_text</item>
-        <item name="appMuted">@color/t_lamplight_muted</item>
-        <item name="appOutline">@color/t_lamplight_outline</item>
-        <item name="appRing">@color/t_lamplight_ring</item>
+        <item name="colorPrimary">@color/t_lamplight_dark_accent</item>
+        <item name="colorOnPrimary">@color/t_lamplight_dark_onaccent</item>
+        <item name="android:colorBackground">@color/t_lamplight_dark_bg</item>
+        <item name="colorSurface">@color/t_lamplight_dark_surface</item>
+        <item name="colorOnSurface">@color/t_lamplight_dark_text</item>
+        <item name="appBg">@color/t_lamplight_dark_bg</item>
+        <item name="appSurface">@color/t_lamplight_dark_surface</item>
+        <item name="appSurfaceAlt">@color/t_lamplight_dark_alt</item>
+        <item name="appBorder">@color/t_lamplight_dark_border</item>
+        <item name="appAccent">@color/t_lamplight_dark_accent</item>
+        <item name="appOnAccent">@color/t_lamplight_dark_onaccent</item>
+        <item name="appInk">@color/t_lamplight_dark_accent</item>
+        <item name="appOnInk">@color/t_lamplight_dark_onaccent</item>
+        <item name="appText">@color/t_lamplight_dark_text</item>
+        <item name="appMuted">@color/t_lamplight_dark_muted</item>
+        <item name="appOutline">@color/t_lamplight_dark_outline</item>
+        <item name="appRing">@color/t_lamplight_dark_ring</item>
         <item name="appIsLight">false</item>
         <item name="android:fontFamily">serif</item>
         <item name="fontFamily">serif</item>

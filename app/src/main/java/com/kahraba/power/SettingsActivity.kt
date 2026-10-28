@@ -278,7 +278,20 @@ class SettingsActivity : ThemedActivity() {
             addView(text("Version $version · Created by Aubrey Arenas", 14f, R.attr.appMuted), lp(top = 14))
         })
 
-        // THEME
+        // APPEARANCE AND THEME
+        section("Appearance")
+        body.addView(card {
+            addView(segmented(listOf("Auto" to "auto", "Light" to "light", "Dark" to "dark"), Prefs.appearance(this@SettingsActivity)) { value ->
+                if (value != Prefs.appearance(this@SettingsActivity)) {
+                    Prefs.setAppearance(this@SettingsActivity, value)
+                    AppCompatDelegate.setDefaultNightMode(Prefs.nightMode(this@SettingsActivity))
+                    recreate()
+                }
+            })
+            addView(text("Auto follows your phone's dark mode. Every theme has a light and a dark version.",
+                14f, R.attr.appMuted), lp(top = 10))
+        })
+
         section("Theme")
         val current = Prefs.colorTheme(this)
         for (t in Themes.all) body.addView(themeRow(t, t.key == current), lp(top = 10))
@@ -304,11 +317,18 @@ class SettingsActivity : ThemedActivity() {
                 }
             }
         }
-        // Swatch: the theme's background with its accent dot.
-        val swatch = FrameLayout(this).apply { background = rounded(t.bg, 0x33FFFFFF, 14f) }
-        swatch.addView(View(this).apply {
-            background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(t.dot) }
-        }, FrameLayout.LayoutParams(px(18), px(18), Gravity.CENTER))
+        // Swatch: the light and dark versions side by side, each its background with its accent dot.
+        val swatch = LinearLayout(this).apply {
+            background = rounded(color(R.attr.appSurface), color(R.attr.appBorder), 14f)
+            clipToOutline = true
+        }
+        for (v in listOf(t.light, t.dark)) {
+            val half = FrameLayout(this).apply { setBackgroundColor(v.bg) }
+            half.addView(View(this).apply {
+                background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(v.dot) }
+            }, FrameLayout.LayoutParams(px(12), px(12), Gravity.CENTER))
+            swatch.addView(half, LinearLayout.LayoutParams(0, -1, 1f))
+        }
         row.addView(swatch, LinearLayout.LayoutParams(px(54), px(54)))
 
         val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
