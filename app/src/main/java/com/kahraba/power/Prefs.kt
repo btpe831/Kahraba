@@ -129,7 +129,7 @@ object Prefs {
         "card_setup" to "Room setup guide",
         "card_room" to "Room",
         "card_recent" to "Recent checks",
-        "card_accuracy" to "How right is it?",
+        "card_accuracy" to "Accuracy",
         "card_monitor" to "Always-on monitor",
         "card_amps" to "Amps calculator",
         "card_meter" to "Light meter",

@@ -235,7 +235,7 @@ class MonitorActivity : ThemedActivity() {
         EventLog.file(this).takeIf { it.exists() }?.let { files += it }
         File(filesDir, "data").listFiles()?.sortedBy { it.name }?.let { files += it }
         if (files.isEmpty()) {
-            com.google.android.material.dialog.MaterialAlertDialogBuilder(this).setMessage("Nothing recorded yet. Start monitoring first.")
+            com.google.android.material.dialog.MaterialAlertDialogBuilder(this).setMessage("No recordings yet. Start the monitor to begin recording.")
                 .setPositiveButton("OK", null).show()
             return
         }

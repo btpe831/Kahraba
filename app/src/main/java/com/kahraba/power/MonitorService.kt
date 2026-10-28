@@ -243,7 +243,7 @@ class MonitorService : Service(), SensorEventListener {
         MonitorState.calibrationEndsMs = 0
         val s = MonitorState.calibrationSource
         if (values.size < 60) {
-            MonitorState.message = "Calibration failed: the light was too dark or kept changing. " +
+            MonitorState.message = "Couldn't learn this yet: the light was too dim or kept changing. " +
                 "Keep the phone still under a halogen light and try again."
             return
         }

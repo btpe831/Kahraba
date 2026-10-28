@@ -14,7 +14,7 @@ object Tour {
     fun setWelcomeSeen(ctx: Context) = Prefs.sp(ctx).edit().putBoolean(WELCOME_SEEN, true).apply()
     fun setTourSeen(ctx: Context) = Prefs.sp(ctx).edit().putBoolean(TOUR_SEEN, true).apply()
 
-    /** Settings > Replay the tour. */
+    /** Settings > Getting started guide: show the welcome and the tips again. */
     fun replay(ctx: Context) = Prefs.sp(ctx).edit().putBoolean(WELCOME_SEEN, false).putBoolean(TOUR_SEEN, false).apply()
 
     fun markAllSeen(edit: android.content.SharedPreferences.Editor) {

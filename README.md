@@ -29,8 +29,8 @@ higher, so the same bulb glows steady and about 25% brighter.
   for sure, the app learns how bright a room is on each source (two checks to set up).
 - **Always-on monitor:** for a spare phone left on its charger under a light. A power cut means
   the moteur took over; a jump in brightness means kahraba is back. It beeps on each switch.
-- **How right is it?** The app keeps score of the results you confirm, so you can see how far to
-  trust it in your home.
+- **Accuracy:** the app keeps score of the results you confirm, so you can see how far to trust
+  it in your home.
 - Also: a light meter with CSV export, an amps calculator for your moteur subscription, a
   calendar with notes, backup and restore.
 
@@ -49,7 +49,7 @@ Every release is signed with the same key. Its certificate SHA-256 is:
 
 ## Disclaimer
 
-The app makes an educated guess from the light. It can be wrong. Don't rely on it for anything
-where a wrong answer is dangerous or costly.
+The app makes an educated guess from the light. It may be inaccurate. Don't rely on it for anything
+where an incorrect result is dangerous or costly.
 
 Created by Aubrey Arenas.

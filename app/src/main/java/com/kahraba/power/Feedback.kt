@@ -25,7 +25,7 @@ object Feedback {
             "Kahraba or Not $version\n" +
             "Phone: ${Build.MANUFACTURER} ${Build.MODEL}, Android ${Build.VERSION.RELEASE}\n" +
             "Area: ${Area.label(activity).ifEmpty { "not set" }}\n" +
-            "Score: " + (if (total > 0) "right $right of $total" else "no confirmed checks yet") + "\n"
+            "Accuracy: " + (if (total > 0) "$right of $total correct" else "no confirmed checks yet") + "\n"
         val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"))
             .putExtra(Intent.EXTRA_EMAIL, arrayOf(EMAIL))
             .putExtra(Intent.EXTRA_SUBJECT, "Kahraba or Not feedback")

@@ -88,7 +88,7 @@ class TourOverlay(
 
         val buttons = LinearLayout(activity).apply { gravity = Gravity.CENTER_VERTICAL }
         buttons.addView(TextView(activity).apply {
-            this.text = "Skip tour"
+            this.text = "Skip"
             textSize = 15f
             setTextColor(color(R.attr.appMuted))
             setPadding(0, px(12), px(12), px(12))
@@ -135,7 +135,7 @@ class TourOverlay(
         counter.text = "${i + 1} OF ${steps.size}"
         title.text = s.title
         text.text = s.text
-        next.text = if (i == steps.size - 1) "Got it" else "Next"
+        next.text = if (i == steps.size - 1) "Done" else "Next"
 
         // From the current highlight (or the whole screen at the start).
         if (hole.isEmpty) from.set(0f, 0f, width.toFloat(), height.toFloat()) else from.set(hole)

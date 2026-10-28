@@ -262,7 +262,7 @@ class SettingsActivity : ThemedActivity() {
                 startActivity(Intent(this@SettingsActivity, HelpActivity::class.java))
             })
             addView(divider())
-            addView(link("Replay the tour", "The welcome screens and the tips on the main screen.") {
+            addView(link("Getting started guide", "See the welcome screens and main-screen tips again.") {
                 Tour.replay(this@SettingsActivity)
                 startActivity(Intent(this@SettingsActivity, MainActivity::class.java)
                     .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP))

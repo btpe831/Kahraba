@@ -878,13 +878,13 @@
                         android:orientation="vertical" />
                 </com.kahraba.power.NotchCard>
 
-                <!-- HOW RIGHT IS IT?: the accuracy score from confirmed checks -->
+                <!-- ACCURACY: the score from confirmed checks -->
                 <com.kahraba.power.NotchCard
                     android:id="@+id/accuracyCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="22dp"
-                    app:notchTitle="How right is it?">
+                    app:notchTitle="Accuracy">
 
                     <LinearLayout
                         android:layout_width="match_parent"

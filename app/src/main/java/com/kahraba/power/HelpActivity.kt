@@ -38,7 +38,7 @@ class HelpActivity : ThemedActivity() {
             """,
 
             "Rooms: how to get a sure “Kahraba”" to """
-                On its own, a check can prove <b>Moteur</b> (wobble) but not Kahraba, because a calm moteur can be steady too. Rooms fix that.
+                On its own, a check can prove <b>Moteur</b> (wobble) but not Kahraba, because a calm moteur can be steady too. Rooms solve this.
                 Kahraba's higher voltage makes a halogen about 25% brighter. Once the app knows how bright a room is on each source, it can tell them apart even when the light is steady.
                 <b>Set up a room</b> (the <b>Set up a room</b> card on the main screen walks you through it):
                 1. Tap the room button above <b>Check now</b> → <b>Add a room</b> and name it (Kitchen, Bathroom…).
@@ -53,7 +53,7 @@ class HelpActivity : ThemedActivity() {
                 • Moved the lamp or changed the bulb? Tap the room button → Rename or delete → delete it, and set it up again.
                 • The always-on monitor can use the same rooms, so teaching a room once helps both.
                 • Rooms are learned per phone: each phone's light sensor reads differently.
-                • The <b>How right is it?</b> card keeps score of the results you confirm, so you can see how much to trust the app in your home.
+                • The <b>Accuracy</b> card keeps score of the results you confirm, so you can see how much to trust the app in your home.
             """,
 
             "How it works" to """
@@ -68,7 +68,7 @@ class HelpActivity : ThemedActivity() {
             "Which lights work" to """
                 <b>✓ Halogen</b> – best. Spotlights, desk lamps, capsule bulbs (G4, G9, GU10, MR16), halogen floodlights.
                 <b>✓ Old filament (incandescent) bulbs</b> – work just as well.
-                <b>✗ LED bulbs</b> – most have a circuit inside that keeps the light steady, which hides the wobble. The app will wrongly say Kahraba. Some cheap LEDs do wobble, but don't rely on it.
+                <b>✗ LED bulbs</b> – most have a circuit inside that keeps the light steady, which hides the wobble. The app may incorrectly report kahraba. Some cheap LEDs do wobble, but don't rely on it.
                 <b>✗ Bulbs marked “100W equivalent”</b> – these are LEDs, not 100W bulbs.
                 <b>✗ Energy-saving bulbs (CFL, the twisted “neon” type)</b> – have electronics inside like LEDs; usually hide the wobble.
                 <b>? Fluorescent tubes (“neon”)</b> – old tubes that flicker or hum when switching on may work; modern ones usually don't.
@@ -101,15 +101,15 @@ class HelpActivity : ThemedActivity() {
                 <b>Solar inverters and battery systems.</b> If your lights run through an inverter (Deye, Growatt, etc.), the inverter makes its own smooth power whatever feeds it. Every check would say Kahraba. Use your inverter's screen or app instead: kahraba usually shows a steadier frequency (close to 50.0 Hz) and often a higher voltage than the moteur.
                 <b>UPS.</b> Same problem: a light plugged into a UPS gets smoothed power. Use a light on the normal house wiring.
                 <b>Voltage stabilisers.</b> A whole-house stabiliser (regulator) may smooth out the wobble. If checks always say Kahraba even when you know it's the moteur, this may be why.
-                <b>The wrong bulbs.</b> See “Which lights work”.
+                <b>Unsuitable bulbs.</b> See “Which lights work”.
             """,
 
             "Your results" to """
-                <b>Recent checks</b> shows your last checks; the list button in the bottom bar shows all of them. <b>Tap one to fix it</b> if you know it was wrong, or to delete it. Checks you confirmed or fixed are marked ✓.
-                <b>How right is it?</b> counts how often each result was right, among the checks you confirmed.
+                <b>Recent checks</b> shows your last checks; the list button in the bottom bar shows all of them. <b>Tap one to correct it</b>, or to delete it. Checks you confirmed or corrected are marked ✓.
+                <b>Accuracy</b> shows how often each result was correct, among the checks you confirmed.
                 <b>Move cards:</b> press and hold any card below the Check button, then drag it up or down. Hide cards in Settings › Cards.
                 <b>Can't tell</b> means the light was too dim, the phone was moved, or there was no light reading. Nothing is guessed.
-                Tip: a wrong <b>Moteur</b> result is rare (kahraba doesn't wobble), but a shadow or moving the phone can cause one. “No flicker” on the moteur happens when the moteur is calm, or the light can't show the wobble (LED, too dim, inverter, UPS).
+                Tip: an incorrect <b>Moteur</b> result is rare (kahraba doesn't wobble), but a shadow or moving the phone can cause one. “No flicker” on the moteur happens when the moteur is calm, or the light can't show the wobble (LED, too dim, inverter, UPS).
             """,
 
             "Always-on monitor (optional)" to """
@@ -131,9 +131,9 @@ class HelpActivity : ThemedActivity() {
             """,
 
             "Disclaimer" to """
-                Kahraba or Not gives an <b>estimate</b> based on how a light bulb behaves. It can be wrong, and results depend on your bulbs, wiring, generator and phone. It is provided as-is, without any guarantee of accuracy.
+                Kahraba or Not gives an <b>estimate</b> based on how a light bulb behaves. It may be inaccurate, and results depend on your bulbs, wiring, generator and phone. It is provided as-is, without any guarantee of accuracy.
                 • <b>Never use this app for safety decisions.</b> It cannot tell you whether wires are live or safe to touch. Always treat wiring as live, and leave electrical work to a qualified electrician.
-                • Don't rely on it for medical equipment or anything where a wrong answer could cause harm or damage.
+                • Don't rely on it for medical equipment or anything where an incorrect result could cause harm or damage.
                 • Halogen bulbs get very hot. Keep the phone and your hands away from them.
                 • Kahraba or Not is not affiliated with Électricité du Liban (EDL) or any generator provider.
                 Use at your own risk.

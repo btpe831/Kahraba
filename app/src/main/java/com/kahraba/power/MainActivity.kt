@@ -271,7 +271,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             // The bottom bar is always on screen: no scrolling.
             TourOverlay.Step(
                 "All your checks",
-                "Tap a check to fix it if it was wrong. That's how the app learns, and how it keeps score.",
+                "Tap a check to correct it. Corrections help the app learn and keep its accuracy score up to date.",
                 { findViewById(R.id.barHistory) },
             ),
             TourOverlay.Step(
@@ -386,7 +386,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         if (check == null || System.currentTimeMillis() < measureFromMs) return
         stopCheck(null)
         beeper.cancel()
-        showHero(R.color.idle, R.drawable.ic_bolt, "Moved", "The phone moved", "Put it down and try again")
+        showHero(R.color.idle, R.drawable.ic_bolt, "Check stopped", "The phone was moved", "Place it down and try again")
     }
 
     private fun stopCheck(result: QuickCheck.Result?) {
@@ -680,7 +680,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         val sheet = BottomSheetDialog(this)
         val v = layoutInflater.inflate(R.layout.sheet_day, null)
         v.findViewById<TextView>(R.id.sheetTitle).text = "All checks"
-        v.findViewById<TextView>(R.id.sheetDate).text = "Tap one to fix or delete it"
+        v.findViewById<TextView>(R.id.sheetDate).text = "Tap a check to correct or delete it"
         v.findViewById<View>(R.id.sheetNote).visibility = View.GONE
         val content = v.findViewById<LinearLayout>(R.id.sheetContent)
         val fmt = SimpleDateFormat("EEE d MMM  HH:mm", Locale.US)
@@ -769,7 +769,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         refreshAll()
     }
 
-    /** Tap a check to fix it (e.g. it said kahraba but it was moteur) or delete it. */
+    /** Tap a check to correct it (e.g. it said kahraba but it was moteur) or delete it. */
     private fun editEntry(e: CheckHistory.Entry) {
         val whenText = SimpleDateFormat("EEE HH:mm", Locale.US).format(Date(e.timeMs))
         MaterialAlertDialogBuilder(this)
@@ -942,7 +942,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         return row
     }
 
-    /** HOW RIGHT IS IT?: how often each result was right, from the checks the user confirmed. */
+    /** ACCURACY: how often each result was correct, from the checks the user confirmed. */
     private fun renderAccuracy() {
         val scores = CheckHistory.scores(CheckHistory.read(this))
         val right = scores.sumOf { it.right }
@@ -952,21 +952,21 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         val head = findViewById<TextView>(R.id.accuracyTotal)
         val note = findViewById<TextView>(R.id.accuracyNote)
         if (total == 0) {
-            head.text = "No score yet"
+            head.text = "No confirmed checks yet"
             note.text = "After a check, tap It was kahraba or It was moteur when you know for sure. The app keeps score here."
             return
         }
-        head.text = "Right $right of $total (${right * 100 / total}%)"
+        head.text = "$right of $total correct (${right * 100 / total}%)"
         for (sc in scores.filter { it.total > 0 }) {
             val (label, value) = when (sc.said) {
-                QuickCheck.Verdict.MOTEUR -> "Said moteur" to "right ${sc.right} of ${sc.total}"
-                QuickCheck.Verdict.KAHRABA -> "Said kahraba" to "right ${sc.right} of ${sc.total}"
-                else -> "Said no flicker" to "kahraba ${sc.right} of ${sc.total}"
+                QuickCheck.Verdict.MOTEUR -> "Moteur results" to "${sc.right} of ${sc.total} correct"
+                QuickCheck.Verdict.KAHRABA -> "Kahraba results" to "${sc.right} of ${sc.total} correct"
+                else -> "No-flicker results" to "${sc.right} of ${sc.total} were kahraba"
             }
             list.addView(row(colorFor(sc.said), label, value))
         }
-        note.text = (if (total < 10) "Early days: the score settles after about 10 confirmed checks. " else "") +
-            "Counts checks you confirmed. Confirm right answers too, not just wrong ones, so the score stays fair."
+        note.text = (if (total < 10) "The score becomes reliable after about 10 confirmed checks. " else "") +
+            "Counts checks you confirmed. Confirm correct results too, not only mistakes, so the score stays accurate."
     }
 
     private fun renderHistoryCards() {
