@@ -127,7 +127,7 @@ class HelpActivity : ThemedActivity() {
             """,
 
             "Privacy" to """
-                Everything stays on this phone. Kahraba or Not has <b>no internet access</b>. Nothing is sent anywhere unless you tap Share or Send feedback yourself. Your area (Settings › Your area) is optional, chosen by you rather than from GPS, and only included in feedback emails. Uninstalling the app deletes all its data.
+                Everything stays on this phone. Kahraba or Not has <b>no internet access</b>. Nothing is sent anywhere unless you tap Share or Send feedback yourself. Settings › Check for updates just opens the download page in your browser. Your area (Settings › Your area) is optional, chosen by you rather than from GPS, and only included in feedback emails. Uninstalling the app deletes all its data.
             """,
 
             "Disclaimer" to """

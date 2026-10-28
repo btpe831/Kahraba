@@ -119,6 +119,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         findViewById<View>(R.id.meterCard).setOnClickListener { startActivity(Intent(this, LightMeterActivity::class.java)) }
         findViewById<View>(R.id.ampsCard).setOnClickListener { startActivity(Intent(this, AmpsActivity::class.java)) }
         findViewById<View>(R.id.factsCard).setOnClickListener { Facts.next(this); renderFact() }
+        findViewById<View>(R.id.updateCheck).setOnClickListener { Updates.open(this); renderUpdate() }
+        findViewById<View>(R.id.updateLater).setOnClickListener { Updates.snooze(this, Updates.LATER_DAYS); renderUpdate() }
         findViewById<View>(R.id.setupHide).setOnClickListener {
             Prefs.sp(this).edit().putBoolean(SETUP_CARD, false).apply()
             android.widget.Toast.makeText(this, "You can turn it back on in Settings › Cards", android.widget.Toast.LENGTH_LONG).show()
@@ -292,6 +294,15 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         applyCardSettings()
         renderSetup()
         renderAccuracy()
+        renderUpdate()
+    }
+
+    /** UPDATE: shown a month after this version was installed, until checked or put off. */
+    private fun renderUpdate() {
+        val due = Updates.reminderDue(this)
+        findViewById<View>(R.id.updateCard).visibility = if (due) View.VISIBLE else View.GONE
+        if (due) findViewById<TextView>(R.id.updateText).text =
+            "You've had version ${Updates.version(this)} for a month. There may be a newer one with fixes."
     }
 
     // ---- The check ----

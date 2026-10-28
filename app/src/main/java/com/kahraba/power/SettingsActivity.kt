@@ -254,6 +254,10 @@ class SettingsActivity : ThemedActivity() {
         // ABOUT
         section("About")
         body.addView(card {
+            addView(link("Check for updates", "You have version ${Updates.version(this@SettingsActivity)}. Opens the download page in your browser.") {
+                Updates.open(this@SettingsActivity)
+            })
+            addView(divider())
             addView(link("How to use the app", "Which bulbs work, distance, rooms, solar and UPS, and the disclaimer.") {
                 startActivity(Intent(this@SettingsActivity, HelpActivity::class.java))
             })
