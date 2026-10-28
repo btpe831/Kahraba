@@ -13,6 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The full history and tags, to list what changed since the last release.
+          fetch-depth: 0
+          fetch-tags: true
 
       - uses: actions/setup-java@v4
         with:
@@ -43,12 +47,17 @@ jobs:
           "$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner" verify --print-certs KahrabaOrNot-*.apk \
             | grep -i "SHA-256 digest: 77e93fa7e7c94c4e5304da0550bc84442694977a9650e52d926babf0fe5f6776"
 
+      - name: Write the release notes
+        id: notes
+        run: python3 .github/release_notes.py "${{ steps.version.outputs.name }}" release-notes.md "$GITHUB_OUTPUT"
+
       - uses: actions/upload-artifact@v4
         with:
           name: KahrabaOrNot-apk
           path: "*.apk"
 
       - name: Publish as a release (download this on the phone)
+        if: steps.notes.outputs.publish == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.name }}-build-${{ github.run_number }}
@@ -56,7 +65,4 @@ jobs:
           target_commitish: ${{ github.sha }}
           make_latest: true
           files: KahrabaOrNot-*.apk
-          body: |
-            Install on the Android phone: tap the .apk file below, then allow "Install unknown apps" if asked.
-
-            Signing certificate SHA-256: `77:E9:3F:A7:E7:C9:4C:4E:53:04:DA:05:50:BC:84:44:26:94:97:7A:96:50:E5:2D:92:6B:AB:F0:FE:5F:67:76`
+          body_path: release-notes.md
