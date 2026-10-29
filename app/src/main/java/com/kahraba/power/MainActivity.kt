@@ -126,9 +126,12 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         hero.setOnClickListener { if (check == null) startCheck() }
         findViewById<View>(R.id.confirmKahraba).setOnClickListener { confirmLatest(QuickCheck.Verdict.KAHRABA) }
         findViewById<View>(R.id.confirmMoteur).setOnClickListener { confirmLatest(QuickCheck.Verdict.MOTEUR) }
-        findViewById<View>(R.id.monitorCard).setOnClickListener { startActivity(Intent(this, MonitorActivity::class.java)) }
-        findViewById<View>(R.id.meterCard).setOnClickListener { startActivity(Intent(this, LightMeterActivity::class.java)) }
-        findViewById<View>(R.id.ampsCard).setOnClickListener { startActivity(Intent(this, AmpsActivity::class.java)) }
+        findViewById<View>(R.id.toolMonitor).setOnClickListener { startActivity(Intent(this, MonitorActivity::class.java)) }
+        findViewById<View>(R.id.toolMeter).setOnClickListener { startActivity(Intent(this, LightMeterActivity::class.java)) }
+        findViewById<View>(R.id.toolAmps).setOnClickListener { startActivity(Intent(this, AmpsActivity::class.java)) }
+        setUpHistoryTabs()
+        // The bottom bar's status fades out while the NOW card (which shows the same) is on screen.
+        findViewById<android.widget.ScrollView>(R.id.scroll).setOnScrollChangeListener { _, _, _, _, _ -> renderBarStatus(animate = true) }
         findViewById<View>(R.id.factsCard).setOnClickListener { Facts.next(this); renderFact() }
         findViewById<View>(R.id.updateCheck).setOnClickListener { Updates.open(this); renderUpdate() }
         findViewById<View>(R.id.updateLater).setOnClickListener { Updates.snooze(this, Updates.LATER_DAYS); renderUpdate() }
@@ -212,6 +215,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         override fun run() {
             renderClock()
             renderBar()
+            renderBarStatus(animate = true)
             renderMonitorCard()
             renderWobble()
             if (++ticks % 30 == 0) renderHistoryCards()
@@ -306,7 +310,78 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         renderSetup()
         renderAccuracy()
         renderUpdate()
+        // The definition and the "lay the phone…" hint are for the first few checks only.
+        val firstChecks = CheckHistory.read(this).count { !it.fromMonitor } < INTRO_CHECKS
+        findViewById<View>(R.id.definition).visibility = if (firstChecks) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.checkHint).visibility = if (firstChecks) View.VISIBLE else View.GONE
+        // After layout, so the NOW card's position is known.
+        findViewById<View>(R.id.scroll).post { renderBarStatus(animate = false) }
     }
+
+    // ---- History card: Today · 7 days · Calendar ----
+
+    private val historyTabs = listOf("today" to "Today", "week" to "7 days", "calendar" to "Calendar")
+
+    private fun setUpHistoryTabs() {
+        val bar = findViewById<LinearLayout>(R.id.historyTabs)
+        bar.setPadding((4 * dp).toInt(), (4 * dp).toInt(), (4 * dp).toInt(), (4 * dp).toInt())
+        bar.background = GradientDrawable().apply {
+            cornerRadius = 24 * dp
+            setColor(themeColor(R.attr.appSurfaceAlt))
+            setStroke((1 * dp).toInt(), themeColor(R.attr.appBorder))
+        }
+        for ((key, label) in historyTabs) {
+            bar.addView(TextView(this).apply {
+                text = label
+                gravity = Gravity.CENTER
+                textSize = 15f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setPadding(0, (9 * dp).toInt(), 0, (9 * dp).toInt())
+                setOnClickListener {
+                    Prefs.sp(this@MainActivity).edit().putString(HISTORY_TAB, key).apply()
+                    renderHistoryTab()
+                }
+            }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        }
+        renderHistoryTab()
+    }
+
+    private fun renderHistoryTab() {
+        val tab = Prefs.sp(this).getString(HISTORY_TAB, "today")
+        val bar = findViewById<LinearLayout>(R.id.historyTabs)
+        for ((i, pair) in historyTabs.withIndex()) {
+            val on = pair.first == tab
+            (bar.getChildAt(i) as TextView).apply {
+                setTextColor(themeColor(if (on) R.attr.appOnAccent else R.attr.appMuted))
+                background = if (on) GradientDrawable().apply { cornerRadius = 20 * dp; setColor(themeColor(R.attr.appAccent)) } else null
+            }
+        }
+        findViewById<View>(R.id.historyToday).visibility = if (tab == "today") View.VISIBLE else View.GONE
+        findViewById<View>(R.id.historyWeek).visibility = if (tab == "week") View.VISIBLE else View.GONE
+        findViewById<View>(R.id.historyCalendar).visibility = if (tab == "calendar") View.VISIBLE else View.GONE
+    }
+
+    /**
+     * The bottom bar shows the status only when it adds something: while the monitor runs (the NOW
+     * card shows checks), or once the NOW card has scrolled out of sight.
+     */
+    private fun renderBarStatus(animate: Boolean) {
+        val scroll = findViewById<android.widget.ScrollView>(R.id.scroll)
+        val r = android.graphics.Rect()
+        hero.getDrawingRect(r)
+        scroll.offsetDescendantRectToMyCoords(hero, r)
+        val nowOnScreen = r.bottom > scroll.scrollY + 24 * dp
+        val show = MonitorState.running || !nowOnScreen
+        if (show == barStatusShown) return
+        barStatusShown = show
+        val target = if (show) 1f else 0f
+        for (v in listOf(barTile, findViewById<View>(R.id.barText))) {
+            v.animate().cancel()
+            if (animate) v.animate().alpha(target).setDuration(180).start() else v.alpha = target
+        }
+    }
+
+    private var barStatusShown: Boolean? = null
 
     /** UPDATE: shown a month after this version was installed, until checked or put off. */
     private fun renderUpdate() {
@@ -854,17 +929,17 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     /** Shows, hides and orders the cards as chosen in Settings > Cards > Arrange cards. */
     /** Card setting keys and their views. */
     private val cardIds = mapOf(
-        "card_timeline" to R.id.timelineCard, "card_today" to R.id.todayCard, "card_week" to R.id.weekCard,
-        "card_stats" to R.id.statsCard, "card_wobble" to R.id.wobbleCard, "card_advice" to R.id.adviceCard,
-        "card_facts" to R.id.factsCard,
-        "card_room" to R.id.roomCard, "card_recent" to R.id.recentCard, "card_accuracy" to R.id.accuracyCard,
-        "card_monitor" to R.id.monitorCard,
-        "card_meter" to R.id.meterCard, "card_amps" to R.id.ampsCard,
+        "card_room" to R.id.roomCard, "card_advice" to R.id.adviceCard, "card_history" to R.id.historyCard,
+        "card_recent" to R.id.recentCard, "card_accuracy" to R.id.accuracyCard, "card_tools" to R.id.toolsCard,
+        "card_facts" to R.id.factsCard, "card_wobble" to R.id.wobbleCard,
     )
 
     private fun applyCardSettings() {
         val ids = cardIds
         for ((key, id) in ids) findViewById<View>(id).visibility = if (Prefs.cardOn(this, key)) View.VISIBLE else View.GONE
+        // History stays hidden until there is something to show: a check, or the monitor's log.
+        val hasHistory = CheckHistory.read(this).any { !it.fromMonitor } || EventLog.read(this).isNotEmpty()
+        if (!hasHistory) findViewById<View>(R.id.historyCard).visibility = View.GONE
 
         // The saved order (from dragging a card, or Arrange cards); only moves views when it changed.
         val stack = findViewById<LinearLayout>(R.id.cardStack)
@@ -1297,5 +1372,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         private const val CHART_MAX = 600
         private const val CAL_MONITOR = "calendar_monitor"
         private const val SETUP_CARD = "card_setup"
+        private const val HISTORY_TAB = "history_tab"
+        /** The definition and hint show until this many checks have been done. */
+        private const val INTRO_CHECKS = 3
     }
 }

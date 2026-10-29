@@ -263,6 +263,7 @@
             </LinearLayout>
 
             <TextView
+                android:id="@+id/checkHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
@@ -573,66 +574,36 @@
                     </LinearLayout>
                 </com.kahraba.power.NotchCard>
 
-                <!-- LAST 12 HOURS -->
+                <!-- HISTORY: today (stats and the last 12 hours), 7 days and the calendar, in tabs -->
                 <com.kahraba.power.NotchCard
-                    android:id="@+id/timelineCard"
+                    android:id="@+id/historyCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:paddingStart="8dp"
-                    android:paddingTop="30dp"
-                    android:paddingEnd="8dp"
-                    android:paddingBottom="16dp"
-                    app:notchTitle="Last 12 hours">
+                    android:layout_marginTop="22dp"
+                    app:notchTitle="History">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
 
-                        <HorizontalScrollView
-                            android:id="@+id/timelineScroll"
+                        <!-- Today · 7 days · Calendar (built in code) -->
+                        <LinearLayout
+                            android:id="@+id/historyTabs"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:scrollbars="none">
+                            android:layout_marginBottom="16dp"
+                            android:orientation="horizontal" />
 
-                            <LinearLayout
-                                android:id="@+id/timelineRow"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal" />
-                        </HorizontalScrollView>
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="1dp"
-                            android:layout_marginStart="12dp"
-                            android:layout_marginTop="10dp"
-                            android:layout_marginEnd="12dp"
-                            android:background="?attr/appOutline" />
-
-                        <TextView
-                            android:id="@+id/timelineNote"
+                        <LinearLayout
+                            android:id="@+id/historyToday"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:gravity="center"
-                            android:paddingStart="12dp"
-                            android:paddingEnd="12dp"
-                            android:textColor="?attr/appMuted"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-                </com.kahraba.power.NotchCard>
+                            android:orientation="vertical">
 
-                <!-- KAHRABA TODAY -->
-                <com.kahraba.power.NotchCard
-                    android:id="@+id/statsCard"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="22dp"
-                    app:notchTitle="Kahraba today">
 
                     <LinearLayout
+                        android:id="@+id/historyStats"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
@@ -704,17 +675,53 @@
                             android:textColor="?attr/appText"
                             android:textSize="15sp" />
                     </LinearLayout>
-                </com.kahraba.power.NotchCard>
 
-                <!-- 7 DAYS -->
-                <com.kahraba.power.NotchCard
-                    android:id="@+id/weekCard"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="22dp"
-                    app:notchTitle="7 days">
 
                     <LinearLayout
+                        android:id="@+id/historyTimeline"
+                        android:layout_marginTop="18dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <HorizontalScrollView
+                            android:id="@+id/timelineScroll"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:scrollbars="none">
+
+                            <LinearLayout
+                                android:id="@+id/timelineRow"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal" />
+                        </HorizontalScrollView>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginStart="12dp"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginEnd="12dp"
+                            android:background="?attr/appOutline" />
+
+                        <TextView
+                            android:id="@+id/timelineNote"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp"
+                            android:textColor="?attr/appMuted"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+                        </LinearLayout>
+
+
+                    <LinearLayout
+                        android:id="@+id/historyWeek"
+                        android:visibility="gone"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
@@ -733,17 +740,11 @@
                             android:textColor="?attr/appMuted"
                             android:textSize="13sp" />
                     </LinearLayout>
-                </com.kahraba.power.NotchCard>
 
-                <!-- TODAY: date, live clock and calendar -->
-                <com.kahraba.power.NotchCard
-                    android:id="@+id/todayCard"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    app:notchTitle="Today">
 
                     <LinearLayout
+                        android:id="@+id/historyCalendar"
+                        android:visibility="gone"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
@@ -857,7 +858,11 @@
                                 android:textSize="13sp" />
                         </LinearLayout>
                     </LinearLayout>
+                    </LinearLayout>
                 </com.kahraba.power.NotchCard>
+
+
+
 
                 <!-- RECENT CHECKS -->
                 <com.kahraba.power.NotchCard
@@ -917,111 +922,163 @@
                     </LinearLayout>
                 </com.kahraba.power.NotchCard>
 
-                <!-- ALWAYS-ON MONITOR -->
+                <!-- TOOLS: the always-on monitor, amps calculator and light meter -->
                 <com.kahraba.power.NotchCard
-                    android:id="@+id/monitorCard"
+                    android:id="@+id/toolsCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="22dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:notchTitle="Always-on monitor">
+                    app:notchTitle="Tools">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:id="@+id/toolMonitor"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackground"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp">
+
+                            <View
+                                android:id="@+id/monitorDot"
+                                android:layout_width="12dp"
+                                android:layout_height="12dp"
+                                android:layout_marginEnd="14dp"
+                                android:background="@drawable/dot" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Always-on monitor"
+                                    android:textColor="?attr/appText"
+                                    android:textSize="17sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/monitorSub"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:textColor="?attr/appMuted"
+                                    android:textSize="14sp" />
+                            </LinearLayout>
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:importantForAccessibility="no"
+                                android:src="@drawable/ic_chevron"
+                                app:tint="?attr/appAccent" />
+                        </LinearLayout>
 
                         <View
-                            android:id="@+id/monitorDot"
-                            android:layout_width="12dp"
-                            android:layout_height="12dp"
-                            android:background="@drawable/dot" />
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="?attr/appOutline" />
 
-                        <TextView
-                            android:id="@+id/monitorSub"
-                            android:layout_width="0dp"
+                        <LinearLayout
+                            android:id="@+id/toolAmps"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="14dp"
-                            android:layout_weight="1"
-                            android:textColor="?attr/appText"
-                            android:textSize="16sp" />
+                            android:background="?attr/selectableItemBackground"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp">
 
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:importantForAccessibility="no"
-                            android:src="@drawable/ic_chevron"
-                            app:tint="?attr/appAccent" />
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Amps calculator"
+                                    android:textColor="?attr/appText"
+                                    android:textSize="17sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:text="Will the kettle and heater fit in your subscription?"
+                                    android:textColor="?attr/appMuted"
+                                    android:textSize="14sp" />
+                            </LinearLayout>
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:importantForAccessibility="no"
+                                android:src="@drawable/ic_chevron"
+                                app:tint="?attr/appAccent" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="?attr/appOutline" />
+
+                        <LinearLayout
+                            android:id="@+id/toolMeter"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackground"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Light meter"
+                                    android:textColor="?attr/appText"
+                                    android:textSize="17sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:text="Live lux, a chart, and recordings"
+                                    android:textColor="?attr/appMuted"
+                                    android:textSize="14sp" />
+                            </LinearLayout>
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:importantForAccessibility="no"
+                                android:src="@drawable/ic_chevron"
+                                app:tint="?attr/appAccent" />
+                        </LinearLayout>
                     </LinearLayout>
                 </com.kahraba.power.NotchCard>
 
-                <!-- AMPS CALCULATOR -->
-                <com.kahraba.power.NotchCard
-                    android:id="@+id/ampsCard"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="22dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:notchTitle="Amps calculator">
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
 
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Watts to amps: will the kettle and heater fit in your 10 A subscription?"
-                            android:textColor="?attr/appText"
-                            android:textSize="16sp" />
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:importantForAccessibility="no"
-                            android:src="@drawable/ic_chevron"
-                            app:tint="?attr/appAccent" />
-                    </LinearLayout>
-                </com.kahraba.power.NotchCard>
-
-                <!-- LIGHT METER -->
-                <com.kahraba.power.NotchCard
-                    android:id="@+id/meterCard"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="22dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:notchTitle="Light meter">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Live lux, a chart, and recordings you can save as CSV"
-                            android:textColor="?attr/appText"
-                            android:textSize="16sp" />
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:importantForAccessibility="no"
-                            android:src="@drawable/ic_chevron"
-                            app:tint="?attr/appAccent" />
-                    </LinearLayout>
-                </com.kahraba.power.NotchCard>
             </com.kahraba.power.ReorderLayout>
 
             <TextView
@@ -1085,6 +1142,7 @@
         </FrameLayout>
 
         <LinearLayout
+            android:id="@+id/barText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"

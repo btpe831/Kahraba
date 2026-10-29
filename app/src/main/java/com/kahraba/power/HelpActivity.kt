@@ -107,13 +107,13 @@ class HelpActivity : ThemedActivity() {
             "Your results" to """
                 <b>Recent checks</b> shows your last checks; the list button in the bottom bar shows all of them. <b>Tap one to correct it</b>, or to delete it. Checks you confirmed or corrected are marked ✓.
                 <b>Accuracy</b> shows how often each result was correct, among the checks you confirmed.
-                <b>Move cards:</b> press and hold any card below the Check button, then drag it up or down. Hide cards in Settings › Cards.
+                <b>Move cards:</b> press and hold any card below the Check button, then drag it up or down. Show or hide cards in Settings › Cards: History (today, 7 days and the calendar), Tools, Did you know? and more.
                 <b>Can't tell</b> means the light was too dim, the phone was moved, or there was no light reading. Nothing is guessed.
                 Tip: an incorrect <b>Moteur</b> result is rare (kahraba doesn't wobble), but a shadow or moving the phone can cause one. “No flicker” on the moteur happens when the moteur is calm, or the light can't show the wobble (LED, too dim, inverter, UPS).
             """,
 
             "Always-on monitor (optional)" to """
-                For a spare phone that stays in one place. Open it from the card at the bottom of the main screen.
+                For a spare phone that stays in one place. Open it from <b>Tools</b> on the main screen, or Settings › Tools.
                 • Plug the phone into a <b>wall socket</b> (not a UPS) and leave it face-up under a halogen light. The screen can be off.
                 • A power cut is seen through the charger and means the moteur took over.
                 • It says Kahraba is back when the light gets clearly <b>brighter</b> (no blackout) and stays steady for 2 minutes – kahraba's higher voltage makes the bulb brighter. Steady light alone is not enough, because a calm moteur is steady too.

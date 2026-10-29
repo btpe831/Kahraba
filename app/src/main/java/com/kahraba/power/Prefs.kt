@@ -119,23 +119,38 @@ object Prefs {
 
     /** Main-screen cards that can be turned on or off (key to name). */
     val CARDS = listOf(
-        "card_timeline" to "Last 12 hours",
-        "card_today" to "Today (calendar)",
-        "card_week" to "7 days",
-        "card_stats" to "Kahraba today",
-        "card_wobble" to "Light wobble",
-        "card_advice" to "What to run",
-        "card_facts" to "Did you know?",
         "card_setup" to "Room setup guide",
         "card_room" to "Room",
+        "card_advice" to "What to run",
+        "card_history" to "History",
         "card_recent" to "Recent checks",
         "card_accuracy" to "Accuracy",
-        "card_monitor" to "Always-on monitor",
-        "card_amps" to "Amps calculator",
-        "card_meter" to "Light meter",
+        "card_tools" to "Tools",
+        "card_facts" to "Did you know?",
+        "card_wobble" to "Light wobble",
     )
 
-    fun cardOn(ctx: Context, key: String) = sp(ctx).getBoolean(key, true)
+    fun cardOn(ctx: Context, key: String) = sp(ctx).getBoolean(key, key !in CardOrder.OFF_FOR_NEW_USERS)
+
+    private const val CARDS_1_1 = "cards_1_1_set_up"
+
+    /**
+     * Once, on the first start of 1.1.0: people who used the app before keep the cards they had
+     * (Did you know? and Light wobble stay on; History and Tools are on if any card they replaced
+     * was on). New users get the simpler default.
+     */
+    fun setUpCards(ctx: Context) {
+        val p = sp(ctx)
+        if (p.getBoolean(CARDS_1_1, false)) return
+        val edit = p.edit()
+        if (Tour.welcomeSeen(ctx)) {
+            for (key in CardOrder.OFF_FOR_NEW_USERS) if (!p.contains(key)) edit.putBoolean(key, true)
+            for (key in listOf("card_history", "card_tools")) {
+                edit.putBoolean(key, CardOrder.mergedOn(key) { old -> p.getBoolean(old, true) })
+            }
+        }
+        edit.putBoolean(CARDS_1_1, true).apply()
+    }
 
     private const val CARD_ORDER = "card_order"
 

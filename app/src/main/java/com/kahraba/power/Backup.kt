@@ -83,6 +83,8 @@ object Backup {
         edit.commit()
         // Old backups can carry the first version's saved defaults.
         Prefs.cleanUpOldDefaults(ctx, force = true)
+        // Backups from before 1.1.0 have the old cards.
+        Prefs.setUpCards(ctx)
         val files = root.optJSONObject("files")
         for (name in FILES) {
             val text = files?.optString(name, "") ?: ""

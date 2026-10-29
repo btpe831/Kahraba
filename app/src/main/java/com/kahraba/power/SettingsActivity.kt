@@ -32,6 +32,8 @@ class SettingsActivity : ThemedActivity() {
 
     private val dp get() = resources.displayMetrics.density
     private lateinit var body: LinearLayout
+    /** null for Settings itself; [PAGE_ADVANCED] or [PAGE_BACKUP] for those screens. */
+    private var page: String? = null
     private lateinit var scroll: ScrollView
     /** A scroll position waiting to be restored after a theme change (kept if the screen is rebuilt again first). */
     private var pendingScrollY = 0
@@ -116,6 +118,7 @@ class SettingsActivity : ThemedActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        page = intent.getStringExtra(PAGE)
         supportActionBar?.hide()
         scroll = ScrollView(this).apply { setBackgroundColor(color(R.attr.appBg)) }
         body = LinearLayout(this).apply {
@@ -143,7 +146,8 @@ class SettingsActivity : ThemedActivity() {
 
         // Header: title and Close.
         val header = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
-        header.addView(text("Settings", 32f, R.attr.appText, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
+        val title = when (page) { PAGE_ADVANCED -> "Advanced"; PAGE_BACKUP -> "Backup"; else -> "Settings" }
+        header.addView(text(title, 32f, R.attr.appText, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(MaterialButton(this, null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
             text = "Close"
             cornerRadius = px(24)
@@ -152,6 +156,41 @@ class SettingsActivity : ThemedActivity() {
             setOnClickListener { finish() }
         })
         body.addView(header)
+
+        // The Advanced and Backup screens: just their own card.
+        if (page == PAGE_ADVANCED) {
+            body.addView(card {
+                addView(text("You don't need to change these. The defaults work for most homes.", 14f, R.attr.appMuted))
+                addView(numberRow("Flicker sensitivity", "%", Prefs.FLICKER_THRESHOLD, Prefs.DEFAULT_THRESHOLD,
+                    "How much the light must flicker to count as moteur. A lower number catches moteur more easily but " +
+                        "may give false alarms. It's set for you when you use “It's kahraba” / “It's moteur”."))
+                addView(divider())
+                addView(numberRow("Wait before saying kahraba", "min", Prefs.STEADY_MINUTES, 2.0,
+                    "When kahraba comes back, the light gets brighter and steadier. The monitor waits this long to be " +
+                        "sure before switching to kahraba."))
+                addView(divider())
+                addView(numberRow("Minimum brightness", "lux", Prefs.MIN_LUX, 100.0,
+                    "If the light is dimmer than this, the app won't guess. Move the phone closer to a halogen light."))
+                addView(divider())
+                addView(toggle("Detect moteur without a power cut",
+                    "Normally the monitor switches to moteur only when the power cuts out. Turn this on to also switch " +
+                        "when the light keeps flickering. Can give false alarms, so it's off by default.",
+                    Prefs.MOTEUR_ON_FLICKER, false))
+            }, lp(top = 16))
+            return
+        }
+        if (page == PAGE_BACKUP) {
+            body.addView(card {
+                addView(link("Back up to a file", "Saves your checks, rooms, notes, monitor log and settings in one file.") {
+                    launchSafely { saveBackup.launch("kahraba-or-not-backup-" + SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date()) + ".json") }
+                })
+                addView(divider())
+                addView(link("Restore from a file", "Replaces everything here with a backup, e.g. from another phone or Google Drive.") {
+                    launchSafely { openBackup.launch(arrayOf("application/json", "application/octet-stream", "text/plain", "*/*")) }
+                })
+            })
+            return
+        }
 
         // SOUND
         section("Sound")
@@ -208,40 +247,26 @@ class SettingsActivity : ThemedActivity() {
             addView(timeRow("Quiet until", Prefs.QUIET_END, "07:00"))
         })
         body.addView(card {
-            addView(text("Advanced", 18f, R.attr.appText, bold = true))
-            addView(text("You don't need to change these. The defaults work for most homes.", 14f, R.attr.appMuted), lp(top = 2))
-            addView(numberRow("Flicker sensitivity", "%", Prefs.FLICKER_THRESHOLD, Prefs.DEFAULT_THRESHOLD,
-                "How much the light must flicker to count as moteur. A lower number catches moteur more easily but " +
-                    "may give false alarms. It's set for you when you use “It's kahraba” / “It's moteur”."))
-            addView(divider())
-            addView(numberRow("Wait before saying kahraba", "min", Prefs.STEADY_MINUTES, 2.0,
-                "When kahraba comes back, the light gets brighter and steadier. The monitor waits this long to be " +
-                    "sure before switching to kahraba."))
-            addView(divider())
-            addView(numberRow("Minimum brightness", "lux", Prefs.MIN_LUX, 100.0,
-                "If the light is dimmer than this, the app won't guess. Move the phone closer to a halogen light."))
-            addView(divider())
-            addView(toggle("Detect moteur without a power cut",
-                "Normally the monitor switches to moteur only when the power cuts out. Turn this on to also switch " +
-                    "when the light keeps flickering. Can give false alarms, so it's off by default.",
-                Prefs.MOTEUR_ON_FLICKER, false))
+            addView(link("Advanced", "Flicker sensitivity, waiting time and minimum brightness. The defaults work for most homes.") {
+                startActivity(Intent(this@SettingsActivity, SettingsActivity::class.java).putExtra(PAGE, PAGE_ADVANCED))
+            })
         }, lp(top = 12))
 
         // BACKUP
         section("Backup")
         body.addView(card {
-            addView(link("Back up to a file", "Saves your checks, rooms, notes, monitor log and settings in one file.") {
-                launchSafely { saveBackup.launch("kahraba-or-not-backup-" + SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date()) + ".json") }
-            })
-            addView(divider())
-            addView(link("Restore from a file", "Replaces everything here with a backup, e.g. from another phone or Google Drive.") {
-                launchSafely { openBackup.launch(arrayOf("application/json", "application/octet-stream", "text/plain", "*/*")) }
+            addView(link("Back up or restore", "Keep a copy of your checks, rooms and settings, or move them to another phone.") {
+                startActivity(Intent(this@SettingsActivity, SettingsActivity::class.java).putExtra(PAGE, PAGE_BACKUP))
             })
         })
 
         // TOOLS
         section("Tools")
         body.addView(card {
+            addView(link("Always-on monitor", "For a spare phone left under a light: tracks every switch.") {
+                startActivity(Intent(this@SettingsActivity, MonitorActivity::class.java))
+            })
+            addView(divider())
             addView(link("Amps calculator", "Watts to amps, and what fits in your moteur subscription.") {
                 startActivity(Intent(this@SettingsActivity, AmpsActivity::class.java))
             })
@@ -525,5 +550,8 @@ class SettingsActivity : ThemedActivity() {
 
     companion object {
         private const val SCROLL_Y = "scroll_y"
+        private const val PAGE = "page"
+        private const val PAGE_ADVANCED = "advanced"
+        private const val PAGE_BACKUP = "backup"
     }
 }
