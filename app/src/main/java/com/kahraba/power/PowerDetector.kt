@@ -20,11 +20,11 @@ data class DetectorConfig(
     val minLux: Double = 100.0,
     /**
      * How much brighter (in %) the light must get, without a blackout, to count as kahraba coming
-     * back. Kahraba's higher voltage (234 V vs 213 V) made the halogen ~25-30% brighter
-     * (862 vs 650-700 lux). Steadiness alone is NOT enough: on 26 Oct at night a calm moteur
-     * stayed perfectly steady for 19 minutes.
+     * back. Kahraba's higher voltage made the halogen 25-30% brighter on 26 Oct (234 V vs 213 V),
+     * but only 11-21% on later switches (28-29 Oct), so 10%. Steadiness alone is NOT enough: on
+     * 26 Oct at night a calm moteur stayed perfectly steady for 19 minutes.
      */
-    val levelRisePct: Double = 12.0,
+    val levelRisePct: Double = 10.0,
     /** Brightness rises above this are more likely another lamp being switched on. */
     val levelRiseMaxPct: Double = 60.0,
     /** Light levels learned with "It's kahraba" / "It's moteur" at this spot, if any. */
@@ -225,7 +225,9 @@ class PowerDetector(
         flickerPct = flicker
         lightStatus = status
         seconds.addLast(Second(now, flicker, level))
-        val keepMs = (maxOf(config.steadyMinutes + REFERENCE_MINUTES, config.flickerMinutes) * 60_000).roundToLong() + 10_000
+        // Long enough to look back past the switch to the level before it.
+        val keepMs = (maxOf(config.steadyMinutes + REFERENCE_MINUTES, config.flickerMinutes) * 60_000).roundToLong() +
+            SWITCH_MS + 60_000
         while (seconds.isNotEmpty() && seconds.first().t < now - keepMs) seconds.removeFirst()
     }
 
@@ -237,14 +239,10 @@ class PowerDetector(
         if ((source == Source.MOTEUR || source == Source.UNKNOWN) && historyMin >= need && isSteady(now, need, thr)) {
             val recent = levelBetween(now - minutesMs(need), now)
 
-            // 1) The light got clearly brighter (no blackout) and has stayed steady since.
+            // 1) The light got clearly brighter in one go (no blackout) and has stayed steady since.
             if (source == Source.MOTEUR && recent != null) {
-                val refEnd = now - minutesMs(need)
-                val ref = levelBetween(refEnd - minutesMs(REFERENCE_MINUTES), refEnd)
-                // The "before" level must hold right up to the change, so a window that mixes the
-                // old and new levels can't fake a moderate rise.
-                val tail = levelBetween(refEnd - 30_000, refEnd, minCount = 20)
-                if (ref != null && tail != null && kotlin.math.abs(tail / ref - 1) < 0.10) {
+                val ref = levelBeforeChange(recent)
+                if (ref != null) {
                     val rise = (recent / ref - 1) * 100
                     if (rise >= config.levelRisePct && rise <= config.levelRiseMaxPct) {
                         out += change(now, Source.KAHRABA, "Light got ${rise.toInt()}% brighter and stayed steady – kahraba is back")
@@ -285,6 +283,37 @@ class PowerDetector(
 
     private fun minutesMs(minutes: Double) = (minutes * 60_000).roundToLong()
 
+    /**
+     * The steady brightness before the current one, or null if there wasn't one.
+     *
+     * Traces the current level back to where it began, skips the switch itself (the light can
+     * step and bounce for half a minute: 28 Oct went 643 -> 680 -> 738/787 -> 738 lux), and takes
+     * the level over the [REFERENCE_MINUTES] before that (a busy moteur wobbles, so it's the
+     * typical level). The light must not have gone out in between: that's a power cut, handled
+     * through the charger.
+     */
+    private fun levelBeforeChange(recent: Double): Double? {
+        var start: Long? = null
+        for (sec in seconds.reversed()) {
+            val l = sec.level ?: break
+            if (kotlin.math.abs(l / recent - 1) > SAME_LEVEL) break
+            start = sec.t
+        }
+        if (start == null) return null
+        val beforeEnd = start - SWITCH_MS
+        val before = seconds.filter { it.t in (beforeEnd - minutesMs(REFERENCE_MINUTES))..beforeEnd }.mapNotNull { it.level }
+        if (before.size < 0.7 * REFERENCE_MINUTES * 60) return null
+        val ref = median(before) ?: return null
+        // Just before the switch the light must still have been at that level: when the moteur
+        // creeps up in steps (639 -> 688 -> 735 lux on 28 Oct), the last step started from a
+        // different level than the minutes before it, so the steps don't add up to a fake jump.
+        val tail = median(seconds.filter { it.t in (beforeEnd - 30_000)..beforeEnd }.mapNotNull { it.level }) ?: return null
+        if (kotlin.math.abs(tail / ref - 1) > BEFORE_SPREAD) return null
+        val during = seconds.filter { it.t in beforeEnd..start }.mapNotNull { it.level }
+        if (during.any { it < 0.5 * ref }) return null
+        return ref
+    }
+
     /** Median light level over a time span, or null if too few readable seconds in it. */
     private fun levelBetween(from: Long, to: Long, minCount: Int = 30): Double? {
         val levels = seconds.filter { it.t > from && it.t <= to }.mapNotNull { it.level }
@@ -323,6 +352,12 @@ class PowerDetector(
         const val MOTION_PAUSE_MS = 10_000L
         /** Minutes before the steady stretch used as the "before" brightness. */
         const val REFERENCE_MINUTES = 3.0
+        /** Levels within this share of each other count as the same brightness (the sensor steps ~5%). */
+        const val SAME_LEVEL = 0.06
+        /** Time skipped around a switch, where the light can step and bounce. */
+        const val SWITCH_MS = 45_000L
+        /** The light just before the switch must be this close to the typical "before" level. */
+        const val BEFORE_SPREAD = 0.06
         const val SAMPLE_KEEP_MS = 30_000L
         const val DISTURBANCE_PCT = 25.0
         // The moteur took 75 s to come on during the 26 Oct cut.
