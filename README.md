@@ -53,3 +53,6 @@ The app makes an educated guess from the light. It may be inaccurate. Don't rely
 where an incorrect result is dangerous or costly.
 
 Created by Aubrey Arenas.
+
+© 2026 Aubrey Arenas. All rights reserved. The code is public so you can see what the app does;
+see [LICENSE](LICENSE) for what that allows.

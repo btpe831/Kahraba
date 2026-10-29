@@ -137,6 +137,7 @@ class HelpActivity : ThemedActivity() {
                 • Halogen bulbs get very hot. Keep the phone and your hands away from them.
                 • Kahraba or Not is not affiliated with Électricité du Liban (EDL) or any generator provider.
                 Use at your own risk.
+                © 2026 Aubrey Arenas. All rights reserved.
             """,
         )
     }

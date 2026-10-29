@@ -279,7 +279,7 @@ class SettingsActivity : ThemedActivity() {
             addView(text("Everything stays on this phone. Kahraba or Not has no internet access; data only leaves if you tap Share or Send feedback.",
                 14f, R.attr.appMuted), lp(top = 4))
             val version = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull() ?: ""
-            addView(text("Version $version · Created by Aubrey Arenas", 14f, R.attr.appMuted), lp(top = 14))
+            addView(text("Version $version · Created by Aubrey Arenas\n© 2026 Aubrey Arenas. All rights reserved.", 14f, R.attr.appMuted), lp(top = 14))
         })
 
         // APPEARANCE AND THEME
