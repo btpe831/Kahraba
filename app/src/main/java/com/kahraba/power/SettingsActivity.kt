@@ -156,6 +156,10 @@ class SettingsActivity : ThemedActivity() {
             setOnClickListener { finish() }
         })
         body.addView(header)
+        // The version, right at the top so it's easy to find.
+        if (page == null) {
+            body.addView(text("Kahraba or Not ${Updates.version(this)}", 15f, R.attr.appMuted).apply { setPadding(px(2), 0, 0, 0) })
+        }
 
         // The Advanced and Backup screens: just their own card.
         if (page == PAGE_ADVANCED) {

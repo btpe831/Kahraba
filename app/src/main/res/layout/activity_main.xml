@@ -20,16 +20,31 @@
             android:paddingTop="8dp"
             android:paddingEnd="16dp">
 
-            <!-- Title and a dictionary-style subtitle -->
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- Title with the app version, and a dictionary-style subtitle -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:layout_marginTop="4dp"
-                android:text="Kahraba or Not"
-                android:textColor="?attr/appText"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+                android:baselineAligned="true"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Kahraba or Not"
+                    android:textColor="?attr/appText"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/appVersion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:textColor="?attr/appMuted"
+                    android:textSize="13sp" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/definition"

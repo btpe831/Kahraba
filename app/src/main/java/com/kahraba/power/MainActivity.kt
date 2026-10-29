@@ -130,6 +130,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         findViewById<View>(R.id.toolMeter).setOnClickListener { startActivity(Intent(this, LightMeterActivity::class.java)) }
         findViewById<View>(R.id.toolAmps).setOnClickListener { startActivity(Intent(this, AmpsActivity::class.java)) }
         setUpHistoryTabs()
+        findViewById<TextView>(R.id.appVersion).text = "v${Updates.version(this)}"
         // The bottom bar's status fades out while the NOW card (which shows the same) is on screen.
         findViewById<android.widget.ScrollView>(R.id.scroll).setOnScrollChangeListener { _, _, _, _, _ -> renderBarStatus(animate = true) }
         findViewById<View>(R.id.factsCard).setOnClickListener { Facts.next(this); renderFact() }
