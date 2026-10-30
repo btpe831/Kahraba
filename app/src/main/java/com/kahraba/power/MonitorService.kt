@@ -156,6 +156,7 @@ class MonitorService : Service(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent) {
         latestLux = event.values[0].toDouble()
         detector.addReading(System.currentTimeMillis(), event.values[0].toDouble())
+        data.raw(System.currentTimeMillis(), event.values[0].toDouble())
         sensorEvents.addLast(System.currentTimeMillis())
     }
 

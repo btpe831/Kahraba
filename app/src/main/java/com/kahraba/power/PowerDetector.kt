@@ -21,10 +21,12 @@ data class DetectorConfig(
     /**
      * How much brighter (in %) the light must get, without a blackout, to count as kahraba coming
      * back. Kahraba's higher voltage made the halogen 25-30% brighter on 26 Oct (234 V vs 213 V),
-     * but only 11-21% on later switches (28-29 Oct), so 10%. Steadiness alone is NOT enough: on
+     * but only 11-21% on later switches (28-29 Oct). 10% caught more of them, but on 29 Oct a busy
+     * moteur crept up 10% in two small steps and would have been called kahraba, so 12%. Steadiness
+     * alone is NOT enough: on
      * 26 Oct at night a calm moteur stayed perfectly steady for 19 minutes.
      */
-    val levelRisePct: Double = 10.0,
+    val levelRisePct: Double = 12.0,
     /** Brightness rises above this are more likely another lamp being switched on. */
     val levelRiseMaxPct: Double = 60.0,
     /** Light levels learned with "It's kahraba" / "It's moteur" at this spot, if any. */
