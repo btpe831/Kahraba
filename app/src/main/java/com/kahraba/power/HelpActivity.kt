@@ -115,7 +115,7 @@ class HelpActivity : ThemedActivity() {
             "Always-on monitor (optional)" to """
                 For a spare phone that stays in one place. Open it from <b>Tools</b> on the main screen, or Settings › Tools.
                 • Plug the phone into a <b>wall socket</b> (not a UPS) and leave it face-up under a halogen light. The screen can be off.
-                • A power cut is seen through the charger and means the moteur took over.
+                • A power cut is seen through the charger. A cut of a minute or more means the moteur took over (it takes about a minute to start). A blink of a few seconds is a changeover: once the light settles, brighter means kahraba is back, dimmer means moteur.
                 • It says Kahraba is back when the light gets clearly <b>brighter</b> (no blackout) and stays steady for 2 minutes – kahraba's higher voltage makes the bulb brighter. Steady light alone is not enough, because a calm moteur is steady too.
                 • Under <b>Room</b>, pick the room the phone is in, then tap “It's kahraba” and “It's moteur” once each (when you're sure) so it learns how bright that room is on each. If quick checks already taught that room, it knows straight away. Then it can tell kahraba from moteur even when the light is steady. Keep the phone in the exact same place.
                 • Keep other lights the same: switching a lamp on can look like the brightness change.

@@ -167,6 +167,14 @@ class PowerDetector(
         if (prev == false && isPlugged && offSince != null) {
             val off = now - offSince
             unpluggedAtMs = null
+            // Too short for a moteur to start (every "kahraba cut -> moteur" took 1-1.5 min): a
+            // changeover, which can be the switch TO kahraba (31 Oct, 04:41: a 10 s blink). Keep
+            // the light history and decide once the light has settled (see [checkBlink]).
+            if (off < SHORT_BLINK_MS && source != Source.NO_POWER) {
+                blink = levelBetween(offSince - minutesMs(REFERENCE_MINUTES), offSince - 2_000)?.let { Blink(now, off, it) }
+                return
+            }
+            blink = null
             val reason = if (source == Source.NO_POWER) {
                 "Power back after ${formatDuration(off)} – assuming moteur"
             } else {
@@ -233,10 +241,42 @@ class PowerDetector(
         while (seconds.isNotEmpty() && seconds.first().t < now - keepMs) seconds.removeFirst()
     }
 
+    /** A power blink waiting to be judged by the light: when, how long, and the light before it. */
+    private data class Blink(val atMs: Long, val offMs: Long, val before: Double)
+    private var blink: Blink? = null
+
+    /**
+     * After a short power blink, once the light has been steady for [DetectorConfig.steadyMinutes]:
+     * clearly brighter than before the blink means kahraba came back, clearly dimmer means moteur,
+     * about the same means nothing changed. Returns true if it switched.
+     */
+    private fun checkBlink(now: Long, need: Double, thr: Double, out: MutableList<Transition>): Boolean {
+        val b = blink ?: return false
+        if (now - b.atMs > BLINK_DECIDE_MS) {
+            blink = null
+            return false
+        }
+        if (now - b.atMs < minutesMs(need) || !isSteady(now, need, thr)) return false
+        blink = null
+        val recent = levelBetween(now - minutesMs(need), now) ?: return false
+        val pct = (recent / b.before - 1) * 100
+        val off = formatDuration(b.offMs)
+        if (pct >= BLINK_CHANGE_PCT && source != Source.KAHRABA) {
+            out += change(now, Source.KAHRABA, "Power blinked ($off) and came back ${pct.toInt()}% brighter – kahraba is back")
+            return true
+        }
+        if (pct <= -BLINK_CHANGE_PCT && source != Source.MOTEUR) {
+            out += change(now, Source.MOTEUR, "Power blinked ($off) and came back ${(-pct).toInt()}% dimmer – moteur took over")
+            return true
+        }
+        return false
+    }
+
     private fun decide(now: Long, out: MutableList<Transition>) {
         val thr = config.flickerThresholdPct
         val historyMin = (now - historyStartMs) / 60_000.0
         val need = config.steadyMinutes
+        if (checkBlink(now, need, thr, out)) return
 
         if ((source == Source.MOTEUR || source == Source.UNKNOWN) && historyMin >= need && isSteady(now, need, thr)) {
             val recent = levelBetween(now - minutesMs(need), now)
@@ -358,6 +398,12 @@ class PowerDetector(
         const val SAME_LEVEL = 0.06
         /** Time skipped around a switch, where the light can step and bounce. */
         const val SWITCH_MS = 45_000L
+        /** A power cut shorter than this is a changeover, not the moteur starting (that took 61 s or more). */
+        const val SHORT_BLINK_MS = 30_000L
+        /** After a blink, the light must change this much (in %) to count as a different source. */
+        const val BLINK_CHANGE_PCT = 5.0
+        /** How long after a blink the light is still judged against the level before it. */
+        const val BLINK_DECIDE_MS = 10 * 60_000L
         /** The light just before the switch must be this close to the typical "before" level. */
         const val BEFORE_SPREAD = 0.06
         const val SAMPLE_KEEP_MS = 30_000L

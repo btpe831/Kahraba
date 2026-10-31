@@ -80,7 +80,7 @@ class PowerDetectorTest {
     fun cutThenSilentSwitchBackToKahraba() {
         val r = Run(PowerDetector(initialSource = Source.KAHRABA))
         r.run(2 * min) { kahraba(it) }
-        r.run(3_000, plugged = false) { 0.0 }            // short cut
+        r.run(75_000, plugged = false) { 0.0 }           // power cut: the moteur takes ~1 min to start
         r.run(1_000) { kahraba(it) }
         assertEquals(Source.MOTEUR, r.d.source)
         r.run(30 * min, lux = moteur(15_000))             // moteur, flickers every 15 s
@@ -91,10 +91,24 @@ class PowerDetectorTest {
     }
 
     @Test
+    fun shortBlinkWithTheSameLightChangesNothing() {
+        // A blink too short for a moteur to start, and the light comes back the same: no switch.
+        for (start in listOf(Source.MOTEUR, Source.KAHRABA)) {
+            val r = Run(PowerDetector(initialSource = start))
+            val light = if (start == Source.MOTEUR) { t: Long -> calmMoteur(t) } else { t: Long -> kahraba(t) }
+            r.run(5 * min) { light(it) }
+            r.run(10_000, plugged = false) { 0.0 }
+            r.run(10 * min) { light(it) }
+            assertEquals(start, r.d.source)
+            assertTrue("$start: ${r.transitions}", r.transitions.isEmpty())
+        }
+    }
+
+    @Test
     fun calmMoteurThenSilentSwitch() {
         val r = Run(PowerDetector(initialSource = Source.KAHRABA))
         r.run(1 * min) { kahraba(it) }
-        r.run(3_000, plugged = false) { 0.0 }
+        r.run(75_000, plugged = false) { 0.0 }
         r.run(30 * min) { calmMoteur(it) }
         assertEquals(Source.MOTEUR, r.d.source)           // steady, but no brighter: still moteur
         r.run(3 * min) { kahraba(it) }                    // +24% brighter and steady
@@ -331,7 +345,7 @@ class PowerDetectorTest {
         assertEquals(Source.MOTEUR, r.d.source)
         // Power cuts are still caught while paused.
         r.d.onMotion(r.t)
-        r.run(3_000, plugged = false) { 0.0 }
+        r.run(75_000, plugged = false) { 0.0 }
         r.run(1_000) { calmMoteur(it) }
         assertEquals(1, r.transitions.count { it.reason.startsWith("Power cut") })
     }
