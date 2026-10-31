@@ -49,7 +49,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   `oct28-pixel2/pixel9-side-by-side.csv` (moteur, kahraba 18:32:40-18:50:09, dark, moteur from 19:21:49);
   `oct28-night-pixel2-kahraba-cut-moteur.csv`, `oct29-morning-pixel2-moteur-kahraba.csv` (switch 06:29:43);
   `oct30-night-pixel2-raw-blink-to-kahraba.csv` (moteur; 10 s blink 04:41:41 -> kahraba; 77 s cut 06:58 -> moteur).
-- The 28-30 Oct trip (no one home, 1/s files only) has no ground truth; replays suggested a real
+- The 28-30 Oct recording (unattended, 1/s files only) has no ground truth; replays suggested a real
   switch at 29 Oct 16:34 and a likely one at 30 Oct 12:08, and showed 10% was too low a threshold
   (false kahraba at 29 Oct 14:10 from moteur creep).
 
@@ -65,10 +65,9 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (31 Oct 2026)
 
-- Released: 1.1.03. Held, committed but NOT pushed: 1.1.04 (blink handling above) plus the
-  monitor -> "Always-on mode" / "the app" wording. Push only when the owner says so.
-- Owner is posting on Reddit (spouse posting; karma limits) and Projectfy; Play Protect asks to
-  scan: testers tap More details > Install anyway.
+- Released: 1.1.03. Held, committed but NOT pushed: 1.1.04 (blink handling above); the
+  monitor -> "Always-on mode" / "the app" wording is to be added to it. Push only when the owner says so.
+- Shared with testers online. Play Protect asks to scan: testers tap More details > Install anyway.
 - Ideas not built (ask first): "Now kahraba / Now moteur" label buttons in the Light meter;
   per-phone sensor calibration; Did you know? notifications (opt-in); voltage smart plug support
   (needs internet permission, breaks the "no internet" promise); remote alerts (MacroDroid + ntfy
