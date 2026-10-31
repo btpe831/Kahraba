@@ -35,10 +35,24 @@ for entry in filter(None, (e.strip() for e in log.split("\x1e"))):
     changes.append((subject, "\n".join(lines).strip()))
 
 # A hand-written note for a version (e.g. the first public one) replaces the list of changes.
+# Otherwise the app's own "What's new" notes for this version, so the page and the app match.
 import os
-written = os.path.join(os.path.dirname(os.path.abspath(__file__)), "notes", f"{version}.md")
+here = os.path.dirname(os.path.abspath(__file__))
+written = os.path.join(here, "notes", f"{version}.md")
+in_app = []
+whats_new = os.path.join(here, "..", "app", "src", "main", "assets", "whats_new.txt")
+if os.path.exists(whats_new):
+    section = None
+    for line in open(whats_new, encoding="utf-8").read().splitlines():
+        line = line.strip()
+        if line.startswith("## "):
+            section = line[3:].strip()
+        elif line.startswith("- ") and section == version:
+            in_app.append(line)
 if os.path.exists(written):
     parts = [open(written).read().strip(), ""]
+elif in_app:
+    parts = [f"## What's new in {version}", ""] + in_app + [""]
 else:
     parts = [f"## What's new in {version}", ""]
     for subject, body in changes:
@@ -49,7 +63,7 @@ parts += [
     "On the Android phone, tap the `.apk` file below, then allow \"Install unknown apps\" if asked.",
     "",
     "When **Google Play Protect** shows \"App scan recommended\", tap **More details**, then **Install anyway**. "
-    "It shows this because the app is new and can run in the background (for the always-on monitor). "
+    "It shows this because the app is new and can run in the background (for Always-on mode). "
     "Updates install over the previous version and keep your data.",
     "",
     "Signing certificate SHA-256: "

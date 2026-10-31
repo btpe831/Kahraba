@@ -23,8 +23,11 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   tests and builds a release APK signed with `app/release-key.p12` (encrypted; password in the
   `SIGNING_PASSWORD` secret; cert SHA-256 77:E9:3F:A7…5F:67:76, checked in CI). versionCode = run number.
 - A release is published only when `appVersion` changed since the last release tag
-  (`.github/release_notes.py`). Notes = commit subjects/bodies since the last tag, minus commits
-  touching only `.github/`; `.github/notes/<version>.md` replaces them (used for 1.0.0).
+  (`.github/release_notes.py`). Release notes = the version's section in
+  `app/src/main/assets/whats_new.txt` (also shown in the app's "What's new" window after an update;
+  a test checks the current version has one). Fallbacks: `.github/notes/<version>.md` (1.0.0), else
+  commit subjects/bodies since the last tag.
+- **Release notes: just what's improved, in plain words. No dates, times or recording details.**
 - Download link for testers: https://github.com/btpe831/Kahraba/releases/latest
 - Detection logic is pure Kotlin (`PowerDetector.kt`, `QuickCheck.kt`, `CheckHistory.kt`,
   `CardOrder.kt`, `Area.kt`, `OldDefaults.kt`) and is tested with JUnit in `app/src/test`. To run them
@@ -53,7 +56,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   7.5 min outage 13:22 back as kahraba; 21 min outage 15:00 back as moteur; phone fell 18:01:12).
 - Kahraba is dead still (zero wobble for 20+ min); a daytime moteur wobbles most minutes. In the
   evening a moteur also calms down and creeps brighter, but gradually (30 Oct 20:40-21:45).
-- Voltmeter: moteur 210 V (31 Oct afternoon) to 223 V; kahraba 234 V.
+- Voltmeter: moteur 208 V (31 Oct, 8 pm) to 223 V; kahraba 234 V.
 - The 28-30 Oct recording (unattended, 1/s files only) has no ground truth; replays suggested a real
   switch at 29 Oct 16:34 and a likely one at 30 Oct 12:08, and showed 10% was too low a threshold
   (false kahraba at 29 Oct 14:10 from moteur creep).
@@ -77,7 +80,8 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (31 Oct 2026, evening)
 
-- Released: 1.2.0 (wobble-stops rule, phone-moved alert, power-back buttons, timer-pitch beeps).
+- Released: 1.2.01 ("What's new" window). 1.2.0: wobble-stops rule, phone-moved alert, power-back
+  buttons, timer-pitch beeps.
 - Shared with testers online. Play Protect asks to scan: testers tap More details > Install anyway.
 - Ideas not built (ask first): "Now kahraba / Now moteur" label buttons in the Light meter;
   per-phone sensor calibration; Did you know? notifications (opt-in); voltage smart plug support

@@ -87,6 +87,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Before the update card reads the version, which would hide that this one is new.
+        whatsNew = WhatsNew.pending(this)
         setContentView(R.layout.activity_main)
         MonitorService.createChannels(this)
         sensors = getSystemService(SENSOR_SERVICE) as SensorManager
@@ -231,7 +233,10 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         override fun handleOnBackPressed() { tour?.finish() }
     }
 
-    /** New here: the welcome screens first, then a tour of this screen. */
+    /** What's new since the version used before this update; shown once. */
+    private var whatsNew: List<WhatsNew.Section> = emptyList()
+
+    /** New here: the welcome screens first, then a tour of this screen. Just updated: what's new. */
     private fun showIntroIfNew() {
         if (check != null || tour != null) return
         if (!Tour.welcomeSeen(this)) {
@@ -239,6 +244,14 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         } else if (!Tour.tourSeen(this)) {
             // After the screen has been laid out, so the highlights land in the right place.
             findViewById<View>(R.id.scroll).post { startTour() }
+        } else if (whatsNew.isNotEmpty()) {
+            val sections = whatsNew
+            whatsNew = emptyList()
+            MaterialAlertDialogBuilder(this)
+                .setTitle(WhatsNew.title(sections))
+                .setMessage(WhatsNew.message(sections))
+                .setPositiveButton("Got it", null)
+                .show()
         }
     }
 

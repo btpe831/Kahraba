@@ -1,0 +1,18 @@
+# What's new in each version: shown in the app after an update, and on the download page.
+# Plain words about what's improved; no dates or times. Newest first.
+
+## 1.2.01
+- A “What's new” window, like this one, after each update.
+
+## 1.2.0
+- Always-on mode catches kahraba when a busy moteur suddenly goes still and the light gets brighter, even when the change comes in small steps or after a power cut.
+- If the phone falls off its stand, it beeps and says “Phone moved – please check” instead of “Power off”.
+- When the power comes back after an outage, the alert has “It's kahraba” and “It's moteur” buttons.
+- Beeps are now a higher, kitchen-timer pitch.
+
+## 1.1.04
+- Always-on mode catches kahraba coming back after a short power blink.
+- “Always-on monitor” is now called “Always-on mode”.
+
+## 1.1.03
+- Fewer false “Kahraba is back” alerts.
