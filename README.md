@@ -28,7 +28,9 @@ higher, so the same bulb glows steady and usually 10–25% brighter (it varies f
 - **Quick check:** lay the phone face-up under the bulb. A wobble means moteur. To say "kahraba"
   for sure, the app learns how bright a room is on each source (two checks to set up).
 - **Always-on mode:** for a spare phone left on its charger under a light. A power cut means
-  the moteur took over; a jump in brightness means kahraba is back. It beeps on each switch.
+  the moteur took over; a jump in brightness, or a busy moteur's wobble suddenly stopping with a
+  brighter light, means kahraba is back. It beeps on each switch, and warns if the phone falls off
+  its stand.
 - **Accuracy:** the app keeps score of the results you confirm, so you can see how far to trust
   it in your home.
 - Also: a light meter with CSV export, an amps calculator for your moteur subscription, a

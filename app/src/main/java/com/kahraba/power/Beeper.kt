@@ -17,6 +17,8 @@ import kotlin.math.sin
  *
  * Kahraba back: 4 quick beeps, pause, 4 beeps, pause, 4 beeps — played twice.
  * Moteur took over: one 3-second beep, then again after 1 and 2 minutes.
+ * Phone moved: 2 beeps, pause, 2 beeps, pause, 2 beeps.
+ * All at a kitchen-timer pitch ([PITCH_HZ]); the rhythm tells them apart.
  */
 class Beeper(private val ctx: Context) {
     private val exec = Executors.newSingleThreadScheduledExecutor()
@@ -28,7 +30,7 @@ class Beeper(private val ctx: Context) {
         repeat(2) { round ->
             repeat(3) { group ->
                 repeat(4) {
-                    parts += tone(140, 2200.0)
+                    parts += tone(140, PITCH_HZ)
                     parts += silence(110)
                 }
                 if (group < 2) parts += silence(450)
@@ -38,17 +40,21 @@ class Beeper(private val ctx: Context) {
         concat(parts)
     }
 
-    private val moteurSound: ShortArray by lazy { tone(3000, 950.0) }
+    private val moteurSound: ShortArray by lazy { tone(3000, PITCH_HZ) }
+
+    private val phoneMovedSound: ShortArray by lazy {
+        concat((1..3).flatMap { listOf(tone(140, PITCH_HZ), silence(110), tone(140, PITCH_HZ), silence(600)) })
+    }
 
     private val quickKahrabaSound: ShortArray by lazy {
-        concat((1..4).flatMap { listOf(tone(140, 2200.0), silence(110)) })
+        concat((1..4).flatMap { listOf(tone(140, PITCH_HZ), silence(110)) })
     }
-    private val quickMoteurSound: ShortArray by lazy { tone(1500, 950.0) }
+    private val quickMoteurSound: ShortArray by lazy { tone(1500, PITCH_HZ) }
     private val quickNoFlickerSound: ShortArray by lazy {
-        concat((1..2).flatMap { listOf(tone(140, 1500.0), silence(160)) })
+        concat((1..2).flatMap { listOf(tone(140, PITCH_HZ), silence(160)) })
     }
 
-    /** Quick check "no flicker": 2 short, lower beeps. */
+    /** Quick check "no flicker": 2 short beeps. */
     @Synchronized
     fun quickNoFlicker() {
         cancel()
@@ -75,6 +81,13 @@ class Beeper(private val ctx: Context) {
         for (i in 0 until 3) {
             pending += exec.schedule(Runnable { play(moteurSound, respectQuiet) }, i * 60L, TimeUnit.SECONDS)
         }
+    }
+
+    /** The phone moved and its charger came off: check it's back on its stand. */
+    @Synchronized
+    fun phoneMoved(respectQuiet: Boolean = true) {
+        cancel()
+        pending += exec.schedule(Runnable { play(phoneMovedSound, respectQuiet) }, 0, TimeUnit.MILLISECONDS)
     }
 
     /** Stops any alert that is playing or waiting to play. */
@@ -130,6 +143,8 @@ class Beeper(private val ctx: Context) {
 
     companion object {
         private const val RATE = 22050
+        /** A typical kitchen-timer beep; phone speakers are loud at this pitch. */
+        private const val PITCH_HZ = 3000.0
 
         private fun tone(ms: Int, freq: Double): ShortArray {
             val n = RATE * ms / 1000

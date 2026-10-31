@@ -92,12 +92,36 @@ class PowerDetector(
     private var darkBaseline = 0.0
     /** While the phone is being moved, light changes mean nothing. */
     private var motionUntilMs = 0L
+    private var lastMotionMs = -1L
+    /** The charger came off because the phone moved (it fell, or was picked up): not a power cut. */
+    private var unpluggedByMove = false
+    /** Set when the phone moved and its charger came off; cleared by [takePhoneMoved]. */
+    private var phoneMovedAlert = false
+
+    /**
+     * The last [BUSY_KEEP_MS] of light, second by second, to remember the latest busy moteur (light
+     * wobbling again and again: surely the moteur) and how bright it was. Kept through power cuts
+     * (the phone hasn't moved), cleared when the phone moves.
+     */
+    private val longSeconds = ArrayDeque<Second>()
+    /** The last time the moteur was busy, and its typical light level then. */
+    private var lastBusyMs = -1L
+    private var busyLevel: Double? = null
+    /** When the power last came back after a cut or an outage. */
+    private var lastPowerBackMs = -1L
 
     fun tick(nowMs: Long, lux: Double?, isPlugged: Boolean?): List<Transition> {
         val out = mutableListOf<Transition>()
         if (historyStartMs < 0) historyStartMs = nowMs
 
         handleCharger(nowMs, isPlugged, out)
+
+        if (unpluggedByMove) {
+            flickerPct = null
+            lightStatus = PHONE_MOVED
+            if (nowMs - lastEvalMs >= 1000) lastEvalMs = nowMs
+            return out
+        }
 
         if (nowMs < motionUntilMs) {
             // Power cuts are still watched through the charger; the light is ignored.
@@ -135,8 +159,18 @@ class PowerDetector(
      */
     fun onMotion(nowMs: Long) {
         motionUntilMs = nowMs + MOTION_PAUSE_MS
+        lastMotionMs = nowMs
+        longSeconds.clear()
+        lastBusyMs = -1L
+        busyLevel = null
         resetHistory(motionUntilMs)
     }
+
+    /**
+     * True once after the phone moved and its charger came off (31 Oct: it fell off its stand and
+     * the app then said "Power off"). The caller alerts the user to check the phone.
+     */
+    fun takePhoneMoved(): Boolean = phoneMovedAlert.also { phoneMovedAlert = false }
 
     /** The user says which source it is (when they know for sure). */
     fun setManual(nowMs: Long, to: Source): Transition {
@@ -155,7 +189,26 @@ class PowerDetector(
         plugged = isPlugged
         if (isPlugged) everPlugged = true
 
-        if (prev == true && !isPlugged) unpluggedAtMs = now
+        if (prev == true && !isPlugged) {
+            // Moved just before the charger came off: the phone fell or was picked up. In a power
+            // cut the charger goes first; anyone picking the phone up does so after.
+            if (lastMotionMs >= 0 && now - lastMotionMs <= MOVED_UNPLUG_MS) {
+                unpluggedByMove = true
+                phoneMovedAlert = true
+                blink = null
+                return
+            }
+            unpluggedAtMs = now
+        }
+        if (unpluggedByMove) {
+            if (isPlugged) {
+                // Back on the charger: carry on from the same source, judging the light afresh.
+                unpluggedByMove = false
+                unpluggedAtMs = null
+                resetHistory(now)
+            }
+            return
+        }
 
         val offSince = unpluggedAtMs
         if (!isPlugged && offSince != null && source != Source.NO_POWER &&
@@ -175,6 +228,7 @@ class PowerDetector(
                 return
             }
             blink = null
+            lastPowerBackMs = now
             val reason = if (source == Source.NO_POWER) {
                 "Power back after ${formatDuration(off)} – assuming moteur"
             } else {
@@ -235,6 +289,18 @@ class PowerDetector(
         flickerPct = flicker
         lightStatus = status
         seconds.addLast(Second(now, flicker, level))
+        longSeconds.addLast(Second(now, flicker, level))
+        while (longSeconds.isNotEmpty() && longSeconds.first().t < now - BUSY_KEEP_MS) longSeconds.removeFirst()
+        if (flicker != null && flicker > config.flickerThresholdPct) {
+            // Busy: wobbling again and again within a minute (one step in brightness only shows for a
+            // few seconds). Its level is the typical light over the minutes before.
+            val wobbles = longSeconds.count { it.t > now - 60_000 && (it.flicker ?: 0.0) > config.flickerThresholdPct }
+            if (wobbles >= BUSY_WOBBLES) {
+                lastBusyMs = now
+                val levels = longSeconds.filter { it.t > now - BUSY_LEVEL_MS }.mapNotNull { it.level }
+                if (levels.size >= BUSY_LEVEL_MS / 2_000) busyLevel = median(levels)
+            }
+        }
         // Long enough to look back past the switch to the level before it.
         val keepMs = (maxOf(config.steadyMinutes + REFERENCE_MINUTES, config.flickerMinutes) * 60_000).roundToLong() +
             SWITCH_MS + 60_000
@@ -293,7 +359,32 @@ class PowerDetector(
                 }
             }
 
-            // 2) The steady level matches what was learned for this spot.
+            // 2) The moteur was busy (wobbling), then the light went completely still and is clearly
+            //    brighter than that moteur. On 31 Oct kahraba came at 13:00 in steps over 5 minutes
+            //    (4090 -> 3642 lux), too slowly for (1), after half an hour of busy moteur at ~3150.
+            //    The busy moteur must have stopped just before, or the power gone off in between: in
+            //    the evening a moteur also calms down and creeps brighter, but slowly (30 Oct, 21:00).
+            val calmFrom = now - minutesMs(CALM_MINUTES)
+            val moteur = busyLevel
+            if (source == Source.MOTEUR && moteur != null && lastBusyMs >= 0 && now - lastBusyMs <= BUSY_KEEP_MS &&
+                historyStartMs <= calmFrom &&
+                (calmFrom - lastBusyMs <= CALM_AFTER_BUSY_MS || lastPowerBackMs > lastBusyMs) &&
+                isSteady(now, CALM_MINUTES, thr)
+            ) {
+                val calm = levelBetween(calmFrom, now)
+                if (calm != null) {
+                    val rise = (calm / moteur - 1) * 100
+                    if (rise >= CALM_RISE_PCT && rise <= config.levelRiseMaxPct) {
+                        out += change(
+                            now, Source.KAHRABA,
+                            "Light stopped wobbling and is ${rise.toInt()}% brighter than the moteur – kahraba is back",
+                        )
+                        return
+                    }
+                }
+            }
+
+            // 3) The steady level matches what was learned for this spot.
             val k = config.kahrabaLevel
             val m = config.moteurLevel
             if (recent != null && k != null && m != null && k > m * QuickCheck.LEVEL_GAP) {
@@ -392,6 +483,21 @@ class PowerDetector(
         const val FLICKER_WINDOW_MS = 4_000L
         /** How long the phone must be still after a move before the light is judged again. */
         const val MOTION_PAUSE_MS = 10_000L
+        /** The charger coming off this soon after the phone moved means it fell or was picked up. */
+        const val MOVED_UNPLUG_MS = 10_000L
+        const val PHONE_MOVED = "Phone moved – please check"
+        /** Minutes of completely still light needed after a busy moteur. */
+        const val CALM_MINUTES = 5.0
+        /** How much brighter (in %) than the busy moteur that still light must be. */
+        const val CALM_RISE_PCT = 10.0
+        /** The still light must start within this long after the moteur was last busy (the switch can take a few minutes to settle). */
+        const val CALM_AFTER_BUSY_MS = 5 * 60_000L
+        /** A busy moteur is remembered this long. */
+        const val BUSY_KEEP_MS = 60 * 60_000L
+        /** Wobbling seconds within a minute that make the moteur "busy". */
+        const val BUSY_WOBBLES = 10
+        /** The busy moteur's level: the typical light over this long. */
+        const val BUSY_LEVEL_MS = 10 * 60_000L
         /** Minutes before the steady stretch used as the "before" brightness. */
         const val REFERENCE_MINUTES = 3.0
         /** Levels within this share of each other count as the same brightness (the sensor steps ~5%). */

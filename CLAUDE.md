@@ -48,7 +48,12 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 - Fixtures: `recording-2026-10-26.csv`, `calm-moteur-2026-10-26.csv` (first evening);
   `oct28-pixel2/pixel9-side-by-side.csv` (moteur, kahraba 18:32:40-18:50:09, dark, moteur from 19:21:49);
   `oct28-night-pixel2-kahraba-cut-moteur.csv`, `oct29-morning-pixel2-moteur-kahraba.csv` (switch 06:29:43);
-  `oct30-night-pixel2-raw-blink-to-kahraba.csv` (moteur; 10 s blink 04:41:41 -> kahraba; 77 s cut 06:58 -> moteur).
+  `oct30-night-pixel2-raw-blink-to-kahraba.csv` (moteur; 10 s blink 04:41:41 -> kahraba; 77 s cut 06:58 -> moteur);
+  `oct31-day-pixel2-raw-calm-kahraba.csv` (busy moteur ~3150; kahraba 13:00 settling in steps, dead still;
+  7.5 min outage 13:22 back as kahraba; 21 min outage 15:00 back as moteur; phone fell 18:01:12).
+- Kahraba is dead still (zero wobble for 20+ min); a daytime moteur wobbles most minutes. In the
+  evening a moteur also calms down and creeps brighter, but gradually (30 Oct 20:40-21:45).
+- Voltmeter: moteur 210 V (31 Oct afternoon) to 223 V; kahraba 234 V.
 - The 28-30 Oct recording (unattended, 1/s files only) has no ground truth; replays suggested a real
   switch at 29 Oct 16:34 and a likely one at 30 Oct 12:08, and showed 10% was too low a threshold
   (false kahraba at 29 Oct 14:10 from moteur creep).
@@ -57,16 +62,22 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 - Charger off >= 30 s, then back: moteur took over (> 5 min: "power off", then "assuming moteur").
 - Charger off < 30 s (a blink): keep history; after 2 min steady, light >= 5% brighter than before
-  -> kahraba, >= 5% dimmer -> moteur, else no change. (In 1.1.04, held, see below.)
+  -> kahraba, >= 5% dimmer -> moteur, else no change (1.1.04).
 - Silent switch: when on moteur and the light has been steady 2 min, trace the current level back to
   where it started, skip 45 s of switching, compare with the 3-min level before: rise 12-60% ->
   kahraba (1.1.02 tried 10%: false alerts).
+- Wobble stops (1.2.0): the moteur was busy (>= 10 wobbling seconds in a minute; its level = median
+  of the 10 min before), then 5 min of completely still light >= 10% brighter -> kahraba. The still
+  stretch must start within 5 min of the last busy moment, or after a power cut/outage since then.
+- Phone moved (1.2.0): motion, then the charger off within 10 s -> not a cut: "Phone moved – please
+  check" alert; carries on when plugged back in. Power back after an outage: alert with
+  "It's kahraba" / "It's moteur" buttons.
+- All beeps at 3000 Hz (kitchen timer); rhythm tells them apart.
 - Only works from a known source: if it shows "Not sure yet", tap "It's moteur".
 
-## Status (31 Oct 2026)
+## Status (31 Oct 2026, evening)
 
-- Released: 1.1.03. Held, committed but NOT pushed: 1.1.04 (blink handling above, and "Always-on
-  monitor" renamed to "Always-on mode" / "the app"). Push only when the owner says so.
+- Released: 1.2.0 (wobble-stops rule, phone-moved alert, power-back buttons, timer-pitch beeps).
 - Shared with testers online. Play Protect asks to scan: testers tap More details > Install anyway.
 - Ideas not built (ask first): "Now kahraba / Now moteur" label buttons in the Light meter;
   per-phone sensor calibration; Did you know? notifications (opt-in); voltage smart plug support

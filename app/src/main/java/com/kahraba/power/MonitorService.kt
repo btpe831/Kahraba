@@ -124,6 +124,7 @@ class MonitorService : Service(), SensorEventListener {
             ACTION_SET -> {
                 val s = runCatching { Source.valueOf(intent.getStringExtra(EXTRA_SOURCE)!!) }.getOrNull()
                 val calibrate = intent.getBooleanExtra(EXTRA_CALIBRATE, false)
+                if (intent.getBooleanExtra(EXTRA_FROM_ALERT, false)) notifications().cancel(ALERT_ID)
                 if (s != null) handler.post { setManual(s, calibrate) }
             }
             ACTION_TEST_KAHRABA -> beeper.kahraba(respectQuiet = false)
@@ -165,6 +166,7 @@ class MonitorService : Service(), SensorEventListener {
     private fun doTick() {
         val now = System.currentTimeMillis()
         for (t in detector.tick(now, latestLux, plugged)) onTransition(t)
+        if (detector.takePhoneMoved()) onPhoneMoved()
 
         while (sensorEvents.isNotEmpty() && sensorEvents.first() < now - 60_000) sensorEvents.removeFirst()
 
@@ -213,16 +215,50 @@ class MonitorService : Service(), SensorEventListener {
             Source.NO_POWER -> "Power is off"
             Source.UNKNOWN -> "Power source unknown"
         }
+        // After an outage either can come back; the light decides later, or the user can say.
+        val ask = t.from == Source.NO_POWER && t.to == Source.MOTEUR
+        val text = "${PowerDetector.formatClock(t.timeMs)} – ${t.reason}" +
+            if (ask) ". The app keeps checking the light. Know which it is? Tap below." else ""
+        val b = NotificationCompat.Builder(this, CHANNEL_ALERTS)
+            .setSmallIcon(R.drawable.ic_bolt)
+            .setContentTitle(if (ask) "Power's back. Kahraba or moteur?" else title)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setContentIntent(openApp())
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+        if (ask) {
+            b.addAction(0, "It's kahraba", setFromAlert(Source.KAHRABA))
+            b.addAction(0, "It's moteur", setFromAlert(Source.MOTEUR))
+        }
+        notifications().notify(ALERT_ID, b.build())
+    }
+
+    /** The phone moved and its charger came off (it may have fallen): not a power cut. */
+    private fun onPhoneMoved() {
+        beeper.phoneMoved()
+        val text = "${PowerDetector.formatClock(System.currentTimeMillis())} – The phone moved and its charger came off. " +
+            "Put it back on its stand under the light, with the charger plugged in."
         val n = NotificationCompat.Builder(this, CHANNEL_ALERTS)
             .setSmallIcon(R.drawable.ic_bolt)
-            .setContentTitle(title)
-            .setContentText("${PowerDetector.formatClock(t.timeMs)} – ${t.reason}")
-            .setStyle(NotificationCompat.BigTextStyle().bigText("${PowerDetector.formatClock(t.timeMs)} – ${t.reason}"))
+            .setContentTitle(PowerDetector.PHONE_MOVED)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setContentIntent(openApp())
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()
         notifications().notify(ALERT_ID, n)
+    }
+
+    private fun setFromAlert(s: Source): PendingIntent {
+        val i = Intent(this, MonitorService::class.java)
+            .setAction(ACTION_SET)
+            .putExtra(EXTRA_SOURCE, s.name)
+            .putExtra(EXTRA_FROM_ALERT, true)
+        return PendingIntent.getForegroundService(
+            this, s.ordinal + 10, i, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
     }
 
     private fun setManual(s: Source, calibrate: Boolean) {
@@ -322,6 +358,7 @@ class MonitorService : Service(), SensorEventListener {
         const val ACTION_SILENCE = "com.kahraba.power.SILENCE"
         const val EXTRA_SOURCE = "source"
         const val EXTRA_CALIBRATE = "calibrate"
+        const val EXTRA_FROM_ALERT = "from_alert"
 
         const val CHANNEL_STATUS = "status"
         const val CHANNEL_ALERTS = "alerts"

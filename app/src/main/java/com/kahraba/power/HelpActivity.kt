@@ -117,13 +117,17 @@ class HelpActivity : ThemedActivity() {
                 • Plug the phone into a <b>wall socket</b> (not a UPS) and leave it face-up under a halogen light. The screen can be off.
                 • A power cut is seen through the charger. A cut of a minute or more means the moteur took over (it takes about a minute to start). A blink of a few seconds is a changeover: once the light settles, brighter means kahraba is back, dimmer means moteur.
                 • It says Kahraba is back when the light gets clearly <b>brighter</b> (no blackout) and stays steady for 2 minutes – kahraba's higher voltage makes the bulb brighter. Steady light alone is not enough, because a calm moteur is steady too.
+                • It also says Kahraba is back when a busy, wobbling moteur suddenly goes <b>completely still</b> for 5 minutes and the light is clearly brighter than that moteur – even if the change came in small steps, or after a power cut.
+                • When the power comes back after an outage, it assumes moteur and keeps checking the light. The alert has “It's kahraba” and “It's moteur” buttons if you know.
                 • Under <b>Room</b>, pick the room the phone is in, then tap “It's kahraba” and “It's moteur” once each (when you're sure) so it learns how bright that room is on each. If quick checks already taught that room, it knows straight away. Then it can tell kahraba from moteur even when the light is steady. Keep the phone in the exact same place.
                 • Keep other lights the same: switching a lamp on can look like the brightness change.
                 • Every switch is logged with its time, and it beeps on each change. Night silence and beep volume are in Settings.
                 • When Always-on mode is off, it shows “Off”. After you start it, it shows “Not sure yet” until it sees a wobble or a power cut (moteur), matches a learned level, or you tap “It's kahraba” / “It's moteur”.
                 • Tap “It's kahraba” or “It's moteur” when you're sure, so it learns your setup.
-                • Unplugging the phone yourself looks like a power cut.
+                • Unplugging the phone without moving it looks like a power cut.
                 • If the phone is picked up or moved, it stops judging the light until the phone has been still for 10 seconds (power cuts are still noticed). A move is never mistaken for kahraba coming back.
+                • If the phone moves and its charger comes off straight after (for example, it fell off its stand), that's not a power cut: it beeps and shows “Phone moved – please check”. Put it back and plug it in; it carries on from there.
+                • Beeps: 4 quick beeps = kahraba, 1 long beep = moteur, 3 pairs of beeps = phone moved.
             """,
 
             "Privacy" to """

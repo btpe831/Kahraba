@@ -1,6 +1,7 @@
 package com.kahraba.power
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.sin
@@ -343,11 +344,47 @@ class PowerDetectorTest {
         r.d.onMotion(r.t)
         r.run(10 * min) { kahraba(it) }                   // +24% brighter, but only because it moved
         assertEquals(Source.MOTEUR, r.d.source)
-        // Power cuts are still caught while paused.
+        // A power cut soon after a move is still caught. (The charger coming off within 10 s of
+        // a move is the phone falling or being picked up: see the next test.)
         r.d.onMotion(r.t)
+        r.run(15_000) { kahraba(it) }
         r.run(75_000, plugged = false) { 0.0 }
         r.run(1_000) { calmMoteur(it) }
         assertEquals(1, r.transitions.count { it.reason.startsWith("Power cut") })
+    }
+
+    @Test
+    fun aPhoneThatFallsOffItsStandIsNotAPowerCut() {
+        // 31 Oct, 18:01: the phone moved, its charger came off 3 s later, and it lay on the floor.
+        val r = Run(PowerDetector())
+        r.d.setManual(0, Source.MOTEUR)
+        r.run(10 * min, lux = moteur(5_000))
+        r.d.onMotion(r.t)
+        r.run(3_000, lux = moteur(5_000))
+        r.run(20 * min, plugged = false) { 40.0 }
+        assertTrue("an alert to check the phone", r.d.takePhoneMoved())
+        assertFalse("only once", r.d.takePhoneMoved())
+        assertEquals(PowerDetector.PHONE_MOVED, r.d.lightStatus)
+        assertTrue("no power cut, no power off: ${r.transitions}", r.transitions.isEmpty())
+        // Back on its stand and charger: carries on as moteur.
+        r.d.onMotion(r.t)
+        r.run(5 * min, lux = moteur(5_000))
+        assertEquals(Source.MOTEUR, r.d.source)
+        assertTrue("${r.transitions}", r.transitions.isEmpty())
+    }
+
+    @Test
+    fun aPowerCutThenPickingUpThePhoneIsStillAPowerCut() {
+        // The charger goes first in a power cut; the phone is picked up after (for its torch).
+        val r = Run(PowerDetector())
+        r.d.setManual(0, Source.KAHRABA)
+        r.run(10 * min) { kahraba(it) }
+        r.run(2_000, plugged = false) { 0.0 }
+        r.d.onMotion(r.t)
+        r.run(73_000, plugged = false) { 0.0 }
+        r.run(10_000, lux = moteur(5_000))
+        assertFalse(r.d.takePhoneMoved())
+        assertEquals(Source.MOTEUR, r.d.source)
     }
 
     @Test
