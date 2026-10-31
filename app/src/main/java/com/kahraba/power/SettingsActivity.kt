@@ -170,14 +170,14 @@ class SettingsActivity : ThemedActivity() {
                         "may give false alarms. It's set for you when you use “It's kahraba” / “It's moteur”."))
                 addView(divider())
                 addView(numberRow("Wait before saying kahraba", "min", Prefs.STEADY_MINUTES, 2.0,
-                    "When kahraba comes back, the light gets brighter and steadier. The monitor waits this long to be " +
+                    "When kahraba comes back, the light gets brighter and steadier. The app waits this long to be " +
                         "sure before switching to kahraba."))
                 addView(divider())
                 addView(numberRow("Minimum brightness", "lux", Prefs.MIN_LUX, 100.0,
                     "If the light is dimmer than this, the app won't guess. Move the phone closer to a halogen light."))
                 addView(divider())
                 addView(toggle("Detect moteur without a power cut",
-                    "Normally the monitor switches to moteur only when the power cuts out. Turn this on to also switch " +
+                    "Normally the app switches to moteur only when the power cuts out. Turn this on to also switch " +
                         "when the light keeps flickering. Can give false alarms, so it's off by default.",
                     Prefs.MOTEUR_ON_FLICKER, false))
             }, lp(top = 16))
@@ -185,7 +185,7 @@ class SettingsActivity : ThemedActivity() {
         }
         if (page == PAGE_BACKUP) {
             body.addView(card {
-                addView(link("Back up to a file", "Saves your checks, rooms, notes, monitor log and settings in one file.") {
+                addView(link("Back up to a file", "Saves your checks, rooms, notes, Always-on mode log and settings in one file.") {
                     launchSafely { saveBackup.launch("kahraba-or-not-backup-" + SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date()) + ".json") }
                 })
                 addView(divider())
@@ -242,7 +242,7 @@ class SettingsActivity : ThemedActivity() {
         })
 
         // MONITOR
-        section("Always-on monitor")
+        section("Always-on mode")
         body.addView(card {
             addView(toggle("No beeps at night", "Switches are still logged and shown, just without sound.", Prefs.QUIET_ENABLED, false))
             addView(divider())
@@ -267,7 +267,7 @@ class SettingsActivity : ThemedActivity() {
         // TOOLS
         section("Tools")
         body.addView(card {
-            addView(link("Always-on monitor", "For a spare phone left under a light: tracks every switch.") {
+            addView(link("Always-on mode", "For a spare phone left under a light: tracks every switch.") {
                 startActivity(Intent(this@SettingsActivity, MonitorActivity::class.java))
             })
             addView(divider())

@@ -47,7 +47,7 @@ class MonitorActivity : ThemedActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_monitor)
-        setupHeader("Always-on monitor")
+        setupHeader("Always-on mode")
         MonitorService.createChannels(this)
 
         stateBox = findViewById(R.id.stateBox)
@@ -114,7 +114,7 @@ class MonitorActivity : ThemedActivity() {
         when {
             // Off: show no source at all; an old one could be hours out of date.
             !running -> {
-                label.text = "Monitor"
+                label.text = "Always-on"
                 stateText.text = "Off"
                 sinceText.text = "Tap Start to track kahraba and moteur"
                 paintState(ContextCompat.getColor(this, R.color.no_power))
@@ -134,7 +134,7 @@ class MonitorActivity : ThemedActivity() {
                 paintState(MonitorService.colorFor(s))
             }
         }
-        startStop.text = if (running) "Stop monitoring" else "Start monitoring"
+        startStop.text = if (running) "Stop Always-on mode" else "Start Always-on mode"
 
         val thr = Prefs.config(this).flickerThresholdPct
         val stats = listOf(
@@ -188,7 +188,7 @@ class MonitorActivity : ThemedActivity() {
         findViewById<TextView>(R.id.monitorRoomInfo).text = RoomPicker.describe(
             this, room,
             "Optional: the room this phone is in. Once that room is learned, " +
-                "the monitor can tell kahraba from a steady moteur.",
+                "the app can tell kahraba from a steady moteur.",
         )
     }
 
@@ -235,7 +235,7 @@ class MonitorActivity : ThemedActivity() {
         EventLog.file(this).takeIf { it.exists() }?.let { files += it }
         File(filesDir, "data").listFiles()?.sortedBy { it.name }?.let { files += it }
         if (files.isEmpty()) {
-            com.google.android.material.dialog.MaterialAlertDialogBuilder(this).setMessage("No recordings yet. Start the monitor to begin recording.")
+            com.google.android.material.dialog.MaterialAlertDialogBuilder(this).setMessage("No recordings yet. Start Always-on mode to begin recording.")
                 .setPositiveButton("OK", null).show()
             return
         }

@@ -73,7 +73,7 @@
             android:layout_width="match_parent"
             android:layout_height="62dp"
             android:layout_marginTop="16dp"
-            android:text="Start monitoring" />
+            android:text="Start Always-on mode" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/battery"

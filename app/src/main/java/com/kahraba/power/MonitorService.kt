@@ -115,7 +115,7 @@ class MonitorService : Service(), SensorEventListener {
                 monitoring = false
                 // Forget the source: once off, it can't know what happens next.
                 val now = System.currentTimeMillis()
-                EventLog.append(this, Transition(now, MonitorState.source, Source.UNKNOWN, "Monitoring stopped"))
+                EventLog.append(this, Transition(now, MonitorState.source, Source.UNKNOWN, "Always-on mode stopped"))
                 Prefs.saveSource(this, Source.UNKNOWN, now)
                 MonitorState.source = Source.UNKNOWN
                 stopSelf()

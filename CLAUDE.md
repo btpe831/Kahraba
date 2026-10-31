@@ -65,8 +65,8 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (31 Oct 2026)
 
-- Released: 1.1.03. Held, committed but NOT pushed: 1.1.04 (blink handling above); the
-  monitor -> "Always-on mode" / "the app" wording is to be added to it. Push only when the owner says so.
+- Released: 1.1.03. Held, committed but NOT pushed: 1.1.04 (blink handling above, and "Always-on
+  monitor" renamed to "Always-on mode" / "the app"). Push only when the owner says so.
 - Shared with testers online. Play Protect asks to scan: testers tap More details > Install anyway.
 - Ideas not built (ask first): "Now kahraba / Now moteur" label buttons in the Light meter;
   per-phone sensor calibration; Did you know? notifications (opt-in); voltage smart plug support

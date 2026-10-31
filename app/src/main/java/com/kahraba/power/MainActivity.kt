@@ -628,8 +628,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             calGrid.addView(row)
         }
         calLegend.text = if (showMonitor) {
-            if (kahraba.isEmpty()) "No monitor data yet. Turn on the always-on monitor to record kahraba hours."
-            else "Hours of kahraba recorded by the always-on monitor."
+            if (kahraba.isEmpty()) "No always-on data yet. Turn on Always-on mode to record kahraba hours."
+            else "Hours of kahraba recorded by Always-on mode."
         } else {
             "Each day shows its last quick check and how many you did."
         }
@@ -728,7 +728,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         val events = DayData.monitorEvents(this, key)
         val kahrabaMs = DayData.kahrabaByDay(this)[key]
         if (events.isNotEmpty() || kahrabaMs != null) {
-            content.addView(sectionLabel("Always-on monitor" + (kahrabaMs?.let { " · ${DayData.hours(it)} kahraba" } ?: "")))
+            content.addView(sectionLabel("Always-on mode" + (kahrabaMs?.let { " · ${DayData.hours(it)} kahraba" } ?: "")))
             for (e in events) {
                 val c = when (e.source) {
                     Source.KAHRABA -> R.color.kahraba
@@ -895,7 +895,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             color = MonitorService.colorFor(s)
             icon = if (s == Source.MOTEUR) R.drawable.ic_moteur else R.drawable.ic_bolt
             val room = Prefs.monitorRoom(this)
-            barLabel.text = "Monitor" + if (room.isNotEmpty()) " · $room" else ""
+            barLabel.text = "Always-on" + if (room.isNotEmpty()) " · $room" else ""
             barStatus.text = if (s == Source.UNKNOWN) "Not sure yet" else
                 "${EventLog.label(s).lowercase().replaceFirstChar { it.uppercase() }} · ${PowerDetector.formatClock(MonitorState.sinceMs)}"
         } else {
@@ -1094,8 +1094,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         findViewById<TextView>(R.id.timelineNote).text = when {
             lastSwitch != null && MonitorState.running ->
                 "${EventLog.label(lastSwitch.source).lowercase().replaceFirstChar { it.uppercase() }} since ${PowerDetector.formatClock(lastSwitch.timeMs)}"
-            anyData -> "Minutes are kahraba time recorded by the always-on monitor; other hours show your checks."
-            else -> "No data yet. Do a check, or turn on the always-on monitor."
+            anyData -> "Minutes are kahraba time recorded by Always-on mode; other hours show your checks."
+            else -> "No data yet. Do a check, or turn on Always-on mode."
         }
     }
 
@@ -1159,9 +1159,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             }
         }
         findViewById<TextView>(R.id.weekNote).text = if (usedMonitor) {
-            "Bars show the share of each day on kahraba, from the always-on monitor."
+            "Bars show the share of each day on kahraba, from Always-on mode."
         } else {
-            "Bars show how many checks were kahraba (or no flicker). The always-on monitor gives exact hours."
+            "Bars show how many checks were kahraba (or no flicker). Always-on mode gives exact hours."
         }
     }
 
@@ -1228,7 +1228,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             for (i in 0..3) { labels[i].text = pairs[i].first; values[i].text = pairs[i].second }
             note.text = if (last != null) {
                 "Last switch: ${EventLog.label(last.source).lowercase()} at ${PowerDetector.formatClock(last.timeMs)}"
-            } else "From the always-on monitor."
+            } else "From Always-on mode."
         } else {
             val today = checks.filter { it.timeMs >= dayStart }
             val kc = today.count { it.verdict == QuickCheck.Verdict.KAHRABA }
@@ -1241,7 +1241,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
                 "Last kahraba" to (lastK?.let { PowerDetector.formatClock(it.timeMs) } ?: "–"),
             )
             for (i in 0..3) { labels[i].text = pairs[i].first; values[i].text = pairs[i].second }
-            note.text = "Turn on the always-on monitor for exact kahraba hours and switch times."
+            note.text = "Turn on Always-on mode for exact kahraba hours and switch times."
         }
     }
 

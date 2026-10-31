@@ -819,7 +819,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Show always-on monitor"
+                                android:text="Show Always-on mode hours"
                                 android:textColor="?attr/appMuted"
                                 android:textSize="14sp" />
 
@@ -976,7 +976,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Always-on monitor"
+                                    android:text="Always-on mode"
                                     android:textColor="?attr/appText"
                                     android:textSize="17sp"
                                     android:textStyle="bold" />

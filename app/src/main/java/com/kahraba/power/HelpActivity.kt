@@ -51,7 +51,7 @@ class HelpActivity : ThemedActivity() {
                 • If the brightness doesn't match the room, you get “No flicker” instead of a guess.
                 • Keep the other lights in the room as they were when you set it up, and avoid daylight.
                 • Moved the lamp or changed the bulb? Tap the room button → Rename or delete → delete it, and set it up again.
-                • The always-on monitor can use the same rooms, so teaching a room once helps both.
+                • Always-on mode can use the same rooms, so teaching a room once helps both.
                 • Rooms are learned per phone: each phone's light sensor reads differently.
                 • The <b>Accuracy</b> card keeps score of the results you confirm, so you can see how much to trust the app in your home.
             """,
@@ -112,7 +112,7 @@ class HelpActivity : ThemedActivity() {
                 Tip: an incorrect <b>Moteur</b> result is rare (kahraba doesn't wobble), but a shadow or moving the phone can cause one. “No flicker” on the moteur happens when the moteur is calm, or the light can't show the wobble (LED, too dim, inverter, UPS).
             """,
 
-            "Always-on monitor (optional)" to """
+            "Always-on mode (optional)" to """
                 For a spare phone that stays in one place. Open it from <b>Tools</b> on the main screen, or Settings › Tools.
                 • Plug the phone into a <b>wall socket</b> (not a UPS) and leave it face-up under a halogen light. The screen can be off.
                 • A power cut is seen through the charger. A cut of a minute or more means the moteur took over (it takes about a minute to start). A blink of a few seconds is a changeover: once the light settles, brighter means kahraba is back, dimmer means moteur.
@@ -120,7 +120,7 @@ class HelpActivity : ThemedActivity() {
                 • Under <b>Room</b>, pick the room the phone is in, then tap “It's kahraba” and “It's moteur” once each (when you're sure) so it learns how bright that room is on each. If quick checks already taught that room, it knows straight away. Then it can tell kahraba from moteur even when the light is steady. Keep the phone in the exact same place.
                 • Keep other lights the same: switching a lamp on can look like the brightness change.
                 • Every switch is logged with its time, and it beeps on each change. Night silence and beep volume are in Settings.
-                • When the monitor is off it shows “Off”. After you start it, it shows “Not sure yet” until it sees a wobble or a power cut (moteur), matches a learned level, or you tap “It's kahraba” / “It's moteur”.
+                • When Always-on mode is off, it shows “Off”. After you start it, it shows “Not sure yet” until it sees a wobble or a power cut (moteur), matches a learned level, or you tap “It's kahraba” / “It's moteur”.
                 • Tap “It's kahraba” or “It's moteur” when you're sure, so it learns your setup.
                 • Unplugging the phone yourself looks like a power cut.
                 • If the phone is picked up or moved, it stops judging the light until the phone has been still for 10 seconds (power cuts are still noticed). A move is never mistaken for kahraba coming back.
