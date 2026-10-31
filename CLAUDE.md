@@ -14,6 +14,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 - Write for a non-developer, on a phone: short, plain, polished English. Avoid "wrong", "fix it"
   wording in the app (use "correct", "incorrect"). Say "the app" (not "the monitor"); the feature is
   called **Always-on mode** (renamed from "Always-on monitor").
+- Times shown in the app use am/pm ("h:mm a", e.g. 8:09 PM); 24-hour only in exported files.
 - Never put AI model names in commits or files. Commit trailers come from the session.
 - Work on branch `claude/lebanon-power-source-detection-5k9xqd`; `main` is behind (merge only when asked).
 
@@ -80,7 +81,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (31 Oct 2026, evening)
 
-- Released: 1.2.01 ("What's new" window). 1.2.0: wobble-stops rule, phone-moved alert, power-back
+- Released: 1.2.02 (am/pm times). 1.2.01: "What's new" window. 1.2.0: wobble-stops rule, phone-moved alert, power-back
   buttons, timer-pitch beeps.
 - Shared with testers online. Play Protect asks to scan: testers tap More details > Install anyway.
 - Ideas not built (ask first): "Now kahraba / Now moteur" label buttons in the Light meter;

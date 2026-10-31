@@ -772,7 +772,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         v.findViewById<TextView>(R.id.sheetDate).text = "Tap a check to correct or delete it"
         v.findViewById<View>(R.id.sheetNote).visibility = View.GONE
         val content = v.findViewById<LinearLayout>(R.id.sheetContent)
-        val fmt = SimpleDateFormat("EEE d MMM  HH:mm", Locale.US)
+        val fmt = SimpleDateFormat("EEE d MMM  h:mm a", Locale.US)
         val entries = CheckHistory.read(this).filter { !it.fromMonitor }
         if (entries.isEmpty()) content.addView(sectionLabel("No checks yet"))
         for (e in entries) {
@@ -817,7 +817,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     private fun renderHistory() {
         historyList.removeAllViews()
         val entries = CheckHistory.read(this).filter { !it.fromMonitor }.take(5)
-        val fmt = SimpleDateFormat("EEE  HH:mm", Locale.US)
+        val fmt = SimpleDateFormat("EEE  h:mm a", Locale.US)
         if (entries.isEmpty()) {
             historyList.addView(row(R.color.idle, "No checks yet", ""))
             return
@@ -860,7 +860,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     /** Tap a check to correct it (e.g. it said kahraba but it was moteur) or delete it. */
     private fun editEntry(e: CheckHistory.Entry) {
-        val whenText = SimpleDateFormat("EEE HH:mm", Locale.US).format(Date(e.timeMs))
+        val whenText = SimpleDateFormat("EEE h:mm a", Locale.US).format(Date(e.timeMs))
         MaterialAlertDialogBuilder(this)
             .setTitle("Check at $whenText")
             .setItems(arrayOf("It was kahraba", "It was moteur", "Delete")) { _, i ->

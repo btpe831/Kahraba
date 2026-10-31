@@ -41,7 +41,7 @@ object EventLog {
         val entries = read(ctx)
         if (entries.isEmpty()) return "No switches recorded yet."
         val day = SimpleDateFormat("EEE d MMM", Locale.US)
-        val clock = SimpleDateFormat("HH:mm", Locale.US)
+        val clock = SimpleDateFormat("h:mm a", Locale.US)
         val sb = StringBuilder()
         var lastDay = ""
         for (i in entries.indices.reversed()) {

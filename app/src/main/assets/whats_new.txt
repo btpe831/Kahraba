@@ -1,6 +1,9 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.2.02
+- Times now show am/pm, like 8:09 PM, in Recent checks, All checks and the Always-on mode log.
+
 ## 1.2.01
 - A “What's new” window, like this one, after each update.
 
