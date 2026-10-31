@@ -204,15 +204,19 @@ class MonitorService : Service(), SensorEventListener {
         updateStatusNotification()
         if (t.manual) return
 
+        val cutsOnly = detector.config.powerCutsOnly
         when (t.to) {
             Source.KAHRABA -> beeper.kahraba()
             Source.MOTEUR -> beeper.moteur()
+            Source.NO_POWER -> if (cutsOnly) beeper.powerOff() else beeper.cancel()
+            Source.POWER_ON -> beeper.powerBack()
             else -> beeper.cancel()
         }
         val title = when (t.to) {
             Source.KAHRABA -> "Kahraba is back"
             Source.MOTEUR -> "Moteur took over"
             Source.NO_POWER -> "Power is off"
+            Source.POWER_ON -> "Power is back"
             Source.UNKNOWN -> "Power source unknown"
         }
         // After an outage either can come back; the light decides later, or the user can say.
@@ -262,6 +266,8 @@ class MonitorService : Service(), SensorEventListener {
     }
 
     private fun setManual(s: Source, calibrate: Boolean) {
+        // Power cuts only: no kahraba/moteur, and nothing to learn from the light.
+        if (detector.config.powerCutsOnly) return
         val t = detector.setManual(System.currentTimeMillis(), s)
         onTransition(t)
         beeper.cancel()
@@ -373,6 +379,7 @@ class MonitorService : Service(), SensorEventListener {
             Source.MOTEUR -> 0xFFD97706.toInt()
             Source.NO_POWER -> 0xFF475569.toInt()
             Source.UNKNOWN -> 0xFF64748B.toInt()
+            Source.POWER_ON -> 0xFF2563EB.toInt()
         }
 
         fun send(ctx: Context, action: String, extras: (Intent) -> Unit = {}) {

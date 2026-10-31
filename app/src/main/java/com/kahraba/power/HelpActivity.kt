@@ -128,6 +128,7 @@ class HelpActivity : ThemedActivity() {
                 • If the phone is picked up or moved, it stops judging the light until the phone has been still for 10 seconds (power cuts are still noticed). A move is never mistaken for kahraba coming back.
                 • If the phone moves and its charger comes off straight after (for example, it fell off its stand), that's not a power cut: it beeps and shows “Phone moved – please check”. Put it back and plug it in; it carries on from there.
                 • Beeps: 4 quick beeps = kahraba, 1 long beep = moteur, 3 pairs of beeps = phone moved.
+                • <b>No halogen light?</b> Choose “An LED, another light, or none” when you start, or turn on <b>Power cuts only</b>. It then just logs when the power goes off and comes back (1 long beep when it goes off, quick beeps when it's back). The light isn't used and nothing is learned.
             """,
 
             "Privacy" to """

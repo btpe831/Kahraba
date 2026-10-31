@@ -18,6 +18,7 @@ import kotlin.math.sin
  * Kahraba back: 4 quick beeps, pause, 4 beeps, pause, 4 beeps — played twice.
  * Moteur took over: one 3-second beep, then again after 1 and 2 minutes.
  * Phone moved: 2 beeps, pause, 2 beeps, pause, 2 beeps.
+ * Power cuts only: one long beep when the power goes off, 4 quick beeps twice when it's back.
  * All at a kitchen-timer pitch ([PITCH_HZ]); the rhythm tells them apart.
  */
 class Beeper(private val ctx: Context) {
@@ -49,6 +50,7 @@ class Beeper(private val ctx: Context) {
     private val quickKahrabaSound: ShortArray by lazy {
         concat((1..4).flatMap { listOf(tone(140, PITCH_HZ), silence(110)) })
     }
+    private val powerBackSound: ShortArray by lazy { concat(listOf(quickKahrabaSound, silence(450), quickKahrabaSound)) }
     private val quickMoteurSound: ShortArray by lazy { tone(1500, PITCH_HZ) }
     private val quickNoFlickerSound: ShortArray by lazy {
         concat((1..2).flatMap { listOf(tone(140, PITCH_HZ), silence(160)) })
@@ -88,6 +90,20 @@ class Beeper(private val ctx: Context) {
     fun phoneMoved(respectQuiet: Boolean = true) {
         cancel()
         pending += exec.schedule(Runnable { play(phoneMovedSound, respectQuiet) }, 0, TimeUnit.MILLISECONDS)
+    }
+
+    /** Power cuts only: the power went off. */
+    @Synchronized
+    fun powerOff(respectQuiet: Boolean = true) {
+        cancel()
+        pending += exec.schedule(Runnable { play(moteurSound, respectQuiet) }, 0, TimeUnit.MILLISECONDS)
+    }
+
+    /** Power cuts only: the power is back. */
+    @Synchronized
+    fun powerBack(respectQuiet: Boolean = true) {
+        cancel()
+        pending += exec.schedule(Runnable { play(powerBackSound, respectQuiet) }, 0, TimeUnit.MILLISECONDS)
     }
 
     /** Stops any alert that is playing or waiting to play. */

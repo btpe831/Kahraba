@@ -13,6 +13,8 @@ object Prefs {
     private const val LEVEL_KAHRABA = "level_kahraba"
     private const val LEVEL_MOTEUR = "level_moteur"
     const val MOTEUR_ON_FLICKER = "moteur_on_flicker"
+    /** Always-on mode without a halogen light: power cuts only. */
+    const val POWER_CUTS_ONLY = "power_cuts_only"
     const val QUIET_ENABLED = "quiet_enabled"
     const val QUIET_START = "quiet_start"
     const val QUIET_END = "quiet_end"
@@ -44,7 +46,14 @@ object Prefs {
         kahrabaLevel = monitorLevels(ctx).first,
         moteurLevel = monitorLevels(ctx).second,
         moteurOnFlickerAlone = sp(ctx).getBoolean(MOTEUR_ON_FLICKER, false),
+        powerCutsOnly = powerCutsOnly(ctx),
     )
+
+    fun powerCutsOnly(ctx: Context): Boolean = sp(ctx).getBoolean(POWER_CUTS_ONLY, false)
+
+    fun setPowerCutsOnly(ctx: Context, on: Boolean) {
+        sp(ctx).edit().putBoolean(POWER_CUTS_ONLY, on).apply()
+    }
 
     /** Beep loudness as a share of the alarm channel's maximum: low, medium or full. */
     fun beepVolume(ctx: Context): Double = when (sp(ctx).getString(BEEP_VOLUME, "full")) {

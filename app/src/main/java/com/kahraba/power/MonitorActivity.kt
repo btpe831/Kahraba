@@ -21,6 +21,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import com.google.android.material.materialswitch.MaterialSwitch
 import com.kahraba.power.Prefs.monitoring
 import java.io.File
 
@@ -61,12 +62,16 @@ class MonitorActivity : ThemedActivity() {
         startStop.setOnClickListener {
             if (MonitorState.running) {
                 MonitorService.send(this, MonitorService.ACTION_STOP)
+                ui.postDelayed({ render() }, 300)
             } else {
-                askNotificationPermission()
-                monitoring = true
-                MonitorService.send(this, MonitorService.ACTION_START)
+                chooseLightThenStart()
             }
-            ui.postDelayed({ render() }, 300)
+        }
+        findViewById<MaterialSwitch>(R.id.cutsOnlySwitch).setOnCheckedChangeListener { _, on ->
+            if (on != Prefs.powerCutsOnly(this)) {
+                Prefs.setPowerCutsOnly(this, on)
+                render()
+            }
         }
         findViewById<Button>(R.id.setKahraba).setOnClickListener { confirmSet(Source.KAHRABA) }
         findViewById<Button>(R.id.setMoteur).setOnClickListener { confirmSet(Source.MOTEUR) }
@@ -106,8 +111,35 @@ class MonitorActivity : ThemedActivity() {
         super.onDestroy()
     }
 
+    /** Asks what light the phone is under, then starts: full detection, or power cuts only. */
+    private fun chooseLightThenStart() {
+        var cutsOnly = Prefs.powerCutsOnly(this)
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle("What light is the phone under?")
+            .setSingleChoiceItems(
+                arrayOf(
+                    "A halogen or filament bulb – tells kahraba from moteur",
+                    "An LED, another light, or none – power cuts only",
+                ),
+                if (cutsOnly) 1 else 0,
+            ) { _, which -> cutsOnly = which == 1 }
+            .setPositiveButton("Start") { _, _ ->
+                Prefs.setPowerCutsOnly(this, cutsOnly)
+                askNotificationPermission()
+                monitoring = true
+                MonitorService.send(this, MonitorService.ACTION_START)
+                ui.postDelayed({ render() }, 300)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     private fun render() {
         renderRoom()
+        val cutsOnly = Prefs.powerCutsOnly(this)
+        findViewById<MaterialSwitch>(R.id.cutsOnlySwitch).let { if (it.isChecked != cutsOnly) it.isChecked = cutsOnly }
+        findViewById<View>(R.id.roomCard).visibility = if (cutsOnly) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.teachCard).visibility = if (cutsOnly) View.GONE else View.VISIBLE
         val running = MonitorState.running
         val s = MonitorState.source
         val label = findViewById<TextView>(R.id.stateLabel)
@@ -116,7 +148,7 @@ class MonitorActivity : ThemedActivity() {
             !running -> {
                 label.text = "Always-on"
                 stateText.text = "Off"
-                sinceText.text = "Tap Start to track kahraba and moteur"
+                sinceText.text = if (cutsOnly) "Tap Start to log power cuts" else "Tap Start to track kahraba and moteur"
                 paintState(ContextCompat.getColor(this, R.color.no_power))
             }
             s == Source.UNKNOWN -> {
@@ -154,7 +186,8 @@ class MonitorActivity : ThemedActivity() {
         } else buildString {
             if (!MonitorState.hasLightSensor) append("This phone has no light sensor, so only power cuts can be seen.\n")
             append(MonitorState.lightStatus)
-            append("\nA wobble above ${"%.1f".format(thr)}% counts as moteur. The charger going off means a power cut.")
+            if (cutsOnly) append("\nThe charger going off means a power cut.")
+            else append("\nA wobble above ${"%.1f".format(thr)}% counts as moteur. The charger going off means a power cut.")
             val calLeft = MonitorState.calibrationEndsMs - System.currentTimeMillis()
             if (calLeft > 0) append("\n\nLearning ${EventLog.label(MonitorState.calibrationSource).lowercase()}: ${calLeft / 1000}s left. Keep the phone still.")
         }

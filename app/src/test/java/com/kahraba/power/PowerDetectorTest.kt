@@ -374,6 +374,36 @@ class PowerDetectorTest {
     }
 
     @Test
+    fun powerCutsOnlyLogsEveryCutAndIgnoresTheLight() {
+        // Under an LED: the light means nothing; every cut is logged, blinks included.
+        val r = Run(PowerDetector(DetectorConfig(powerCutsOnly = true), Source.MOTEUR))
+        r.run(5 * min) { kahraba(it) }
+        assertEquals(Source.POWER_ON, r.d.source)
+        assertTrue("switching mode is logged quietly", r.transitions.single().manual)
+        r.run(10_000, plugged = false) { 0.0 }                // a 10 s blink
+        r.run(30 * min) { if (it % 5_000 < 1500) 612.0 else 680.0 } // wobbling, brighter: ignored
+        r.run(75_000, plugged = false) { 0.0 }                // a cut
+        r.run(5 * min) { kahraba(it) }
+        val alerts = r.transitions.filter { !it.manual }
+        assertEquals(listOf(Source.NO_POWER, Source.POWER_ON, Source.NO_POWER, Source.POWER_ON), alerts.map { it.to })
+        assertEquals("Power went off", alerts[0].reason)
+        assertEquals("Power back after 10s", alerts[1].reason)
+        assertEquals("Power back after 1m 15s", alerts[3].reason)
+        assertEquals(PowerDetector.CUTS_ONLY, r.d.lightStatus)
+    }
+
+    @Test
+    fun leavingPowerCutsOnlyGoesBackToNotSure() {
+        val d = PowerDetector(DetectorConfig(powerCutsOnly = true))
+        val r = Run(d)
+        r.run(10_000) { 700.0 }
+        assertEquals(Source.POWER_ON, d.source)
+        d.config = DetectorConfig()
+        r.run(10_000) { 700.0 }
+        assertEquals(Source.UNKNOWN, d.source)
+    }
+
+    @Test
     fun aPowerCutThenPickingUpThePhoneIsStillAPowerCut() {
         // The charger goes first in a power cut; the phone is picked up after (for its torch).
         val r = Run(PowerDetector())

@@ -66,5 +66,6 @@ object EventLog {
         Source.MOTEUR -> "MOTEUR"
         Source.NO_POWER -> "NO POWER"
         Source.UNKNOWN -> "UNKNOWN"
+        Source.POWER_ON -> "POWER ON"
     }
 }

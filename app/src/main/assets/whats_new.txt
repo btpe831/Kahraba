@@ -1,6 +1,9 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.2.03
+- Always-on mode can now just log power cuts, for a phone under an LED or with no lamp. Choose it when you start, or turn on “Power cuts only”.
+
 ## 1.2.02
 - Times now show am/pm, like 8:09 PM, in Recent checks, All checks and the Always-on mode log.
 

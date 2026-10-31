@@ -77,10 +77,14 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   check" alert; carries on when plugged back in. Power back after an outage: alert with
   "It's kahraba" / "It's moteur" buttons.
 - All beeps at 3000 Hz (kitchen timer); rhythm tells them apart.
+- Power cuts only (1.2.03, `Prefs.POWER_CUTS_ONLY`, asked when starting; switch on the screen): for LED/no
+  lamp. Light ignored, nothing learned, kahraba/moteur buttons hidden. States POWER_ON / NO_POWER; logs
+  "Power went off" and "Power back after X" (blinks too); 1 long beep off, quick beeps back.
 - Only works from a known source: if it shows "Not sure yet", tap "It's moteur".
 
 ## Status (31 Oct 2026, evening)
 
+- Held, committed but NOT pushed: 1.2.03 (power cuts only). Push only when the owner says so.
 - Released: 1.2.02 (am/pm times). 1.2.01: "What's new" window. 1.2.0: wobble-stops rule, phone-moved alert, power-back
   buttons, timer-pitch beeps.
 - Shared with testers online. Play Protect asks to scan: testers tap More details > Install anyway.

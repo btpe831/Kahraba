@@ -3,8 +3,8 @@ package com.kahraba.power
 import kotlin.math.roundToLong
 import kotlin.math.sqrt
 
-/** Where the house's electricity is coming from. */
-enum class Source { UNKNOWN, KAHRABA, MOTEUR, NO_POWER }
+/** Where the house's electricity is coming from. POWER_ON: on, source not judged (power cuts only). */
+enum class Source { UNKNOWN, KAHRABA, MOTEUR, NO_POWER, POWER_ON }
 
 data class DetectorConfig(
     /** Light wobble (in %) above which a second counts as "flickering". */
@@ -36,6 +36,11 @@ data class DetectorConfig(
     val moteurOnFlickerAlone: Boolean = false,
     /** Charger off for longer than this means a real outage, not a switchover. */
     val noPowerAfterSec: Double = 300.0,
+    /**
+     * Power cuts only (no halogen light): log when the power goes off and comes back, with no
+     * kahraba/moteur judgement. The light is ignored and nothing is learned.
+     */
+    val powerCutsOnly: Boolean = false,
 )
 
 data class Transition(
@@ -114,11 +119,20 @@ class PowerDetector(
         val out = mutableListOf<Transition>()
         if (historyStartMs < 0) historyStartMs = nowMs
 
+        syncMode(nowMs, isPlugged, out)
         handleCharger(nowMs, isPlugged, out)
 
         if (unpluggedByMove) {
             flickerPct = null
             lightStatus = PHONE_MOVED
+            if (nowMs - lastEvalMs >= 1000) lastEvalMs = nowMs
+            return out
+        }
+
+        if (config.powerCutsOnly) {
+            flickerPct = null
+            lightLevel = lux
+            lightStatus = CUTS_ONLY
             if (nowMs - lastEvalMs >= 1000) lastEvalMs = nowMs
             return out
         }
@@ -181,6 +195,23 @@ class PowerDetector(
         return t
     }
 
+    /**
+     * Switching into power-cuts-only mode: from a source to "power on" (or off). Switching out of
+     * it: "not sure yet" until the light or a cut shows which. Logged, without alerts.
+     */
+    private fun syncMode(now: Long, isPlugged: Boolean?, out: MutableList<Transition>) {
+        val to = when {
+            config.powerCutsOnly && source != Source.POWER_ON && source != Source.NO_POWER ->
+                if (isPlugged == false) Source.NO_POWER else Source.POWER_ON
+            !config.powerCutsOnly && source == Source.POWER_ON -> Source.UNKNOWN
+            else -> return
+        }
+        out += Transition(now, source, to, if (config.powerCutsOnly) "Power cuts only" else "Full detection", manual = true)
+        source = to
+        sinceMs = now
+        resetHistory(now)
+    }
+
     // ---- Charger ----
 
     private fun handleCharger(now: Long, isPlugged: Boolean?, out: MutableList<Transition>) {
@@ -206,6 +237,20 @@ class PowerDetector(
                 unpluggedByMove = false
                 unpluggedAtMs = null
                 resetHistory(now)
+            }
+            return
+        }
+
+        if (config.powerCutsOnly) {
+            if (prev == true && !isPlugged && source != Source.NO_POWER) {
+                out += change(now, Source.NO_POWER, "Power went off")
+            }
+            if (prev == false && isPlugged) {
+                val off = unpluggedAtMs?.let { now - it }
+                unpluggedAtMs = null
+                if (source == Source.NO_POWER) {
+                    out += change(now, Source.POWER_ON, off?.let { "Power back after ${formatDuration(it)}" } ?: "Power back")
+                }
             }
             return
         }
@@ -486,6 +531,7 @@ class PowerDetector(
         /** The charger coming off this soon after the phone moved means it fell or was picked up. */
         const val MOVED_UNPLUG_MS = 10_000L
         const val PHONE_MOVED = "Phone moved – please check"
+        const val CUTS_ONLY = "Power cuts only – the light isn't used"
         /** Minutes of completely still light needed after a busy moteur. */
         const val CALM_MINUTES = 5.0
         /** How much brighter (in %) than the busy moteur that still light must be. */
