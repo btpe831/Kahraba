@@ -57,7 +57,9 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   7.5 min outage 13:22 back as kahraba; 21 min outage 15:00 back as moteur; phone fell 18:01:12).
 - Kahraba is dead still (zero wobble for 20+ min); a daytime moteur wobbles most minutes. In the
   evening a moteur also calms down and creeps brighter, but gradually (30 Oct 20:40-21:45).
-- Voltmeter: moteur 208 V (31 Oct, 8 pm) to 223 V; kahraba 234 V.
+- Voltmeter: moteur 208 V (31 Oct, 8 pm) to 223 V; kahraba 231-234 V (1 Nov morning too).
+- **Ignore the Pixel 2 Always-on data from the night of 31 Oct - 1 Nov**: it was under an LED (owner only
+  wanted power-cut beeps), so its light readings and kahraba/moteur labels mean nothing.
 - The 28-30 Oct recording (unattended, 1/s files only) has no ground truth; replays suggested a real
   switch at 29 Oct 16:34 and a likely one at 30 Oct 12:08, and showed 10% was too low a threshold
   (false kahraba at 29 Oct 14:10 from moteur creep).
