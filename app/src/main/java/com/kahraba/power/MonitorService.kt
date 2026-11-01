@@ -213,7 +213,7 @@ class MonitorService : Service(), SensorEventListener {
             else -> beeper.cancel()
         }
         val title = when (t.to) {
-            Source.KAHRABA -> "Kahraba is back"
+            Source.KAHRABA -> "Kahraba since ${PowerDetector.formatClock(t.timeMs)}"
             Source.MOTEUR -> "Moteur took over"
             Source.NO_POWER -> "Power is off"
             Source.POWER_ON -> "Power is back"

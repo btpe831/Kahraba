@@ -269,6 +269,7 @@ class PowerDetector(
             // changeover, which can be the switch TO kahraba (31 Oct, 04:41: a 10 s blink). Keep
             // the light history and decide once the light has settled (see [checkBlink]).
             if (off < SHORT_BLINK_MS && source != Source.NO_POWER) {
+                pending = null
                 blink = levelBetween(offSince - minutesMs(REFERENCE_MINUTES), offSince - 2_000)?.let { Blink(now, off, it) }
                 return
             }
@@ -336,6 +337,15 @@ class PowerDetector(
         seconds.addLast(Second(now, flicker, level))
         longSeconds.addLast(Second(now, flicker, level))
         while (longSeconds.isNotEmpty() && longSeconds.first().t < now - BUSY_KEEP_MS) longSeconds.removeFirst()
+        // Separate wobbles: kahraba has at most one in 5 minutes (a step in brightness), a moteur
+        // three or more, even when calm (1 Nov: 222 V evening moteur).
+        if (flicker != null && flicker > config.flickerThresholdPct) {
+            if (calmSeconds >= EPISODE_GAP_S) wobbleEpisodes.addLast(now)
+            calmSeconds = 0
+        } else {
+            calmSeconds++
+        }
+        while (wobbleEpisodes.isNotEmpty() && wobbleEpisodes.first() < now - CONFIRM_MS * 2) wobbleEpisodes.removeFirst()
         if (flicker != null && flicker > config.flickerThresholdPct) {
             // Busy: wobbling again and again within a minute (one step in brightness only shows for a
             // few seconds). Its level is the typical light over the minutes before.
@@ -350,6 +360,41 @@ class PowerDetector(
         val keepMs = (maxOf(config.steadyMinutes + REFERENCE_MINUTES, config.flickerMinutes) * 60_000).roundToLong() +
             SWITCH_MS + 60_000
         while (seconds.isNotEmpty() && seconds.first().t < now - keepMs) seconds.removeFirst()
+    }
+
+    /** Start times of separate wobbles (after [EPISODE_GAP_S] calm seconds). */
+    private val wobbleEpisodes = ArrayDeque<Long>()
+    private var calmSeconds = EPISODE_GAP_S
+
+    /**
+     * Kahraba seen in the light, waiting [CONFIRM_MS] to be sure before alerting: [sinceMs] is when
+     * it came on (the time shown), [foundMs] when it was spotted. A calm moteur at a high voltage can
+     * look like kahraba for a few minutes, but it soon wobbles again (1 Nov, 18:37).
+     */
+    private data class Pending(val sinceMs: Long, val foundMs: Long, val reason: String)
+    private var pending: Pending? = null
+
+    /** Light says kahraba: check it for [CONFIRM_MS] before switching. */
+    private fun propose(now: Long, sinceMs: Long, reason: String) {
+        if (pending == null) pending = Pending(minOf(sinceMs, now), now, reason)
+    }
+
+    /** True while a kahraba is being confirmed (nothing else is decided meanwhile). */
+    private fun checkPending(now: Long, out: MutableList<Transition>): Boolean {
+        val p = pending ?: return false
+        if (wobbleEpisodes.count { it > p.foundMs } >= CONFIRM_WOBBLES) {
+            pending = null
+            lightStatus = "Light wobbling – still moteur"
+            return true
+        }
+        if (now - p.foundMs >= CONFIRM_MS) {
+            pending = null
+            out += change(p.sinceMs, Source.KAHRABA, p.reason)
+            return true
+        }
+        val left = (CONFIRM_MS - (now - p.foundMs) + 59_999) / 60_000
+        lightStatus = "Looks like kahraba – checking the light stays still ($left min)"
+        return true
     }
 
     /** A power blink waiting to be judged by the light: when, how long, and the light before it. */
@@ -373,7 +418,7 @@ class PowerDetector(
         val pct = (recent / b.before - 1) * 100
         val off = formatDuration(b.offMs)
         if (pct >= BLINK_CHANGE_PCT && source != Source.KAHRABA) {
-            out += change(now, Source.KAHRABA, "Power blinked ($off) and came back ${pct.toInt()}% brighter – kahraba is back")
+            propose(now, b.atMs, "Power blinked ($off) and came back ${pct.toInt()}% brighter – kahraba is back")
             return true
         }
         if (pct <= -BLINK_CHANGE_PCT && source != Source.MOTEUR) {
@@ -387,6 +432,7 @@ class PowerDetector(
         val thr = config.flickerThresholdPct
         val historyMin = (now - historyStartMs) / 60_000.0
         val need = config.steadyMinutes
+        if (checkPending(now, out)) return
         if (checkBlink(now, need, thr, out)) return
 
         if ((source == Source.MOTEUR || source == Source.UNKNOWN) && historyMin >= need && isSteady(now, need, thr)) {
@@ -394,11 +440,12 @@ class PowerDetector(
 
             // 1) The light got clearly brighter in one go (no blackout) and has stayed steady since.
             if (source == Source.MOTEUR && recent != null) {
-                val ref = levelBeforeChange(recent)
-                if (ref != null) {
+                val found = levelBeforeChange(recent)
+                if (found != null) {
+                    val (ref, start) = found
                     val rise = (recent / ref - 1) * 100
                     if (rise >= config.levelRisePct && rise <= config.levelRiseMaxPct) {
-                        out += change(now, Source.KAHRABA, "Light got ${rise.toInt()}% brighter and stayed steady – kahraba is back")
+                        propose(now, start, "Light got ${rise.toInt()}% brighter and stayed steady – kahraba is back")
                         return
                     }
                 }
@@ -420,8 +467,9 @@ class PowerDetector(
                 if (calm != null) {
                     val rise = (calm / moteur - 1) * 100
                     if (rise >= CALM_RISE_PCT && rise <= config.levelRiseMaxPct) {
-                        out += change(
-                            now, Source.KAHRABA,
+                        // It came on when the wobble stopped, or when the power came back.
+                        propose(
+                            now, maxOf(lastBusyMs, lastPowerBackMs),
                             "Light stopped wobbling and is ${rise.toInt()}% brighter than the moteur – kahraba is back",
                         )
                         return
@@ -429,13 +477,14 @@ class PowerDetector(
                 }
             }
 
-            // 3) The steady level matches what was learned for this spot.
+            // 3) Not sure yet: the steady level matches what was learned for this spot. Never from
+            //    moteur: an evening moteur at 222 V reached the kahraba level (1 Nov, 18:37).
             val k = config.kahrabaLevel
             val m = config.moteurLevel
-            if (recent != null && k != null && m != null && k > m * QuickCheck.LEVEL_GAP) {
+            if (source == Source.UNKNOWN && recent != null && k != null && m != null && k > m * QuickCheck.LEVEL_GAP) {
                 val mid = sqrt(k * m)
                 if (recent >= mid && recent <= k * 1.25) {
-                    out += change(now, Source.KAHRABA, "Light matches your kahraba level (${recent.toInt()} lux)")
+                    propose(now, now - minutesMs(need), "Light matches your kahraba level (${recent.toInt()} lux)")
                     return
                 }
                 if (source == Source.UNKNOWN && recent < mid && recent >= m * 0.75) {
@@ -468,9 +517,9 @@ class PowerDetector(
      * step and bounce for half a minute: 28 Oct went 643 -> 680 -> 738/787 -> 738 lux), and takes
      * the level over the [REFERENCE_MINUTES] before that (a busy moteur wobbles, so it's the
      * typical level). The light must not have gone out in between: that's a power cut, handled
-     * through the charger.
+     * through the charger. Also returns when the current level started.
      */
-    private fun levelBeforeChange(recent: Double): Double? {
+    private fun levelBeforeChange(recent: Double): Pair<Double, Long>? {
         var start: Long? = null
         for (sec in seconds.reversed()) {
             val l = sec.level ?: break
@@ -489,7 +538,7 @@ class PowerDetector(
         if (kotlin.math.abs(tail / ref - 1) > BEFORE_SPREAD) return null
         val during = seconds.filter { it.t in beforeEnd..start }.mapNotNull { it.level }
         if (during.any { it < 0.5 * ref }) return null
-        return ref
+        return ref to start
     }
 
     /** Median light level over a time span, or null if too few readable seconds in it. */
@@ -514,10 +563,14 @@ class PowerDetector(
         val t = Transition(at, source, to, reason)
         source = to
         sinceMs = at
+        pending = null
         return t
     }
 
     private fun resetHistory(now: Long) {
+        pending = null
+        wobbleEpisodes.clear()
+        calmSeconds = EPISODE_GAP_S
         samples.clear()
         seconds.clear()
         historyStartMs = now
@@ -538,6 +591,12 @@ class PowerDetector(
         const val CALM_RISE_PCT = 10.0
         /** The still light must start within this long after the moteur was last busy (the switch can take a few minutes to settle). */
         const val CALM_AFTER_BUSY_MS = 5 * 60_000L
+        /** Kahraba seen in the light is confirmed for this long before the alert. */
+        const val CONFIRM_MS = 5 * 60_000L
+        /** Separate wobbles during that time that mean it was a calm moteur after all. */
+        const val CONFIRM_WOBBLES = 3
+        /** Calm seconds between two wobbles for them to count as separate. */
+        const val EPISODE_GAP_S = 5
         /** A busy moteur is remembered this long. */
         const val BUSY_KEEP_MS = 60 * 60_000L
         /** Wobbling seconds within a minute that make the moteur "busy". */

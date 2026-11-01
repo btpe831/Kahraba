@@ -54,7 +54,7 @@ class PowerDetectorTest {
     fun learnedLevelsDecideFromUnknown() {
         val cfg = DetectorConfig(kahrabaLevel = 862.0, moteurLevel = 680.0)
         val k = Run(PowerDetector(cfg))
-        k.run(3 * min) { kahraba(it) }
+        k.run(8 * min) { kahraba(it) }
         assertEquals(Source.KAHRABA, k.d.source)
         val m = Run(PowerDetector(cfg))
         m.run(3 * min) { calmMoteur(it) }
@@ -86,7 +86,7 @@ class PowerDetectorTest {
         assertEquals(Source.MOTEUR, r.d.source)
         r.run(30 * min, lux = moteur(15_000))             // moteur, flickers every 15 s
         assertEquals(Source.MOTEUR, r.d.source)
-        r.run(3 * min) { kahraba(it) }                   // silent switch to kahraba
+        r.run(8 * min) { kahraba(it) }                   // silent switch to kahraba (5 min to confirm)
         assertEquals(Source.KAHRABA, r.d.source)
         assertEquals(listOf(Source.MOTEUR, Source.KAHRABA), r.transitions.map { it.to })
     }
@@ -112,7 +112,7 @@ class PowerDetectorTest {
         r.run(75_000, plugged = false) { 0.0 }
         r.run(30 * min) { calmMoteur(it) }
         assertEquals(Source.MOTEUR, r.d.source)           // steady, but no brighter: still moteur
-        r.run(3 * min) { kahraba(it) }                    // +24% brighter and steady
+        r.run(8 * min) { kahraba(it) }                    // +24% brighter and steady (5 min to confirm)
         assertEquals(Source.KAHRABA, r.d.source)
     }
 
@@ -215,13 +215,16 @@ class PowerDetectorTest {
         val end = recording().last().first
         var t = end
         var switchedAt: Long? = null
-        while (t < end + 5 * min) {
+        var cameOn: Long? = null
+        while (t < end + 10 * min) {
             t += step
-            if (d.tick(t, 862.31, true).any { it.to == Source.KAHRABA }) switchedAt = t
+            d.tick(t, 862.31, true).firstOrNull { it.to == Source.KAHRABA }?.let { switchedAt = t; cameOn = it.timeMs }
         }
         assertEquals(Source.KAHRABA, d.source)
-        println("Kahraba detected ${(switchedAt!! - end) / 1000}s after the silent switch")
-        assertTrue(switchedAt - end <= 150_000)
+        println("Kahraba seen ${(cameOn!! - end) / 1000}s after the silent switch, alert after ${(switchedAt!! - end) / 1000}s")
+        // Shown from when it came on; the alert waits for 5 minutes of still light to be sure.
+        assertTrue(cameOn!! - end <= 150_000)
+        assertTrue(switchedAt!! - end <= 150_000 + PowerDetector.CONFIRM_MS)
     }
 
     @Test
@@ -371,6 +374,31 @@ class PowerDetectorTest {
         r.run(5 * min, lux = moteur(5_000))
         assertEquals(Source.MOTEUR, r.d.source)
         assertTrue("${r.transitions}", r.transitions.isEmpty())
+    }
+
+    @Test
+    fun brightStillMoteurThatWobblesAgainIsNeverAnnounced() {
+        // Looks like kahraba (24% brighter, still), but wobbles again within 5 minutes: no alert.
+        val r = Run(PowerDetector(initialSource = Source.MOTEUR))
+        r.run(10 * min) { calmMoteur(it) }
+        r.run(3 * min) { kahraba(it) }
+        assertTrue(r.d.lightStatus, r.d.lightStatus.startsWith("Looks like kahraba"))
+        r.run(2 * min) { t -> if (t % 30_000 < 1_000) 800.0 else 862.0 } // a dip every 30 s
+        assertEquals(Source.MOTEUR, r.d.source)
+        assertTrue("${r.transitions}", r.transitions.none { it.to == Source.KAHRABA })
+    }
+
+    @Test
+    fun kahrabaIsAnnouncedAfterFiveMinutesWithTheTimeItCameOn() {
+        val r = Run(PowerDetector(initialSource = Source.MOTEUR))
+        r.run(10 * min) { calmMoteur(it) }
+        val cameOn = r.t
+        r.run(3 * min) { kahraba(it) }
+        assertTrue("not yet: ${r.transitions}", r.transitions.isEmpty())
+        r.run(5 * min) { kahraba(it) }
+        val k = r.transitions.single()
+        assertEquals(Source.KAHRABA, k.to)
+        assertTrue("came on ${k.timeMs - cameOn} ms after", k.timeMs - cameOn in 0..10_000)
     }
 
     @Test

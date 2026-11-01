@@ -50,8 +50,8 @@ class CalmKahrabaTest {
             listOf(Source.KAHRABA, Source.NO_POWER, Source.MOTEUR, Source.KAHRABA, Source.NO_POWER, Source.MOTEUR),
             sw.map { it.to },
         )
-        // Kahraba once the light has been still for 5 minutes after settling (13:05).
-        assertTrue("${sw[0]}", sw[0].timeMs in hms(13, 5, 0)..hms(13, 15, 0))
+        // Kahraba from about 13:00, when the wobbling stopped (announced once confirmed).
+        assertTrue("${sw[0]}", sw[0].timeMs in hms(12, 59, 0)..hms(13, 6, 0))
         // After the first outage: back as kahraba within 10 minutes.
         assertTrue("${sw[2]}", sw[2].timeMs == outage1.last + 1)
         assertTrue("${sw[3]}", sw[3].timeMs in outage1.last..outage1.last + 10 * 60_000)

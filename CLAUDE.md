@@ -57,8 +57,10 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   7.5 min outage 13:22 back as kahraba; 21 min outage 15:00 back as moteur; phone fell 18:01:12).
   `nov01-morning-pixel2-raw-kahraba-cut-moteur.csv` (kahraba 231 V set 08:12:59, ~4,400-4,700 lux dead still;
   1m 13s cut 10:00:12 -> moteur 213 V, ~3,100-3,500 wobbling: kahraba ~40% brighter).
-- Doubt: 31 Oct 13:00-15:00 was only 15-24% above the moteur (vs 40% on 1 Nov): kahraba is likely but
-  unconfirmed; a calm moteur is possible. Next "kahraba is back" alert: ask for a voltmeter photo.
+- 31 Oct 13:00-15:00 was only 15-24% above the moteur (vs 40% on 1 Nov), but its wobble pattern (<= 1
+  episode per 5 min) matches kahraba, so very likely kahraba. Still: ask for a voltmeter photo at alerts.
+  `nov01-evening-pixel2-raw-kahraba-cut-calm-moteur.csv` (from 14:00: busy moteur; kahraba 16:01, ~4,600
+  still; cut 18:00:14 for 1m 14s; moteur 222 V, pole light green, ~3,600-4,150 calm: 1.2.04 false kahraba 18:37).
 - Kahraba is dead still (zero wobble for 20+ min); a daytime moteur wobbles most minutes. In the
   evening a moteur also calms down and creeps brighter, but gradually (30 Oct 20:40-21:45).
 - Voltmeter: moteur 208 V (31 Oct, 8 pm) to 223 V; kahraba 231-234 V (1 Nov morning too).
@@ -87,11 +89,17 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   (1.2.04, `Prefs.monitorLight`): Halogen or filament bulb / LED / Other light / Power cuts only; all but
   halogen turn power cuts only on. Light ignored, nothing learned, kahraba/moteur buttons hidden. States POWER_ON / NO_POWER; logs
   "Power went off" and "Power back after X" (blinks too); 1 long beep off, quick beeps back.
+- Kahraba confirmation (1.2.05): every light rule only *proposes* kahraba; the alert comes after 5 more
+  minutes unless the light wobbles 3+ separate times (episodes after >= 5 calm s). Kahraba never had more than
+  1 episode in 5 min; moteur 3+, even calm (1 Nov 18:37, 222 V). The transition is dated when kahraba came on
+  (level start / power back / blink), so the NOW card and alert show "Kahraba since 4:01 PM".
+- Learned-level rule ("Light matches your kahraba level") only from "Not sure yet", never moteur -> kahraba
+  (1.2.05): it called the bright 222 V evening moteur kahraba (1 Nov 18:37; `EveningMoteurTest`).
 - Only works from a known source: if it shows "Not sure yet", tap "It's moteur".
 
 ## Status (1 Nov 2026)
 
-- Released: 1.2.04 ("Choose an option" light picker). 1.2.03: power cuts only. 1.2.02: am/pm times. 1.2.01: "What's new" window. 1.2.0: wobble-stops rule, phone-moved alert, power-back
+- Released: 1.2.05 (kahraba confirmed for 5 min; level rule only from Not sure yet). 1.2.04: "Choose an option" light picker. 1.2.03: power cuts only. 1.2.02: am/pm times. 1.2.01: "What's new" window. 1.2.0: wobble-stops rule, phone-moved alert, power-back
   buttons, timer-pitch beeps.
 - Shared with testers online. Play Protect asks to scan: testers tap More details > Install anyway.
 - Ideas not built (ask first): "Now kahraba / Now moteur" label buttons in the Light meter;

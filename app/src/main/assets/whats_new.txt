@@ -1,6 +1,9 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.2.05
+- Fewer false “Kahraba is back” alerts: the app checks the light stays still for 5 minutes before it beeps, and shows the time kahraba actually came on.
+
 ## 1.2.04
 - Starting Always-on mode now asks which light the phone is under: halogen, LED, other light, or power cuts only.
 
