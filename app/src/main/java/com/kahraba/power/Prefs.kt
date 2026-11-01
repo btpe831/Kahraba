@@ -51,8 +51,19 @@ object Prefs {
 
     fun powerCutsOnly(ctx: Context): Boolean = sp(ctx).getBoolean(POWER_CUTS_ONLY, false)
 
-    fun setPowerCutsOnly(ctx: Context, on: Boolean) {
-        sp(ctx).edit().putBoolean(POWER_CUTS_ONLY, on).apply()
+    /** The light Always-on mode's phone is under. Only halogen/filament shows kahraba or moteur. */
+    const val LIGHT_HALOGEN = "halogen"
+    const val LIGHT_LED = "led"
+    const val LIGHT_OTHER = "other"
+    const val LIGHT_NONE = "none"
+    private const val MONITOR_LIGHT = "monitor_light"
+
+    fun monitorLight(ctx: Context): String =
+        sp(ctx).getString(MONITOR_LIGHT, null) ?: if (powerCutsOnly(ctx)) LIGHT_NONE else LIGHT_HALOGEN
+
+    /** Saves the light, and turns power cuts only on for anything but a halogen or filament bulb. */
+    fun setMonitorLight(ctx: Context, light: String) {
+        sp(ctx).edit().putString(MONITOR_LIGHT, light).putBoolean(POWER_CUTS_ONLY, light != LIGHT_HALOGEN).apply()
     }
 
     /** Beep loudness as a share of the alarm channel's maximum: low, medium or full. */

@@ -69,7 +69,7 @@ class MonitorActivity : ThemedActivity() {
         }
         findViewById<MaterialSwitch>(R.id.cutsOnlySwitch).setOnCheckedChangeListener { _, on ->
             if (on != Prefs.powerCutsOnly(this)) {
-                Prefs.setPowerCutsOnly(this, on)
+                Prefs.setMonitorLight(this, if (on) Prefs.LIGHT_NONE else Prefs.LIGHT_HALOGEN)
                 render()
             }
         }
@@ -111,20 +111,54 @@ class MonitorActivity : ThemedActivity() {
         super.onDestroy()
     }
 
-    /** Asks what light the phone is under, then starts: full detection, or power cuts only. */
+    /**
+     * Asks what light the phone is under, then starts. Only a halogen or filament bulb shows
+     * kahraba or moteur; with anything else the app logs power cuts only.
+     */
     private fun chooseLightThenStart() {
-        var cutsOnly = Prefs.powerCutsOnly(this)
+        val dp = resources.displayMetrics.density
+        fun px(v: Int) = (v * dp).toInt()
+        val muted = android.util.TypedValue().also { theme.resolveAttribute(R.attr.appMuted, it, true) }.data
+        val options = listOf(
+            Prefs.LIGHT_HALOGEN to "Halogen or filament bulb",
+            Prefs.LIGHT_LED to "LED",
+            Prefs.LIGHT_OTHER to "Other light",
+            Prefs.LIGHT_NONE to "Power cuts only",
+        )
+        val note = TextView(this).apply {
+            text = "This light can't show kahraba or moteur, so the app will log power cuts only."
+            setTextColor(muted)
+            textSize = 14f
+            setPadding(0, px(8), 0, 0)
+        }
+        val group = android.widget.RadioGroup(this)
+        options.forEach { (key, label) ->
+            group.addView(android.widget.RadioButton(this).apply {
+                id = View.generateViewId()
+                tag = key
+                text = label
+                textSize = 16f
+                isChecked = key == Prefs.monitorLight(this@MonitorActivity)
+            })
+        }
+        fun chosen(): String = group.findViewById<View>(group.checkedRadioButtonId)?.tag as? String ?: Prefs.LIGHT_HALOGEN
+        fun showNote() {
+            val c = chosen()
+            note.visibility = if (c == Prefs.LIGHT_LED || c == Prefs.LIGHT_OTHER) View.VISIBLE else View.GONE
+        }
+        group.setOnCheckedChangeListener { _, _ -> showNote() }
+        showNote()
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(px(24), px(8), px(24), 0)
+            addView(group)
+            addView(note)
+        }
         com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
-            .setTitle("What light is the phone under?")
-            .setSingleChoiceItems(
-                arrayOf(
-                    "A halogen or filament bulb – tells kahraba from moteur",
-                    "An LED, another light, or none – power cuts only",
-                ),
-                if (cutsOnly) 1 else 0,
-            ) { _, which -> cutsOnly = which == 1 }
+            .setTitle("Choose an option")
+            .setView(box)
             .setPositiveButton("Start") { _, _ ->
-                Prefs.setPowerCutsOnly(this, cutsOnly)
+                Prefs.setMonitorLight(this, chosen())
                 askNotificationPermission()
                 monitoring = true
                 MonitorService.send(this, MonitorService.ACTION_START)
