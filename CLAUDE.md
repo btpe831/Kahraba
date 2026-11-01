@@ -55,6 +55,10 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   `oct30-night-pixel2-raw-blink-to-kahraba.csv` (moteur; 10 s blink 04:41:41 -> kahraba; 77 s cut 06:58 -> moteur);
   `oct31-day-pixel2-raw-calm-kahraba.csv` (busy moteur ~3150; kahraba 13:00 settling in steps, dead still;
   7.5 min outage 13:22 back as kahraba; 21 min outage 15:00 back as moteur; phone fell 18:01:12).
+  `nov01-morning-pixel2-raw-kahraba-cut-moteur.csv` (kahraba 231 V set 08:12:59, ~4,400-4,700 lux dead still;
+  1m 13s cut 10:00:12 -> moteur 213 V, ~3,100-3,500 wobbling: kahraba ~40% brighter).
+- Doubt: 31 Oct 13:00-15:00 was only 15-24% above the moteur (vs 40% on 1 Nov): kahraba is likely but
+  unconfirmed; a calm moteur is possible. Next "kahraba is back" alert: ask for a voltmeter photo.
 - Kahraba is dead still (zero wobble for 20+ min); a daytime moteur wobbles most minutes. In the
   evening a moteur also calms down and creeps brighter, but gradually (30 Oct 20:40-21:45).
 - Voltmeter: moteur 208 V (31 Oct, 8 pm) to 223 V; kahraba 231-234 V (1 Nov morning too).
