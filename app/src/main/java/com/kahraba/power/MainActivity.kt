@@ -458,7 +458,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         val v = layoutInflater.inflate(R.layout.sheet_day, null)
         // The app's name, smaller, with the version under it.
         v.findViewById<TextView>(R.id.sheetTitle).apply {
-            text = "Kahraba or Not"
+            text = "Kahraba or Not?"
             textSize = 20f
         }
         v.findViewById<TextView>(R.id.sheetDate).apply {
