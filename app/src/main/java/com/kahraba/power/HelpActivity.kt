@@ -59,7 +59,7 @@ class HelpActivity : ThemedActivity() {
             "How it works" to """
                 The moteur's voltage is never quite steady; it rises and falls as neighbours switch things on and off. A halogen bulb's brightness follows the voltage, so on the moteur the light <b>wobbles</b> slightly, often too little for your eyes to notice.
                 Kahraba is much steadier, so the light stays <b>flat</b>. Kahraba's voltage is usually higher too, so the same bulb usually shines <b>10–25% brighter</b>; it varies from day to day.
-                Your phone's light sensor watches for that wobble:
+                Your phone's light sensor measures that wobble:
                 &nbsp;&nbsp;• A wobble that repeats or keeps going → <b>Moteur</b>. A single dip doesn't count: switching on a kettle or heater dips the voltage on kahraba too.
                 &nbsp;&nbsp;• 25 seconds with no wobble → <b>No flicker</b> (kahraba, or a calm moteur)
                 <b>Why “No flicker” isn't a sure Kahraba:</b> when few people are using it (often at night), the moteur can stay perfectly steady for many minutes. The phone's light sensor also only notices changes bigger than about 8%. So a wobble proves moteur, but a steady light can be either. To be sure, use a learned room (see “Rooms”) or a voltage meter (kahraba usually reads higher, e.g. 234 V vs 213 V).
@@ -114,6 +114,7 @@ class HelpActivity : ThemedActivity() {
 
             "Always-on mode (optional)" to """
                 For a spare phone that stays in one place. Open it from <b>Tools</b> on the main screen, or Settings › Tools.
+                • It uses only the light sensor and the charger. No camera, microphone or internet, and nothing leaves the phone.
                 • Plug the phone into a <b>wall socket</b> (not a UPS) and leave it face-up under a halogen light. The screen can be off.
                 • A power cut is seen through the charger. A cut of a minute or more means the moteur took over (it takes about a minute to start). A blink of a few seconds is a changeover: once the light settles, brighter means kahraba is back, dimmer means moteur.
                 • It says Kahraba is back when the light gets clearly <b>brighter</b> (no blackout) and stays steady for 2 minutes – kahraba's higher voltage makes the bulb brighter. Steady light alone is not enough, because a calm moteur is steady too.

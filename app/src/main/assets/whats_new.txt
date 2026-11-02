@@ -3,6 +3,7 @@
 
 ## 1.3.02
 - The Kahraba pattern card has a clearer colour key for its bars.
+- Always-on mode says clearly what it uses: only the light sensor and the charger. No camera, microphone or internet.
 - Cards start in a more useful order: What to run, Kahraba pattern, Recent checks, History, Tools. If you arranged your own, it's kept (Settings › Cards can reset it).
 
 ## 1.3.01
