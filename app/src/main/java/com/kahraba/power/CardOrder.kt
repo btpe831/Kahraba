@@ -2,10 +2,13 @@ package com.kahraba.power
 
 /** The order of the main-screen cards below the Check button, which the user can rearrange. */
 object CardOrder {
-    /** Cards that can be moved, in their default order (as in activity_main.xml). */
+    /**
+     * Cards that can be moved, in their default order: most useful first (1.3.02). The layout file
+     * may list them differently; the app arranges them in this order.
+     */
     val MOVABLE = listOf(
-        "card_advice", "card_history", "card_pattern", "card_recent", "card_accuracy", "card_tools", "card_facts",
-        "card_wobble",
+        "card_advice", "card_pattern", "card_recent", "card_history", "card_tools", "card_accuracy", "card_wobble",
+        "card_facts",
     )
 
     /** Cards that always stay at the top (they can still be turned off). */
