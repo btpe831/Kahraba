@@ -456,8 +456,15 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     private fun showTools() {
         val sheet = BottomSheetDialog(this)
         val v = layoutInflater.inflate(R.layout.sheet_day, null)
-        v.findViewById<TextView>(R.id.sheetTitle).text = "Menu"
-        v.findViewById<View>(R.id.sheetDate).visibility = View.GONE
+        // The app's name, smaller, with the version under it.
+        v.findViewById<TextView>(R.id.sheetTitle).apply {
+            text = "Kahraba or Not"
+            textSize = 20f
+        }
+        v.findViewById<TextView>(R.id.sheetDate).apply {
+            text = "Version ${Updates.version(this@MainActivity)}"
+            textSize = 13f
+        }
         v.findViewById<View>(R.id.sheetNote).visibility = View.GONE
         val content = v.findViewById<LinearLayout>(R.id.sheetContent)
         fun item(icon: Int, title: String, sub: String, action: () -> Unit) {

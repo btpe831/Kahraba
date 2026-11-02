@@ -113,7 +113,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
-- Released: 1.4.03 (top-right ☰ Menu sheet with Settings inside). 1.4.02: room pill at the top of home, `@id/homeRoom`. 1.4.01: Your power sheet and Tools sheet, like the mockup. 1.4.0: calm home screen. 1.3.02: pattern card colour key; default card order: advice, pattern, recent, history, tools,
+- Released: 1.4.04 (menu header: app name small + version). 1.4.03: top-right ☰ Menu sheet with Settings inside. 1.4.02: room pill at the top of home, `@id/homeRoom`. 1.4.01: Your power sheet and Tools sheet, like the mockup. 1.4.0: calm home screen. 1.3.02: pattern card colour key; default card order: advice, pattern, recent, history, tools,
   accuracy, wobble, facts; privacy line: only light sensor and charger). 1.3.01: today and week overview.
 - Home screen (1.4.0; mockup https://claude.ai/artifact/PZfEztQWriu3wSmfZLeVRs): `@id/home` overlay on top of
   the old screen's ScrollView. 1.4.01: home is moved under it; the ScrollView is the "Your power" sheet that
