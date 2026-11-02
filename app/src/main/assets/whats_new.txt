@@ -2,7 +2,8 @@
 # Plain words about what's improved; no dates or times. Newest first.
 
 ## 1.4.04
-- The menu shows the app's name and version at the top.
+- The menu shows the app's name and version at the top, and has Check for updates.
+- Clearer icons for rooms and feedback.
 
 ## 1.4.03
 - The top-right button is now a menu (☰): Always-on mode, the Light meter, the Amps calculator, rooms and all checks, with Settings and Help at the bottom.

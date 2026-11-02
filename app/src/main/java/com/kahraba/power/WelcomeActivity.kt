@@ -25,7 +25,7 @@ class WelcomeActivity : ThemedActivity() {
             "This app tells you which one you're on, using your phone's light sensor and a halogen bulb."),
         Slide(R.drawable.ic_moteur, "Check in under a minute",
             "Tap Check now and lay the phone face-up under a halogen light. Don't touch it until it beeps:\n1 long beep = moteur · 4 short = kahraba"),
-        Slide(R.drawable.ic_place, "Teach your room",
+        Slide(R.drawable.ic_pin, "Teach your room",
             "A wobble in the light proves moteur. To say kahraba for sure, do one check on each in the same spot, and confirm them."),
         Slide(R.drawable.ic_lock, "Halogen bulbs only",
             "LED bulbs, solar inverters and UPS smooth the power and hide the difference.\nNothing you do here leaves your phone."),

@@ -351,7 +351,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         findViewById<TextView>(R.id.homeRoom).apply {
             setOnClickListener { if (check == null) pickRoom() }
             // A small white pin before the room name.
-            val pin = ContextCompat.getDrawable(this@MainActivity, R.drawable.ic_place)?.mutate()
+            val pin = ContextCompat.getDrawable(this@MainActivity, R.drawable.ic_pin)?.mutate()
             pin?.setTint(0xFFFFFFFF.toInt())
             pin?.setBounds(0, 0, (16 * dp).toInt(), (16 * dp).toInt())
             setCompoundDrawablesRelative(pin, null, null, null)
@@ -510,7 +510,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         item(R.drawable.ic_moteur, "Amps calculator", "What you can run on your moteur amps") {
             startActivity(Intent(this, AmpsActivity::class.java))
         }
-        item(R.drawable.ic_place, "Rooms", Prefs.currentSpot(this).ifEmpty { "Choose the room you're in" }) { pickRoom() }
+        item(R.drawable.ic_pin, "Rooms", Prefs.currentSpot(this).ifEmpty { "Choose the room you're in" }) { pickRoom() }
         item(R.drawable.ic_list, "All checks", "Correct or delete a check") { showAllChecks() }
         // Settings and help after a thin line, set apart from the tools.
         content.addView(View(this).apply { setBackgroundColor(themeColor(R.attr.appBorder)) },
@@ -521,8 +521,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         item(R.drawable.ic_settings, "Settings", "Sound, cards, backup and more") {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
+        item(R.drawable.ic_update, "Check for updates", "Opens the download page") { Updates.open(this) }
         item(R.drawable.ic_help, "Help", "How it works, and tips") { startActivity(Intent(this, HelpActivity::class.java)) }
-        if (Feedback.enabled) item(R.drawable.ic_help, "Send feedback", "Tell us what to improve") { Feedback.open(this) }
+        if (Feedback.enabled) item(R.drawable.ic_feedback, "Send feedback", "Tell us what to improve") { Feedback.open(this) }
         v.findViewById<View>(R.id.sheetDone).setOnClickListener { sheet.dismiss() }
         sheet.setContentView(v)
         sheet.show()
