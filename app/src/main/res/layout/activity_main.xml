@@ -938,11 +938,18 @@
                             <TextView style="@style/PatternHour" android:text="6 PM" />
                         </LinearLayout>
 
+                        <LinearLayout
+                            android:id="@+id/patternLegend"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:orientation="vertical" />
+
                         <TextView
                             android:id="@+id/patternNote"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
+                            android:layout_marginTop="8dp"
                             android:lineSpacingExtra="2dp"
                             android:textColor="?attr/appMuted"
                             android:textSize="13sp" />

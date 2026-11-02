@@ -113,6 +113,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
+- Held, committed but NOT pushed: 1.3.02 (pattern card colour key). Push only when the owner says so.
 - Released: 1.3.01 (today and week overview). 1.3.0: Kahraba pattern card. 1.2.05: kahraba confirmed for 5 min; level rule only from Not sure yet. 1.2.04: "Choose an option" light picker. 1.2.03: power cuts only. 1.2.02: am/pm times. 1.2.01: "What's new" window. 1.2.0: wobble-stops rule, phone-moved alert, power-back
   buttons, timer-pitch beeps.
 - Shared with testers online. Play Protect asks to scan: testers tap More details > Install anyway.

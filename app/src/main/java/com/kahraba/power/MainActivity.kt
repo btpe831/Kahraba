@@ -858,9 +858,42 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             }.timeInMillis else dayStarts[i - 1]
             days.addView(patternRow(if (i == 0) "Today" else dayName.format(Date(dayStart)), dayStart, dayEnd, spans))
         }
-        findViewById<TextView>(R.id.patternNote).text =
-            "Green: kahraba · orange: moteur · grey: power off. Blank: Always-on mode wasn't running. " +
-                "An estimate from what the app saw, not an official schedule."
+        renderPatternLegend()
+        findViewById<TextView>(R.id.patternNote).text = "An estimate from what the app saw, not an official schedule."
+    }
+
+    /** The bars' background: where Always-on mode wasn't running. */
+    private fun patternTrackColor() = themeColor(R.attr.appMuted) and 0x00FFFFFF or 0x26000000
+
+    /** Colour swatches for the bars, two per line. */
+    private fun renderPatternLegend() {
+        val legend = findViewById<LinearLayout>(R.id.patternLegend)
+        if (legend.childCount > 0) return
+        val items = listOf(
+            MonitorService.colorFor(Source.KAHRABA) to "Kahraba",
+            MonitorService.colorFor(Source.MOTEUR) to "Moteur",
+            MonitorService.colorFor(Source.NO_POWER) to "Power off",
+            patternTrackColor() to "Not running",
+        )
+        for (pair in items.chunked(2)) {
+            val line = LinearLayout(this).apply { setPadding(0, (3 * dp).toInt(), 0, (3 * dp).toInt()) }
+            for ((color, label) in pair) {
+                val item = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
+                item.addView(View(this).apply {
+                    background = GradientDrawable().apply {
+                        cornerRadius = 4 * dp
+                        setColor(color)
+                    }
+                }, LinearLayout.LayoutParams((16 * dp).toInt(), (16 * dp).toInt()).apply { marginEnd = (8 * dp).toInt() })
+                item.addView(TextView(this).apply {
+                    text = label
+                    textSize = 14f
+                    setTextColor(themeColor(R.attr.appText))
+                })
+                line.addView(item, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            }
+            legend.addView(line)
+        }
     }
 
     private fun patternRow(label: String, dayStart: Long, dayEnd: Long, spans: List<KahrabaPattern.Span>): View {
@@ -876,7 +909,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         val bar = LinearLayout(this).apply {
             background = GradientDrawable().apply {
                 cornerRadius = 7 * dp
-                setColor(themeColor(R.attr.appMuted) and 0x00FFFFFF or 0x26000000)
+                setColor(patternTrackColor())
             }
             clipToOutline = true
         }

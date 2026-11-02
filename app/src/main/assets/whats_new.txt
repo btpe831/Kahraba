@@ -1,6 +1,9 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.3.02
+- The Kahraba pattern card has a clearer colour key for its bars.
+
 ## 1.3.01
 - The Kahraba pattern card now sums up today and the last 7 days in plain words: how long kahraba was on, when, and how many power cuts.
 - Days when Always-on mode was off now show blank on the bars.
