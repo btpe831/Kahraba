@@ -106,11 +106,13 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   (median of the app's own kahraba calls ended by a cut), gap between kahraba starts (only with Always-on
   running throughout), next estimate = last start + gap ("around", or a window if gaps differ > 2 h; hidden
   when passed). Needs 3 of each. "Set by you" starts don't count; a kahraba corrected by "Set by you" is dropped.
+- Overview (1.3.01): `KahrabaPattern.today/week` write plain sentences (kahraba time and when, power cuts,
+  how long Always-on ran). "Always-on mode stopped" time is not a span (blank bars).
 - Seen so far: kahraba in ~2-2.5 h blocks, back ~8-9 h after the last start, cuts often at round times.
 
 ## Status (1 Nov 2026)
 
-- Released: 1.3.0 (Kahraba pattern card). 1.2.05: kahraba confirmed for 5 min; level rule only from Not sure yet. 1.2.04: "Choose an option" light picker. 1.2.03: power cuts only. 1.2.02: am/pm times. 1.2.01: "What's new" window. 1.2.0: wobble-stops rule, phone-moved alert, power-back
+- Released: 1.3.01 (today and week overview). 1.3.0: Kahraba pattern card. 1.2.05: kahraba confirmed for 5 min; level rule only from Not sure yet. 1.2.04: "Choose an option" light picker. 1.2.03: power cuts only. 1.2.02: am/pm times. 1.2.01: "What's new" window. 1.2.0: wobble-stops rule, phone-moved alert, power-back
   buttons, timer-pitch beeps.
 - Shared with testers online. Play Protect asks to scan: testers tap More details > Install anyway.
 - Ideas not built (ask first): "Now kahraba / Now moteur" label buttons in the Light meter;

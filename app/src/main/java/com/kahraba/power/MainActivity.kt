@@ -831,19 +831,31 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         }
         sub.visibility = if (sub.text.isNullOrEmpty()) View.GONE else View.VISIBLE
 
+        // Midnight of today and the 6 days before, today first.
+        val cal = java.util.Calendar.getInstance().apply { timeInMillis = DayData.startOfDay(now) }
+        val dayStarts = (0 until 7).map { i ->
+            if (i > 0) cal.add(java.util.Calendar.DAY_OF_YEAR, -1)
+            cal.timeInMillis
+        }
+
+        // Today and the week in plain words.
+        fun para(label: String, text: String) = "<b>$label</b> " + android.text.TextUtils.htmlEncode(text)
+        findViewById<TextView>(R.id.patternOverview).text = android.text.Html.fromHtml(
+            para("Today:", KahrabaPattern.today(entries, now, running, dayStarts[0])) + "<br><br>" +
+                para("Last 7 days:", KahrabaPattern.week(entries, now, running, dayStarts)),
+            android.text.Html.FROM_HTML_MODE_LEGACY,
+        )
+
         // One bar per day, today first: kahraba, moteur and power off over 24 hours.
         val spans = KahrabaPattern.spans(entries, now, running)
         val days = findViewById<LinearLayout>(R.id.patternDays)
         days.removeAllViews()
         val dayName = SimpleDateFormat("EEE", Locale.US)
-        val cal = java.util.Calendar.getInstance().apply {
-            timeInMillis = DayData.startOfDay(now)
-        }
-        for (i in 0 until 7) {
-            val dayStart = cal.timeInMillis
-            cal.add(java.util.Calendar.DAY_OF_YEAR, 1)
-            val dayEnd = cal.timeInMillis
-            cal.add(java.util.Calendar.DAY_OF_YEAR, -2)
+        for (i in dayStarts.indices) {
+            val dayStart = dayStarts[i]
+            val dayEnd = if (i == 0) java.util.Calendar.getInstance().apply {
+                timeInMillis = dayStart; add(java.util.Calendar.DAY_OF_YEAR, 1)
+            }.timeInMillis else dayStarts[i - 1]
             days.addView(patternRow(if (i == 0) "Today" else dayName.format(Date(dayStart)), dayStart, dayEnd, spans))
         }
         findViewById<TextView>(R.id.patternNote).text =

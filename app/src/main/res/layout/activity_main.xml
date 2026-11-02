@@ -909,6 +909,15 @@
                             android:textColor="?attr/appText"
                             android:textSize="14sp" />
 
+                        <TextView
+                            android:id="@+id/patternOverview"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:lineSpacingExtra="3dp"
+                            android:textColor="?attr/appText"
+                            android:textSize="14sp" />
+
                         <LinearLayout
                             android:id="@+id/patternDays"
                             android:layout_width="match_parent"

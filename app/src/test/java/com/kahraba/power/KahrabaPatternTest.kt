@@ -2,6 +2,7 @@ package com.kahraba.power
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class KahrabaPatternTest {
@@ -86,5 +87,64 @@ class KahrabaPatternTest {
         assertEquals(31 * h, s.nextFromMs) // 25 + 6
         assertEquals(35 * h, s.nextToMs)   // 25 + 10
         assertNull(KahrabaPattern.summary(log, 36 * h, running = true).nextFromMs)
+    }
+}
+
+class KahrabaOverviewTest {
+    private val h = 3_600_000L
+    private val zone = java.util.TimeZone.getTimeZone("GMT+2")
+    private fun at(d: Int, hh: Int, mm: Int) = java.util.Calendar.getInstance(zone).apply {
+        clear(); set(2026, 10, d, hh, mm)
+    }.timeInMillis
+    private fun midnight(d: Int) = at(d, 0, 0)
+    private val cut = "Power cut (1m 14s) – moteur took over"
+    private val back = "Light got 20% brighter and stayed steady – kahraba is back"
+
+    // The owner's real 1-2 Nov: moteur set 21:44, kahraba 01:01, cut 03:31, kahraba 09:59, cut 12:01.
+    private val log = listOf(
+        EventLog.Entry(at(1, 21, 44), Source.MOTEUR, KahrabaPattern.MANUAL),
+        EventLog.Entry(at(2, 1, 1), Source.KAHRABA, back),
+        EventLog.Entry(at(2, 3, 31), Source.MOTEUR, cut),
+        EventLog.Entry(at(2, 9, 59), Source.KAHRABA, back),
+        EventLog.Entry(at(2, 12, 1), Source.MOTEUR, cut),
+    )
+
+    private fun <T> inZone(block: () -> T): T {
+        val old = java.util.TimeZone.getDefault()
+        java.util.TimeZone.setDefault(zone)
+        try { return block() } finally { java.util.TimeZone.setDefault(old) }
+    }
+
+    @Test
+    fun todayInPlainWords() = inZone {
+        val text = KahrabaPattern.today(log, at(2, 13, 0), running = true, dayStart = midnight(2))
+        assertEquals("Kahraba for 4h 32m: 1:01 AM to 3:31 AM and 9:59 AM to 12:01 PM. 2 power cuts.", text)
+    }
+
+    @Test
+    fun todayWhileKahrabaIsOn() = inZone {
+        val text = KahrabaPattern.today(log.take(4), at(2, 10, 30), running = true, dayStart = midnight(2))
+        assertEquals("Kahraba for 3h 1m: 1:01 AM to 3:31 AM and since 9:59 AM. 1 power cut.", text)
+    }
+
+    @Test
+    fun stoppedTimeIsNotRecordedTime() = inZone {
+        val stopped = log + EventLog.Entry(at(2, 12, 30), Source.UNKNOWN, "Always-on mode stopped")
+        val text = KahrabaPattern.today(stopped, at(2, 18, 0), running = false, dayStart = midnight(2))
+        assertTrue(text, text.endsWith("Always-on mode ran for 12h 30m of it."))
+        assertTrue(KahrabaPattern.spans(stopped, at(2, 18, 0), running = false).none { it.end > at(2, 12, 30) })
+    }
+
+    @Test
+    fun theWeekInPlainWords() = inZone {
+        val days = (0 until 7).map { midnight(2 - it) }
+        val text = KahrabaPattern.week(log, at(2, 13, 0), running = true, days)
+        assertEquals("Kahraba for 4h 32m, 2 times, about 4h 32m a day. 2 power cuts. Always-on mode ran for 15h 16m in all.", text)
+    }
+
+    @Test
+    fun nothingRecorded() = inZone {
+        assertEquals("Nothing recorded today: Always-on mode wasn't running.",
+            KahrabaPattern.today(emptyList(), at(2, 13, 0), running = false, dayStart = midnight(2)))
     }
 }
