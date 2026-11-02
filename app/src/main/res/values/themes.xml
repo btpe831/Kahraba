@@ -59,6 +59,15 @@
     </style>
 
     <!-- Small caps label and big number, like the weather app's Comfort card. -->
+    <!-- Hour labels under the Kahraba pattern bars: four equal columns from midnight. -->
+    <style name="PatternHour">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">?attr/appMuted</item>
+    </style>
+
     <style name="StatLabel">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>

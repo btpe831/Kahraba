@@ -221,7 +221,10 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             renderBarStatus(animate = true)
             renderMonitorCard()
             renderWobble()
-            if (++ticks % 30 == 0) renderHistoryCards()
+            if (++ticks % 30 == 0) {
+                renderHistoryCards()
+                renderPattern()
+            }
             ui.postDelayed(this, 1000)
         }
     }
@@ -318,6 +321,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         renderBar()
         renderMonitorCard()
         renderHistoryCards()
+        renderPattern()
         renderWobble()
         renderFact()
         applyCardSettings()
@@ -788,6 +792,100 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         sheet.show()
     }
 
+    // ---- Kahraba pattern ----
+
+    /**
+     * KAHRABA PATTERN: the last 7 days as bars (when kahraba was on, from Always-on mode's log),
+     * how long it usually lasts, and when it may come next. An estimate, not a schedule.
+     */
+    private fun renderPattern() {
+        val now = System.currentTimeMillis()
+        val entries = EventLog.read(this)
+        val running = MonitorState.running
+        val s = KahrabaPattern.summary(entries, now, running)
+        val title = findViewById<TextView>(R.id.patternTitle)
+        val sub = findViewById<TextView>(R.id.patternSub)
+        fun around(ms: Long) = PowerDetector.formatClock((ms + 150_000) / 300_000 * 300_000)
+        val lasts = s.typicalMs?.let { "about ${DayData.hours(it)}" }
+        val every = s.gapMs?.let { "about every ${DayData.hours(it)}" }
+        when {
+            s.onSinceMs != null -> {
+                title.text = "Kahraba now, since ${PowerDetector.formatClock(s.onSinceMs)}"
+                sub.text = if (s.typicalMs != null) {
+                    "It usually lasts $lasts, so until about ${around(s.onSinceMs + s.typicalMs)}."
+                } else ""
+            }
+            s.nextFromMs != null && s.nextToMs != null -> {
+                title.text = if (s.nextFromMs == s.nextToMs) "Next kahraba: around ${around(s.nextFromMs)}"
+                else "Next kahraba: between ${around(s.nextFromMs)} and ${around(s.nextToMs)}"
+                sub.text = "It comes back $every" + (lasts?.let { " and lasts $it." } ?: ".")
+            }
+            else -> {
+                title.text = if (lasts != null) "Kahraba usually lasts $lasts" else "Learning when kahraba comes"
+                sub.text = when {
+                    every != null -> "It comes back $every. Not sure when it comes next."
+                    else -> "Keep Always-on mode running to learn when it comes back " +
+                        "(${minOf(s.gaps, KahrabaPattern.MIN_SAMPLES)} of ${KahrabaPattern.MIN_SAMPLES} so far)."
+                }
+            }
+        }
+        sub.visibility = if (sub.text.isNullOrEmpty()) View.GONE else View.VISIBLE
+
+        // One bar per day, today first: kahraba, moteur and power off over 24 hours.
+        val spans = KahrabaPattern.spans(entries, now, running)
+        val days = findViewById<LinearLayout>(R.id.patternDays)
+        days.removeAllViews()
+        val dayName = SimpleDateFormat("EEE", Locale.US)
+        val cal = java.util.Calendar.getInstance().apply {
+            timeInMillis = DayData.startOfDay(now)
+        }
+        for (i in 0 until 7) {
+            val dayStart = cal.timeInMillis
+            cal.add(java.util.Calendar.DAY_OF_YEAR, 1)
+            val dayEnd = cal.timeInMillis
+            cal.add(java.util.Calendar.DAY_OF_YEAR, -2)
+            days.addView(patternRow(if (i == 0) "Today" else dayName.format(Date(dayStart)), dayStart, dayEnd, spans))
+        }
+        findViewById<TextView>(R.id.patternNote).text =
+            "Green: kahraba · orange: moteur · grey: power off. Blank: Always-on mode wasn't running. " +
+                "An estimate from what the app saw, not an official schedule."
+    }
+
+    private fun patternRow(label: String, dayStart: Long, dayEnd: Long, spans: List<KahrabaPattern.Span>): View {
+        val row = LinearLayout(this).apply {
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, (3 * dp).toInt(), 0, (3 * dp).toInt())
+        }
+        row.addView(TextView(this).apply {
+            text = label
+            textSize = 12f
+            setTextColor(themeColor(R.attr.appMuted))
+        }, LinearLayout.LayoutParams((48 * dp).toInt(), LinearLayout.LayoutParams.WRAP_CONTENT))
+        val bar = LinearLayout(this).apply {
+            background = GradientDrawable().apply {
+                cornerRadius = 7 * dp
+                setColor(themeColor(R.attr.appMuted) and 0x00FFFFFF or 0x26000000)
+            }
+            clipToOutline = true
+        }
+        // Pieces of the day in order; null where nothing was recorded.
+        var t = dayStart
+        fun piece(to: Long, color: Int?) {
+            if (to <= t) return
+            bar.addView(View(this).apply { if (color != null) setBackgroundColor(color) },
+                LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, (to - t).toFloat()))
+            t = to
+        }
+        for (sp in spans.sortedBy { it.start }) {
+            if (sp.end <= dayStart || sp.start >= dayEnd) continue
+            piece(maxOf(sp.start, dayStart), null)
+            piece(minOf(sp.end, dayEnd), MonitorService.colorFor(sp.source))
+        }
+        piece(dayEnd, null)
+        row.addView(bar, LinearLayout.LayoutParams(0, (14 * dp).toInt(), 1f))
+        return row
+    }
+
     private fun sectionLabel(text: String) = TextView(this).apply {
         this.text = text.uppercase()
         textSize = 13f
@@ -944,6 +1042,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     /** Card setting keys and their views. */
     private val cardIds = mapOf(
         "card_room" to R.id.roomCard, "card_advice" to R.id.adviceCard, "card_history" to R.id.historyCard,
+        "card_pattern" to R.id.patternCard,
         "card_recent" to R.id.recentCard, "card_accuracy" to R.id.accuracyCard, "card_tools" to R.id.toolsCard,
         "card_facts" to R.id.factsCard, "card_wobble" to R.id.wobbleCard,
     )
@@ -954,6 +1053,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         // History stays hidden until there is something to show: a check, or the monitor's log.
         val hasHistory = CheckHistory.read(this).any { !it.fromMonitor } || EventLog.read(this).isNotEmpty()
         if (!hasHistory) findViewById<View>(R.id.historyCard).visibility = View.GONE
+        // Kahraba pattern: only once Always-on mode has recorded something.
+        if (EventLog.read(this).isEmpty()) findViewById<View>(R.id.patternCard).visibility = View.GONE
 
         // The saved order (from dragging a card, or Arrange cards); only moves views when it changed.
         val stack = findViewById<LinearLayout>(R.id.cardStack)

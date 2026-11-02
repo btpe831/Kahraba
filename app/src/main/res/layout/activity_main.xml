@@ -879,6 +879,67 @@
 
 
 
+                <!-- KAHRABA PATTERN: when kahraba came in the last 7 days, from Always-on mode -->
+                <com.kahraba.power.NotchCard
+                    android:id="@+id/patternCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="22dp"
+                    app:notchTitle="Kahraba pattern">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/patternTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="?attr/appText"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/patternSub"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:lineSpacingExtra="2dp"
+                            android:textColor="?attr/appText"
+                            android:textSize="14sp" />
+
+                        <LinearLayout
+                            android:id="@+id/patternDays"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:orientation="vertical" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:orientation="horizontal"
+                            android:paddingStart="48dp">
+
+                            <TextView style="@style/PatternHour" android:text="12 AM" />
+                            <TextView style="@style/PatternHour" android:text="6 AM" />
+                            <TextView style="@style/PatternHour" android:text="12 PM" />
+                            <TextView style="@style/PatternHour" android:text="6 PM" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/patternNote"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:lineSpacingExtra="2dp"
+                            android:textColor="?attr/appMuted"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </com.kahraba.power.NotchCard>
+
                 <!-- RECENT CHECKS -->
                 <com.kahraba.power.NotchCard
                     android:id="@+id/recentCard"

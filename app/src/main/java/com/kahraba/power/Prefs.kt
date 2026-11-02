@@ -143,6 +143,7 @@ object Prefs {
         "card_room" to "Room",
         "card_advice" to "What to run",
         "card_history" to "History",
+        "card_pattern" to "Kahraba pattern",
         "card_recent" to "Recent checks",
         "card_accuracy" to "Accuracy",
         "card_tools" to "Tools",

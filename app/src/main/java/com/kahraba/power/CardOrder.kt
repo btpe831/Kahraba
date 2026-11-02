@@ -4,7 +4,8 @@ package com.kahraba.power
 object CardOrder {
     /** Cards that can be moved, in their default order (as in activity_main.xml). */
     val MOVABLE = listOf(
-        "card_advice", "card_history", "card_recent", "card_accuracy", "card_tools", "card_facts", "card_wobble",
+        "card_advice", "card_history", "card_pattern", "card_recent", "card_accuracy", "card_tools", "card_facts",
+        "card_wobble",
     )
 
     /** Cards that always stay at the top (they can still be turned off). */

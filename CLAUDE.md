@@ -100,9 +100,17 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   (1.2.05): it called the bright 222 V evening moteur kahraba (1 Nov 18:37; `EveningMoteurTest`).
 - Only works from a known source: if it shows "Not sure yet", tap "It's moteur".
 
+## Kahraba pattern card (1.3.0, `KahrabaPattern.kt`, `card_pattern`)
+
+- From the switch log: 7 day bars (kahraba/moteur/no power; blank = not running), typical kahraba length
+  (median of the app's own kahraba calls ended by a cut), gap between kahraba starts (only with Always-on
+  running throughout), next estimate = last start + gap ("around", or a window if gaps differ > 2 h; hidden
+  when passed). Needs 3 of each. "Set by you" starts don't count; a kahraba corrected by "Set by you" is dropped.
+- Seen so far: kahraba in ~2-2.5 h blocks, back ~8-9 h after the last start, cuts often at round times.
+
 ## Status (1 Nov 2026)
 
-- Released: 1.2.05 (kahraba confirmed for 5 min; level rule only from Not sure yet). 1.2.04: "Choose an option" light picker. 1.2.03: power cuts only. 1.2.02: am/pm times. 1.2.01: "What's new" window. 1.2.0: wobble-stops rule, phone-moved alert, power-back
+- Released: 1.3.0 (Kahraba pattern card). 1.2.05: kahraba confirmed for 5 min; level rule only from Not sure yet. 1.2.04: "Choose an option" light picker. 1.2.03: power cuts only. 1.2.02: am/pm times. 1.2.01: "What's new" window. 1.2.0: wobble-stops rule, phone-moved alert, power-back
   buttons, timer-pitch beeps.
 - Shared with testers online. Play Protect asks to scan: testers tap More details > Install anyway.
 - Ideas not built (ask first): "Now kahraba / Now moteur" label buttons in the Light meter;

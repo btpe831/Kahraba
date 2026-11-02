@@ -1,6 +1,9 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.3.0
+- New Kahraba pattern card: the last 7 days at a glance, how long kahraba usually lasts, and when it may come next. It learns from Always-on mode, so keep it running.
+
 ## 1.2.05
 - Fewer false “Kahraba is back” alerts: the app checks the light stays still for 5 minutes before it beeps, and shows the time kahraba actually came on.
 
