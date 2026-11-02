@@ -84,6 +84,53 @@
             android:text="Allow running in the background" />
 
         <com.kahraba.power.NotchCard
+            android:id="@+id/teachCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            app:notchTitle="Teach it">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:lineSpacingExtra="2dp"
+                    android:text="Only when you know for sure which one is on. Then leave the phone still under the halogen light for 2 minutes."
+                    android:textColor="?attr/appText"
+                    android:textSize="14sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/setKahraba"
+                        style="@style/OutlinePill"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:text="It's kahraba" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/setMoteur"
+                        style="@style/OutlinePill"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:text="It's moteur" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.kahraba.power.NotchCard>
+
+        <com.kahraba.power.NotchCard
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="22dp"
@@ -164,7 +211,7 @@
                     <com.kahraba.power.HistoryChart
                         android:id="@+id/graphChart"
                         android:layout_width="match_parent"
-                        android:layout_height="170dp"
+                        android:layout_height="130dp"
                         android:layout_marginTop="12dp" />
 
                     <TextView
@@ -260,53 +307,6 @@
                     android:layout_gravity="center_horizontal"
                     android:layout_marginTop="6dp"
                     android:text="None" />
-            </LinearLayout>
-        </com.kahraba.power.NotchCard>
-
-        <com.kahraba.power.NotchCard
-            android:id="@+id/teachCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            app:notchTitle="Teach it">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:lineSpacingExtra="2dp"
-                    android:text="Only when you know for sure which one is on. Then leave the phone still under the halogen light for 2 minutes."
-                    android:textColor="?attr/appText"
-                    android:textSize="14sp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/setKahraba"
-                        style="@style/OutlinePill"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="6dp"
-                        android:layout_weight="1"
-                        android:text="It's kahraba" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/setMoteur"
-                        style="@style/OutlinePill"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:layout_weight="1"
-                        android:text="It's moteur" />
-                </LinearLayout>
             </LinearLayout>
         </com.kahraba.power.NotchCard>
 

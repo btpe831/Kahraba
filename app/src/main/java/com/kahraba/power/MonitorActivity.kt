@@ -252,6 +252,9 @@ class MonitorActivity : ThemedActivity() {
 
     private val graphRanges = listOf(
         "30 sec" to 30_000L,
+        "1 min" to 60_000L,
+        "3 min" to 3 * 60_000L,
+        "5 min" to 5 * 60_000L,
         "10 min" to 10 * 60_000L,
         "1 hour" to 3_600_000L,
         "6 hours" to 6 * 3_600_000L,
@@ -268,10 +271,19 @@ class MonitorActivity : ThemedActivity() {
     private fun setUpGraph() {
         graphRangeMs = Prefs.sp(this).getLong(GRAPH_RANGE, 3_600_000L)
             .takeIf { r -> graphRanges.any { it.second == r } } ?: 3_600_000L
-        val row = findViewById<LinearLayout>(R.id.graphRanges)
+        // Two rows of four: the short live views, then the longer ones.
+        val box = findViewById<LinearLayout>(R.id.graphRanges)
+        box.orientation = LinearLayout.VERTICAL
         val dp = resources.displayMetrics.density
+        var row = LinearLayout(this)
         for ((i, range) in graphRanges.withIndex()) {
-            row.addView(TextView(this).apply {
+            if (i % 4 == 0) {
+                row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+                box.addView(row, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    if (i > 0) topMargin = (6 * dp).toInt()
+                })
+            }
+            val tab = TextView(this).apply {
                 text = range.first
                 textSize = 12f
                 gravity = android.view.Gravity.CENTER
@@ -286,8 +298,10 @@ class MonitorActivity : ThemedActivity() {
                     loadGraph(force = false)
                     drawGraph()
                 }
-            }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
-                if (i > 0) marginStart = (6 * dp).toInt()
+            }
+            rangeTabs += tab
+            row.addView(tab, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                if (i % 4 > 0) marginStart = (6 * dp).toInt()
             })
         }
         paintRanges()
@@ -304,12 +318,12 @@ class MonitorActivity : ThemedActivity() {
         findViewById<TextView>(R.id.graphLegend).text = key
     }
 
+    private val rangeTabs = ArrayList<TextView>()
+
     private fun paintRanges() {
-        val row = findViewById<LinearLayout>(R.id.graphRanges)
         val dp = resources.displayMetrics.density
         fun attr(a: Int) = android.util.TypedValue().also { theme.resolveAttribute(a, it, true) }.data
-        for (i in 0 until row.childCount) {
-            val tv = row.getChildAt(i) as TextView
+        for ((i, tv) in rangeTabs.withIndex()) {
             val on = graphRanges[i].second == graphRangeMs
             tv.background = android.graphics.drawable.GradientDrawable().apply {
                 cornerRadius = 999 * dp
@@ -373,6 +387,16 @@ class MonitorActivity : ThemedActivity() {
         }.start()
     }
 
+    /** 30_000 -> "30s ago", 180_000 -> "3 min ago", 90_000 -> "1m 30s ago". */
+    private fun agoText(ms: Long): String {
+        val sec = ms / 1000
+        return when {
+            sec < 60 -> "${sec}s ago"
+            sec % 60 == 0L -> "${sec / 60} min ago"
+            else -> "${sec / 60}m ${sec % 60}s ago"
+        }
+    }
+
     private fun drawGraph() {
         val chart = findViewById<HistoryChart>(R.id.graphChart)
         val now = System.currentTimeMillis()
@@ -380,10 +404,8 @@ class MonitorActivity : ThemedActivity() {
         val (liveR, liveS) = MonitorState.recent()
         val readings = LightHistory.merge(savedReadings, liveR) { it.timeMs }
         val statuses = LightHistory.merge(savedStatus, liveS) { it.timeMs }
-        val labels = if (graphRangeMs <= 30_000L) {
-            listOf("30s ago", "15s ago", "now")
-        } else if (graphRangeMs <= 10 * 60_000L) {
-            listOf("10 min ago", "5 min ago", "now")
+        val labels = if (graphRangeMs <= 10 * 60_000L) {
+            listOf(agoText(graphRangeMs), agoText(graphRangeMs / 2), "now")
         } else {
             listOf(
                 PowerDetector.formatClock(from),

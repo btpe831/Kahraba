@@ -325,6 +325,18 @@ class SettingsActivity : ThemedActivity() {
                 14f, R.attr.appMuted), lp(top = 10))
         })
 
+        section("Text size")
+        body.addView(card {
+            addView(segmented(listOf("Smaller" to "small", "Default" to "default", "Larger" to "large"), Prefs.textSize(this@SettingsActivity)) { value ->
+                if (value != Prefs.textSize(this@SettingsActivity)) {
+                    Prefs.setTextSize(this@SettingsActivity, value)
+                    recreate()
+                }
+            })
+            addView(text("Changes the text in this app only. Your phone's own text size (Settings › Display) still applies.",
+                14f, R.attr.appMuted), lp(top = 10))
+        })
+
         section("Theme")
         val current = Prefs.colorTheme(this)
         for (t in Themes.all) body.addView(themeRow(t, t.key == current), lp(top = 10))

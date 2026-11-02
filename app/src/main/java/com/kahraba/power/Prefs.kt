@@ -81,6 +81,16 @@ object Prefs {
     }
 
     /** Settings > Appearance: "auto" (follow the phone's dark mode), "light" or "dark". */
+    /** Text size in this app: "small", "default" or "large" (on top of the phone's own setting). */
+    const val TEXT_SIZE = "text_size"
+    fun textSize(ctx: Context): String = sp(ctx).getString(TEXT_SIZE, "default") ?: "default"
+    fun setTextSize(ctx: Context, size: String) = sp(ctx).edit().putString(TEXT_SIZE, size).apply()
+    fun textScale(ctx: Context): Float = when (textSize(ctx)) {
+        "small" -> 0.88f
+        "large" -> 1.12f
+        else -> 1f
+    }
+
     const val APPEARANCE = "appearance"
 
     fun appearance(ctx: Context): String = sp(ctx).getString(APPEARANCE, "auto") ?: "auto"

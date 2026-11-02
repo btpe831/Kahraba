@@ -1,5 +1,7 @@
 package com.kahraba.power
 
+import android.content.Context
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.TypedValue
 import androidx.appcompat.app.AppCompatActivity
@@ -10,6 +12,20 @@ import androidx.core.view.WindowCompat
 open class ThemedActivity : AppCompatActivity() {
     private var appliedTheme = ""
     private var appliedDark = false
+    private var appliedTextScale = 1f
+
+    /** Text size (Settings › Text size): scales the app's text on top of the phone's own setting. */
+    override fun attachBaseContext(newBase: Context) {
+        val scale = runCatching { Prefs.textScale(newBase) }.getOrDefault(1f)
+        appliedTextScale = scale
+        if (scale == 1f) {
+            super.attachBaseContext(newBase)
+        } else {
+            val cfg = Configuration(newBase.resources.configuration)
+            cfg.fontScale = cfg.fontScale * scale
+            super.attachBaseContext(newBase.createConfigurationContext(cfg))
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         KahrabaApp.useEnglishNumbers()
@@ -43,6 +59,10 @@ open class ThemedActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         // Theme or appearance changed elsewhere (or the phone switched dark mode while away).
+        if (Prefs.textScale(this) != appliedTextScale) {
+            recreate()
+            return
+        }
         if (Prefs.colorTheme(this) != appliedTheme || Prefs.isDark(this) != appliedDark) {
             AppCompatDelegate.setDefaultNightMode(Prefs.nightMode(this))
             recreate()

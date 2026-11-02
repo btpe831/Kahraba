@@ -113,7 +113,9 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
-- Released: 1.4.06 (light graph moved into the Live readings card, `@id/graphBox`; new 30 sec range).
+- Released: 1.4.07 (graph ranges 30 s, 1/3/5/10 min, 1/6/24 h in two rows; graph 130dp; "Teach it" card moved under
+  Start/Stop; Settings › Text size Smaller 0.88 / Default / Larger 1.12, `Prefs.textScale`, applied in
+  `ThemedActivity.attachBaseContext`). 1.4.06 (light graph moved into the Live readings card, `@id/graphBox`; new 30 sec range).
   1.4.05 (checks show lux, wobble and a live graph again; the result has LIGHT/WOBBLE boxes + the
   check's graph; Always-on screen light graph: 30 sec (1.4.06)/10 min/1 h/6 h/24 h from the saved raw- and light-*.csv
   files plus `MonitorState.recent()`, shaded by what the app called; `LightHistory.kt`, `HistoryChart.kt`).
