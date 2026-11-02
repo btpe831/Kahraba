@@ -9,8 +9,9 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 - **Confirm before changing anything.** Propose first; build only after a yes.
 - **Always confirm the version number before pushing** an app change (pushing a new version
-  publishes a release). Small updates: 1.0.01 … 1.0.10, then 1.1.0, 1.1.01 … Bigger changes: say so
-  and suggest a bigger jump. The version is `appVersion` in `gradle.properties`.
+  publishes a release). Small updates go up to 50 before the next jump: 1.3.01, 1.3.02 … 1.3.50, then
+  1.4.0, 1.4.01 … 1.4.50, then 1.5.0. Bigger changes: say so and suggest a bigger jump. The version is
+  `appVersion` in `gradle.properties` (two digits after the last dot: 1.3.02, not 1.3.2).
 - Write for a non-developer, on a phone: short, plain, polished English. Avoid "wrong", "fix it"
   wording in the app (use "correct", "incorrect"). Say "the app" (not "the monitor"); the feature is
   called **Always-on mode** (renamed from "Always-on monitor").
