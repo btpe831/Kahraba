@@ -139,8 +139,6 @@ object Prefs {
 
     /** Main-screen cards that can be turned on or off (key to name). */
     val CARDS = listOf(
-        "card_setup" to "Room setup guide",
-        "card_room" to "Room",
         "card_advice" to "What to run",
         "card_history" to "History",
         "card_pattern" to "Kahraba pattern",
@@ -162,16 +160,30 @@ object Prefs {
      */
     fun setUpCards(ctx: Context) {
         val p = sp(ctx)
-        if (p.getBoolean(CARDS_1_1, false)) return
         val edit = p.edit()
-        if (Tour.welcomeSeen(ctx)) {
-            for (key in CardOrder.OFF_FOR_NEW_USERS) if (!p.contains(key)) edit.putBoolean(key, true)
-            for (key in listOf("card_history", "card_tools")) {
-                edit.putBoolean(key, CardOrder.mergedOn(key) { old -> p.getBoolean(old, true) })
+        if (!p.getBoolean(CARDS_1_1, false)) {
+            if (Tour.welcomeSeen(ctx)) {
+                for (key in setOf("card_facts", "card_wobble")) if (!p.contains(key)) edit.putBoolean(key, true)
+                for (key in listOf("card_history", "card_tools")) {
+                    edit.putBoolean(key, CardOrder.mergedOn(key) { old -> p.getBoolean(old, true) })
+                }
             }
+            edit.putBoolean(CARDS_1_1, true)
         }
-        edit.putBoolean(CARDS_1_1, true).apply()
+        // 1.4.01: Your power starts like the mockup for everyone: the kahraba pattern, recent checks and
+        // accuracy, in that order. The other cards can be turned back on in Settings › Cards.
+        if (!p.getBoolean(CARDS_1_4, false)) {
+            if (Tour.welcomeSeen(ctx)) {
+                for (key in CardOrder.OFF_FOR_NEW_USERS) edit.putBoolean(key, false)
+                for (key in listOf("card_pattern", "card_recent", "card_accuracy")) edit.putBoolean(key, true)
+                edit.remove(CARD_ORDER)
+            }
+            edit.putBoolean(CARDS_1_4, true)
+        }
+        edit.apply()
     }
+
+    private const val CARDS_1_4 = "cards_1_4_your_power"
 
     private const val CARD_ORDER = "card_order"
 

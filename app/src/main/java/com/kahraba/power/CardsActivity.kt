@@ -53,9 +53,11 @@ class CardsActivity : ThemedActivity() {
     private fun buildRows() {
         val names = Prefs.CARDS.toMap()
         rows.clear()
-        rows += Row.Label("Always at the top")
-        for (key in CardOrder.FIXED) rows += Row.Card(key, names[key] ?: key, movable = false)
-        rows += Row.Label("Below the Check button")
+        if (CardOrder.FIXED.isNotEmpty()) {
+            rows += Row.Label("Always at the top")
+            for (key in CardOrder.FIXED) rows += Row.Card(key, names[key] ?: key, movable = false)
+        }
+        rows += Row.Label("In Your power")
         for (key in Prefs.cardOrder(this)) rows += Row.Card(key, names[key] ?: key, movable = true)
     }
 

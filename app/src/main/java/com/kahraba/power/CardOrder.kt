@@ -1,21 +1,21 @@
 package com.kahraba.power
 
-/** The order of the main-screen cards below the Check button, which the user can rearrange. */
+/** The order of the cards in Your power, which the user can rearrange. */
 object CardOrder {
     /**
-     * Cards that can be moved, in their default order: most useful first (1.3.02). The layout file
+     * The cards in Your power, in their default order (1.4.01: as in the mockup). The layout file
      * may list them differently; the app arranges them in this order.
      */
     val MOVABLE = listOf(
-        "card_advice", "card_pattern", "card_recent", "card_history", "card_tools", "card_accuracy", "card_wobble",
+        "card_pattern", "card_recent", "card_accuracy", "card_history", "card_advice", "card_tools", "card_wobble",
         "card_facts",
     )
 
-    /** Cards that always stay at the top (they can still be turned off). */
-    val FIXED = listOf("card_setup", "card_room")
+    /** Cards that always stay at the top: none since 1.4.01 (the room is in Tools › Rooms). */
+    val FIXED = emptyList<String>()
 
-    /** Off at first for new users, to keep the main screen simple (they can turn them on). */
-    val OFF_FOR_NEW_USERS = setOf("card_facts", "card_wobble")
+    /** Off at first, to keep Your power simple (they can be turned on in Settings › Cards). */
+    val OFF_FOR_NEW_USERS = setOf("card_history", "card_advice", "card_tools", "card_wobble", "card_facts")
 
     /** Cards merged in 1.1.0: the four history cards became History, the three tool cards Tools. */
     val MERGED = mapOf(

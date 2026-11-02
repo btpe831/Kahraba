@@ -1,6 +1,10 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.4.01
+- Your power is now a sheet that slides up over the home screen: the kahraba pattern, recent checks and accuracy. More cards can be turned on in Settings › Cards.
+- The gear opens Tools: Always-on mode, the Light meter, the Amps calculator, rooms, all checks, settings and help.
+
 ## 1.4.0
 - A calmer home screen: one big Check button, what's on now, and when kahraba may come next.
 - Press and hold the button, or tap the Always-on chip, for Always-on mode.

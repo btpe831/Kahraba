@@ -113,11 +113,13 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
-- Released: 1.4.0 (calm home screen). 1.3.02: pattern card colour key; default card order: advice, pattern, recent, history, tools,
+- Released: 1.4.01 (Your power sheet and Tools sheet, like the mockup). 1.4.0: calm home screen. 1.3.02: pattern card colour key; default card order: advice, pattern, recent, history, tools,
   accuracy, wobble, facts; privacy line: only light sensor and charger). 1.3.01: today and week overview.
 - Home screen (1.4.0; mockup https://claude.ai/artifact/PZfEztQWriu3wSmfZLeVRs): `@id/home` overlay on top of
-  the old screen, which is now "Your power" (swipe up / chart icon / handle; back or the bottom status tile
-  returns). One big Check button (tap = check, hold = Always-on screen), tinted by source (Always-on, else a
+  the old screen's ScrollView. 1.4.01: home is moved under it; the ScrollView is the "Your power" sheet that
+  slides up (swipe up / chart icon / handle; back or × closes), its old parts hidden by `hideOldMain()`, bottom
+  bar gone; default cards pattern, recent, accuracy (others off, Settings › Cards; one-time `cards_1_4_your_power`
+  migration). Gear = Tools bottom sheet (`showTools`); Tools › Rooms = room picker + setup steps. One big Check button (tap = check, hold = Always-on screen), tinted by source (Always-on, else a
   check < 30 min); "Always-on: active/inactive" chip; next-kahraba line from `KahrabaPattern`; power off greys
   the button. Checks started there show a full-screen result with Correct/Incorrect. Tour targets home views.
 - Earlier: 1.3.0: Kahraba pattern card. 1.2.05: kahraba confirmed for 5 min; level rule only from Not sure yet. 1.2.04: "Choose an option" light picker. 1.2.03: power cuts only. 1.2.02: am/pm times. 1.2.01: "What's new" window. 1.2.0: wobble-stops rule, phone-moved alert, power-back

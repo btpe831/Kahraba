@@ -342,10 +342,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         findViewById<View>(R.id.homeChip).setOnClickListener { openAlwaysOn() }
         findViewById<View>(R.id.homePower).setOnClickListener { showPower(true) }
         findViewById<View>(R.id.homeHandle).setOnClickListener { showPower(true) }
-        findViewById<View>(R.id.homeSettings).setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
-        // In Your power, the status tile at the bottom goes back home.
-        barTile.setOnClickListener { showPower(false) }
-        barTile.contentDescription = "Home"
+        findViewById<View>(R.id.homeSettings).setOnClickListener { showTools() }
+        setUpPowerSheet()
         // Swipe up anywhere on the home screen opens Your power.
         var downY = 0f
         home.setOnTouchListener { _, e ->
@@ -367,21 +365,162 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     private fun openAlwaysOn() = startActivity(Intent(this, MonitorActivity::class.java))
 
-    /** Slides home away to show Your power (the detailed screen), or back. */
+    /** Slides the Your power sheet up over home, or back down. */
     private fun showPower(show: Boolean) {
         if (!::home.isInitialized || show == powerBack.isEnabled) return
         powerBack.isEnabled = show
-        home.animate().cancel()
+        val page = findViewById<android.widget.ScrollView>(R.id.scroll)
+        page.animate().cancel()
         val h = home.height.toFloat().coerceAtLeast(1f)
         if (show) {
-            findViewById<android.widget.ScrollView>(R.id.scroll).scrollTo(0, 0)
-            home.animate().translationY(-h).setDuration(280)
-                .withEndAction { home.visibility = View.INVISIBLE }.start()
+            refreshAll()
+            page.scrollTo(0, 0)
+            page.translationY = h
+            page.visibility = View.VISIBLE
+            page.animate().translationY(0f).setDuration(300).start()
         } else {
-            home.visibility = View.VISIBLE
-            home.animate().translationY(0f).setDuration(280).start()
+            page.animate().translationY(h).setDuration(260)
+                .withEndAction { page.visibility = View.GONE }.start()
         }
         colorSystemBars()
+    }
+
+    /**
+     * 1.4.01: the old main screen is gone. Its scroll view is now the Your power sheet: a header
+     * with a close button, then the cards (the kahraba pattern, recent checks, accuracy by default).
+     * Home sits underneath; the sheet slides up over it.
+     */
+    private fun setUpPowerSheet() {
+        val page = findViewById<android.widget.ScrollView>(R.id.scroll)
+        val root = home.parent as android.view.ViewGroup
+        root.removeView(home)
+        root.addView(home, 0)
+        page.setBackgroundColor(themeColor(R.attr.appBg))
+        page.visibility = View.GONE
+        page.setPadding(page.paddingLeft, page.paddingTop, page.paddingRight, (32 * dp).toInt())
+        findViewById<View>(R.id.bottomBar).visibility = View.GONE
+
+        val inner = page.getChildAt(0) as LinearLayout
+        val header = LinearLayout(this).apply {
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding((4 * dp).toInt(), (10 * dp).toInt(), 0, (4 * dp).toInt())
+        }
+        header.addView(TextView(this).apply {
+            text = "Your power"
+            textSize = 24f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setTextColor(themeColor(R.attr.appText))
+        }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        header.addView(TextView(this).apply {
+            text = "×"
+            textSize = 22f
+            gravity = Gravity.CENTER
+            setTextColor(themeColor(R.attr.appText))
+            background = ContextCompat.getDrawable(this@MainActivity, R.drawable.circle_button)
+            contentDescription = "Close"
+            setOnClickListener { showPower(false) }
+        }, LinearLayout.LayoutParams((40 * dp).toInt(), (40 * dp).toInt()))
+        inner.addView(header, 0)
+        hideOldMain()
+    }
+
+    /** The old main screen's own parts, which Your power doesn't show. */
+    private fun hideOldMain() {
+        if (!::home.isInitialized) return
+        for (v in listOf(
+            findViewById<View>(R.id.appVersion).parent as View,
+            findViewById<View>(R.id.definition),
+            hero.parent as View,
+            findViewById<View>(R.id.roomCard),
+            checkButton,
+            confirmRow,
+            findViewById<View>(R.id.checkHint),
+            findViewById<View>(R.id.setupCard),
+        )) v.visibility = View.GONE
+    }
+
+    /** TOOLS (the gear on home): Always-on mode, the tools, rooms, all checks, settings and help. */
+    private fun showTools() {
+        val sheet = BottomSheetDialog(this)
+        val v = layoutInflater.inflate(R.layout.sheet_day, null)
+        v.findViewById<TextView>(R.id.sheetTitle).text = "Tools"
+        v.findViewById<TextView>(R.id.sheetDate).text = "Always-on mode, tools and settings"
+        v.findViewById<View>(R.id.sheetNote).visibility = View.GONE
+        val content = v.findViewById<LinearLayout>(R.id.sheetContent)
+        fun item(icon: Int, title: String, sub: String, action: () -> Unit) {
+            val row = LinearLayout(this).apply {
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, (10 * dp).toInt(), 0, (10 * dp).toInt())
+                val ripple = TypedValue()
+                theme.resolveAttribute(android.R.attr.selectableItemBackground, ripple, true)
+                setBackgroundResource(ripple.resourceId)
+                setOnClickListener {
+                    sheet.dismiss()
+                    action()
+                }
+            }
+            row.addView(ImageView(this).apply {
+                setImageResource(icon)
+                setColorFilter(themeColor(R.attr.appAccent))
+                setPadding((9 * dp).toInt(), (9 * dp).toInt(), (9 * dp).toInt(), (9 * dp).toInt())
+                background = GradientDrawable().apply {
+                    cornerRadius = 12 * dp
+                    setColor(themeColor(R.attr.appMuted) and 0x00FFFFFF or 0x1F000000)
+                }
+            }, LinearLayout.LayoutParams((40 * dp).toInt(), (40 * dp).toInt()).apply { marginEnd = (14 * dp).toInt() })
+            val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            texts.addView(TextView(this).apply {
+                text = title
+                textSize = 16f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setTextColor(themeColor(R.attr.appText))
+            })
+            texts.addView(TextView(this).apply {
+                text = sub
+                textSize = 13f
+                setTextColor(themeColor(R.attr.appMuted))
+            })
+            row.addView(texts, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            content.addView(row)
+        }
+        item(R.drawable.ic_bolt, "Always-on mode", if (MonitorState.running) "Active" else "Inactive") { openAlwaysOn() }
+        item(R.drawable.ic_chart, "Light meter", "Live light and wobble, recordings") {
+            startActivity(Intent(this, LightMeterActivity::class.java))
+        }
+        item(R.drawable.ic_moteur, "Amps calculator", "What you can run on your moteur amps") {
+            startActivity(Intent(this, AmpsActivity::class.java))
+        }
+        item(R.drawable.ic_place, "Rooms", Prefs.currentSpot(this).ifEmpty { "Choose the room you're in" }) { pickRoom() }
+        item(R.drawable.ic_list, "All checks", "Correct or delete a check") { showAllChecks() }
+        item(R.drawable.ic_settings, "Settings", "Sound, cards, backup and more") {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+        item(R.drawable.ic_help, "Help", "How it works, and tips") { startActivity(Intent(this, HelpActivity::class.java)) }
+        if (Feedback.enabled) item(R.drawable.ic_help, "Send feedback", "Tell us what to improve") { Feedback.open(this) }
+        v.findViewById<View>(R.id.sheetDone).setOnClickListener { sheet.dismiss() }
+        sheet.setContentView(v)
+        sheet.show()
+    }
+
+    /** Tools › Rooms: choose the room, then how to set it up if it isn't learned yet. */
+    private fun pickRoom() {
+        RoomPicker.pick(this, Prefs.currentSpot(this)) { room ->
+            Prefs.setCurrentSpot(this, room)
+            refreshAll()
+            if (room.isEmpty()) return@pick
+            val (k, m) = CheckHistory.spotLevels(this, room)
+            if (k != null && m != null && k > m * QuickCheck.LEVEL_GAP) return@pick
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Set up “$room”")
+                .setMessage(
+                    "So the app can say kahraba for sure in this room:\n\n" +
+                        "1. On moteur, do a check here. If it doesn't say Moteur, tap Incorrect.\n" +
+                        "2. On kahraba, do a check here, then tap Correct.\n\n" +
+                        "Keep the phone in the same place each time, with daylight out of the way.",
+                )
+                .setPositiveButton("Got it", null)
+                .show()
+        }
     }
 
     /** The status and navigation bars take the home colour on the home screen. */
@@ -598,6 +737,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         findViewById<View>(R.id.checkHint).visibility = if (firstChecks) View.VISIBLE else View.GONE
         // After layout, so the NOW card's position is known.
         findViewById<View>(R.id.scroll).post { renderBarStatus(animate = false) }
+        hideOldMain()
     }
 
     // ---- History card: Today · 7 days · Calendar ----
@@ -783,6 +923,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         val room = Prefs.currentSpot(this)
         findViewById<TextView>(R.id.confirmPrompt).text =
             if (room.isEmpty()) "Know for sure? Confirm it:" else "Know for sure? Confirm it to teach “$room”:"
+        hideOldMain()
         if (fromHome && !powerBack.isEnabled) showHomeResult(result)
     }
 
@@ -1362,7 +1503,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     /** Shows, hides and orders the cards as chosen in Settings > Cards > Arrange cards. */
     /** Card setting keys and their views. */
     private val cardIds = mapOf(
-        "card_room" to R.id.roomCard, "card_advice" to R.id.adviceCard, "card_history" to R.id.historyCard,
+        "card_advice" to R.id.adviceCard, "card_history" to R.id.historyCard,
         "card_pattern" to R.id.patternCard,
         "card_recent" to R.id.recentCard, "card_accuracy" to R.id.accuracyCard, "card_tools" to R.id.toolsCard,
         "card_facts" to R.id.factsCard, "card_wobble" to R.id.wobbleCard,
