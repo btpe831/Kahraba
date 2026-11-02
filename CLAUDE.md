@@ -61,6 +61,9 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   episode per 5 min) matches kahraba, so very likely kahraba. Still: ask for a voltmeter photo at alerts.
   `nov01-evening-pixel2-raw-kahraba-cut-calm-moteur.csv` (from 14:00: busy moteur; kahraba 16:01, ~4,600
   still; cut 18:00:14 for 1m 14s; moteur 222 V, pole light green, ~3,600-4,150 calm: 1.2.04 false kahraba 18:37).
+  `nov02-night-pixel2-raw-kahraba-cut-moteur-kahraba.csv` (from 21:00 1 Nov: moteur 223 V; kahraba 01:01 ~3,600
+  still; cut 03:30:33 for 1m 14s (heater reset); moteur ~2,600-3,200 wobbling, 227 V at 6 AM = as bright as the
+  later kahraba; kahraba 09:59 at 227-228 V under 8 A. Same voltage = same light: only wobble separates them).
 - Kahraba is dead still (zero wobble for 20+ min); a daytime moteur wobbles most minutes. In the
   evening a moteur also calms down and creeps brighter, but gradually (30 Oct 20:40-21:45).
 - Voltmeter: moteur 208 V (31 Oct, 8 pm) to 223 V; kahraba 231-234 V (1 Nov morning too).
