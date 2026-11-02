@@ -25,6 +25,9 @@ import com.google.android.material.materialswitch.MaterialSwitch
 import com.kahraba.power.Prefs.monitoring
 import java.io.File
 
+/** Which range the light graph shows (remembered). */
+private const val GRAPH_RANGE = "graph_range_ms"
+
 /** The secondary mode: always-on monitoring with the phone left under a light. */
 class MonitorActivity : ThemedActivity() {
 
@@ -90,6 +93,7 @@ class MonitorActivity : ThemedActivity() {
             }
         }
         battery.setOnClickListener { askBatteryExemption() }
+        setUpGraph()
 
         askNotificationPermission()
         if (monitoring && !MonitorState.running) MonitorService.send(this, MonitorService.ACTION_START)
@@ -98,6 +102,7 @@ class MonitorActivity : ThemedActivity() {
     override fun onResume() {
         super.onResume()
         renderRoom()
+        loadGraph(force = true)
         ui.post(refresh)
     }
 
@@ -173,6 +178,13 @@ class MonitorActivity : ThemedActivity() {
         val cutsOnly = Prefs.powerCutsOnly(this)
         findViewById<MaterialSwitch>(R.id.cutsOnlySwitch).let { if (it.isChecked != cutsOnly) it.isChecked = cutsOnly }
         findViewById<View>(R.id.roomCard).visibility = if (cutsOnly) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.graphCard).visibility = if (cutsOnly) View.GONE else View.VISIBLE
+        if (!cutsOnly) {
+            loadGraph(force = false)
+            // Live every second for 10 minutes; the longer views change slowly.
+            val now = System.currentTimeMillis()
+            if (graphRangeMs <= 10 * 60_000L || now - graphDrawnMs >= 10_000) drawGraph()
+        }
         findViewById<View>(R.id.teachCard).visibility = if (cutsOnly) View.GONE else View.VISIBLE
         val running = MonitorState.running
         val s = MonitorState.source
@@ -234,6 +246,155 @@ class MonitorActivity : ThemedActivity() {
 
         val pm = getSystemService(POWER_SERVICE) as PowerManager
         battery.visibility = if (pm.isIgnoringBatteryOptimizations(packageName)) View.GONE else View.VISIBLE
+    }
+
+    // ---- Light graph: what Always-on mode saved, plus the last few minutes live ----
+
+    private val graphRanges = listOf(
+        "10 min" to 10 * 60_000L,
+        "1 hour" to 3_600_000L,
+        "6 hours" to 6 * 3_600_000L,
+        "24 hours" to 24 * 3_600_000L,
+    )
+    private var graphRangeMs = 3_600_000L
+    private var savedReadings: List<LightHistory.Reading> = emptyList()
+    private var savedStatus: List<LightHistory.Status> = emptyList()
+    private var graphLoadedFrom = Long.MAX_VALUE
+    private var graphLoadedAt = 0L
+    private var graphLoading = false
+    private var graphDrawnMs = 0L
+
+    private fun setUpGraph() {
+        graphRangeMs = Prefs.sp(this).getLong(GRAPH_RANGE, 3_600_000L)
+            .takeIf { r -> graphRanges.any { it.second == r } } ?: 3_600_000L
+        val row = findViewById<LinearLayout>(R.id.graphRanges)
+        val dp = resources.displayMetrics.density
+        for ((i, range) in graphRanges.withIndex()) {
+            row.addView(TextView(this).apply {
+                text = range.first
+                textSize = 13f
+                gravity = android.view.Gravity.CENTER
+                maxLines = 1
+                setPadding((4 * dp).toInt(), (6 * dp).toInt(), (4 * dp).toInt(), (6 * dp).toInt())
+                isClickable = true
+                isFocusable = true
+                setOnClickListener {
+                    graphRangeMs = range.second
+                    Prefs.sp(this@MonitorActivity).edit().putLong(GRAPH_RANGE, range.second).apply()
+                    paintRanges()
+                    loadGraph(force = false)
+                    drawGraph()
+                }
+            }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                if (i > 0) marginStart = (6 * dp).toInt()
+            })
+        }
+        paintRanges()
+
+        // Colour key, and what the graph shows.
+        val key = android.text.SpannableStringBuilder()
+        listOf(Source.KAHRABA to "Kahraba", Source.MOTEUR to "Moteur", Source.NO_POWER to "Power off").forEachIndexed { i, (src, name) ->
+            if (i > 0) key.append("     ")
+            val start = key.length
+            key.append("■")
+            key.setSpan(android.text.style.ForegroundColorSpan(MonitorService.colorFor(src)), start, key.length, 0)
+            key.append(" ").append(name)
+        }
+        findViewById<TextView>(R.id.graphLegend).text = key
+        findViewById<TextView>(R.id.graphNote).text =
+            "The shading shows what the app called. The moteur makes the light wobble (the soft band); " +
+                "kahraba keeps it still. Blank: Always-on mode wasn't running."
+    }
+
+    private fun paintRanges() {
+        val row = findViewById<LinearLayout>(R.id.graphRanges)
+        val dp = resources.displayMetrics.density
+        fun attr(a: Int) = android.util.TypedValue().also { theme.resolveAttribute(a, it, true) }.data
+        for (i in 0 until row.childCount) {
+            val tv = row.getChildAt(i) as TextView
+            val on = graphRanges[i].second == graphRangeMs
+            tv.background = android.graphics.drawable.GradientDrawable().apply {
+                cornerRadius = 999 * dp
+                if (on) setColor(attr(R.attr.appAccent)) else setStroke((1 * dp).toInt(), attr(R.attr.appOutline))
+            }
+            tv.setTextColor(attr(if (on) R.attr.appBg else R.attr.appMuted))
+            tv.setTypeface(null, if (on) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
+            tv.isSelected = on
+        }
+    }
+
+    /** Reads the saved files (in the background) when the range needs more, or every 5 minutes. */
+    private fun loadGraph(force: Boolean) {
+        val now = System.currentTimeMillis()
+        val from = now - graphRangeMs - 30 * 60_000L // a little before, for the light in force at the start
+        if (graphLoading) return
+        if (!force && from >= graphLoadedFrom && now - graphLoadedAt < 5 * 60_000L) return
+        graphLoading = true
+        val dir = File(filesDir, "data")
+        Thread {
+            val dayFmt = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+            val days = LinkedHashSet<String>()
+            var t = from
+            while (t < now) { days += dayFmt.format(java.util.Date(t)); t += 6 * 3_600_000L }
+            days += dayFmt.format(java.util.Date(now))
+            val fromText = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).format(java.util.Date(from))
+            val midnights = HashMap<String, Long?>()
+            val timeOf = { text: String ->
+                val mid = midnights.getOrPut(text.substring(0, 10)) { runCatching { dayFmt.parse(text.substring(0, 10))?.time }.getOrNull() }
+                val h = text.substring(11, 13).toIntOrNull()
+                val m = text.substring(14, 16).toIntOrNull()
+                val s = text.substring(17, 19).toIntOrNull()
+                if (mid == null || h == null || m == null || s == null) null else mid + ((h * 60 + m) * 60 + s) * 1000L
+            }
+            val readings = ArrayList<LightHistory.Reading>()
+            val statuses = ArrayList<LightHistory.Status>()
+            for (d in days) {
+                runCatching {
+                    File(dir, "raw-$d.csv").takeIf { it.exists() }?.useLines { lines ->
+                        lines.forEach { l -> LightHistory.parseReading(l)?.takeIf { it.timeMs >= from }?.let { readings += it } }
+                    }
+                }
+                runCatching {
+                    File(dir, "light-$d.csv").takeIf { it.exists() }?.useLines { lines ->
+                        lines.forEach { l ->
+                            if (l.length >= 19 && l.substring(0, 19) >= fromText) LightHistory.parseStatus(l, timeOf)?.let { statuses += it }
+                        }
+                    }
+                }
+            }
+            readings.sortBy { it.timeMs }
+            statuses.sortBy { it.timeMs }
+            ui.post {
+                savedReadings = readings
+                savedStatus = statuses
+                graphLoadedFrom = from
+                graphLoadedAt = now
+                graphLoading = false
+                drawGraph()
+            }
+        }.start()
+    }
+
+    private fun drawGraph() {
+        val chart = findViewById<HistoryChart>(R.id.graphChart)
+        val now = System.currentTimeMillis()
+        val from = now - graphRangeMs
+        val (liveR, liveS) = MonitorState.recent()
+        val readings = LightHistory.merge(savedReadings, liveR) { it.timeMs }
+        val statuses = LightHistory.merge(savedStatus, liveS) { it.timeMs }
+        val labels = if (graphRangeMs <= 10 * 60_000L) {
+            listOf("10 min ago", "5 min ago", "now")
+        } else {
+            listOf(
+                PowerDetector.formatClock(from),
+                PowerDetector.formatClock(from + graphRangeMs / 3),
+                PowerDetector.formatClock(from + graphRangeMs * 2 / 3),
+                "now",
+            )
+        }
+        chart.emptyText = if (graphLoading && savedStatus.isEmpty()) "Loading…" else "Nothing recorded in this time."
+        chart.set(LightHistory.slices(readings, statuses, from, now, chart.sliceCount()), labels)
+        graphDrawnMs = now
     }
 
     /** The status card: a soft gradient in the status colour, like NOW on the main screen. */

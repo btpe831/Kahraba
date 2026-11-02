@@ -32,7 +32,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 - **Release notes: just what's improved, in plain words. No dates, times or recording details.**
 - Download link for testers: https://github.com/btpe831/Kahraba/releases/latest
 - Detection logic is pure Kotlin (`PowerDetector.kt`, `QuickCheck.kt`, `CheckHistory.kt`,
-  `CardOrder.kt`, `Area.kt`, `OldDefaults.kt`) and is tested with JUnit in `app/src/test`. To run them
+  `CardOrder.kt`, `Area.kt`, `OldDefaults.kt`, `KahrabaPattern.kt`, `LightHistory.kt`) and is tested with JUnit in `app/src/test`. To run them
   locally without the SDK, a plain Kotlin/JVM Gradle project can compile those files plus tiny stubs
   for `android.content.Context`/`SharedPreferences` and `Prefs` (constants + `sp()`).
 - Android code (activities, layouts) can only be compiled in CI: read diffs carefully before pushing.
@@ -113,7 +113,10 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
-- Released: 1.4.04 (menu header: app name small + version). 1.4.03: top-right ☰ Menu sheet with Settings inside. 1.4.02: room pill at the top of home, `@id/homeRoom`. 1.4.01: Your power sheet and Tools sheet, like the mockup. 1.4.0: calm home screen. 1.3.02: pattern card colour key; default card order: advice, pattern, recent, history, tools,
+- Released: 1.4.05 (checks show lux, wobble and a live graph again; the result has LIGHT/WOBBLE boxes + the
+  check's graph; Always-on screen has a "Light graph" card: 10 min/1 h/6 h/24 h from the saved raw- and light-*.csv
+  files plus `MonitorState.recent()`, shaded by what the app called; `LightHistory.kt`, `HistoryChart.kt`).
+  1.4.04: menu header: app name small + version, Check for updates. 1.4.03: top-right ☰ Menu sheet with Settings inside. 1.4.02: room pill at the top of home, `@id/homeRoom`. 1.4.01: Your power sheet and Tools sheet, like the mockup. 1.4.0: calm home screen. 1.3.02: pattern card colour key; default card order: advice, pattern, recent, history, tools,
   accuracy, wobble, facts; privacy line: only light sensor and charger). 1.3.01: today and week overview.
 - Home screen (1.4.0; mockup https://claude.ai/artifact/PZfEztQWriu3wSmfZLeVRs): `@id/home` overlay on top of
   the old screen's ScrollView. 1.4.01: home is moved under it; the ScrollView is the "Your power" sheet that

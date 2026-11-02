@@ -36,7 +36,9 @@ class QuickCheck(
     private val samples = ArrayList<Pair<Long, Double>>()
     private var startMs = -1L
     private var steadySinceMs = -1L
-    private var maxSwing = 0.0
+    /** The biggest wobble seen, in % of the light level (shown with the result). */
+    var maxSwing = 0.0
+        private set
     private var lastEvalMs = -1L
     private var darkSeen = false
     private var darkCount = 0

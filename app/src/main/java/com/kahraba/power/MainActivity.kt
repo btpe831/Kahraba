@@ -308,6 +308,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     private lateinit var home: View
     private lateinit var homeButton: View
+    /** The live graph under the button while a check runs, and the whole check's graph with its result. */
+    private lateinit var homeChart: LuxChart
+    private lateinit var resultChart: LuxChart
     private var homeSource = Source.UNKNOWN
     private var homeColor = 0
     private var homeTop = 0
@@ -330,6 +333,14 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     private fun setUpHome() {
         home = findViewById(R.id.home)
         homeButton = findViewById(R.id.homeButton)
+        homeChart = findViewById<LuxChart>(R.id.homeChart).apply {
+            windowSeconds = 30
+            useColors(0xFFFFFFFF.toInt(), 0x40FFFFFF, 0xD9FFFFFF.toInt())
+        }
+        resultChart = findViewById<LuxChart>(R.id.resultChart).apply {
+            endLabel = "end"
+            useColors(0xFFFFFFFF.toInt(), 0x40FFFFFF, 0xD9FFFFFF.toInt())
+        }
         homeButton.setOnClickListener {
             when {
                 check != null -> stopCheck(null)
@@ -670,7 +681,14 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         homeButton.scaleX = 1f
         homeButton.scaleY = 1f
         homePulse = null
+        // While checking: the live reading and graph take the place of the chip and next-kahraba line.
+        findViewById<View>(R.id.homeChip).visibility = if (on) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.homeLive).visibility = if (on) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.homeChartBox).visibility = if (on) View.VISIBLE else View.GONE
         if (on) {
+            findViewById<View>(R.id.homeNext).visibility = View.GONE
+            findViewById<TextView>(R.id.homeLive).text = lux?.let { "${thousands(it)} lux" } ?: "Waiting for the light sensor…"
+            homeChart.setData(chartT, chartV, 0)
             findViewById<TextView>(R.id.homeButtonCap).text = "CHECKING"
             homePulse = android.animation.ObjectAnimator.ofPropertyValuesHolder(
                 homeButton,
@@ -687,9 +705,32 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         }
     }
 
+    /** 3412.6 -> "3,413". */
+    private fun thousands(v: Double) = "%,d".format(Locale.US, Math.round(v))
+
     /** A check's result, full screen in its colour, with Correct / Incorrect. */
-    private fun showHomeResult(r: QuickCheck.Result) {
+    private fun showHomeResult(r: QuickCheck.Result, wobbles: Int, maxSwing: Double) {
         val color = ContextCompat.getColor(this, colorFor(r.verdict))
+        // The numbers behind the result: light level, wobbles, and the graph of the whole check.
+        val lux = r.lux
+        findViewById<View>(R.id.resultStats).visibility = if (lux == null) View.GONE else View.VISIBLE
+        if (lux != null) {
+            findViewById<TextView>(R.id.resultLight).text = thousands(lux)
+            findViewById<TextView>(R.id.resultLightSub).text = "lux"
+            val (w, wSub) = when {
+                r.verdict == QuickCheck.Verdict.CANT_TELL -> "–" to "couldn't judge"
+                wobbles == 0 -> "None" to "steady light"
+                else -> (if (wobbles == 1) "1 time" else "$wobbles times") to "up to ${"%.0f".format(maxSwing)}%"
+            }
+            findViewById<TextView>(R.id.resultWobble).text = w
+            findViewById<TextView>(R.id.resultWobbleSub).text = wSub
+        }
+        val hasChart = chartN > 1
+        findViewById<View>(R.id.resultChartBox).visibility = if (hasChart) View.VISIBLE else View.GONE
+        if (hasChart) {
+            resultChart.windowSeconds = ((chartT[chartN - 1] - chartT[0] + 999) / 1000).toInt().coerceIn(10, 60)
+            resultChart.setData(chartT, chartV, chartN)
+        }
         val box = findViewById<View>(R.id.homeResult)
         box.setBackgroundColor(color)
         findViewById<TextView>(R.id.resultWord).text = when (r.verdict) {
@@ -902,6 +943,10 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             }
             val steady = q.steadySeconds
             val needS = q.steadyNeededMs / 1000
+            if (checkFromHome) {
+                findViewById<TextView>(R.id.homeLive).text =
+                    (lux?.let { "${thousands(it)} lux" } ?: "– lux") + if (steady > 0) " · steady ${steady}s of ${needS}s" else ""
+            }
             showHero(
                 R.color.checking, R.drawable.ic_bolt, "Checking", "Don't touch the phone",
                 "${lux?.toInt() ?: "–"} lux" + if (steady > 0) " · steady ${steady}s of ${needS}s" else "",
@@ -928,6 +973,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         window.attributes = window.attributes.apply {
             screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
         }
+        val wobbles = check?.wobbles ?: 0
+        val maxSwing = check?.maxSwing ?: 0.0
         check = null
         checkButton.text = "Check now"
         heroProgress.visibility = View.GONE
@@ -956,7 +1003,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         findViewById<TextView>(R.id.confirmPrompt).text =
             if (room.isEmpty()) "Know for sure? Confirm it:" else "Know for sure? Confirm it to teach “$room”:"
         hideOldMain()
-        if (fromHome && !powerBack.isEnabled) showHomeResult(result)
+        if (fromHome && !powerBack.isEnabled) showHomeResult(result, wobbles, maxSwing)
     }
 
     override fun onSensorChanged(event: SensorEvent) {
@@ -981,6 +1028,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         chartV[chartN] = v
         chartN++
         heroChart.setData(chartT, chartV, chartN)
+        if (::homeChart.isInitialized) homeChart.setData(chartT, chartV, chartN)
     }
 
     private fun showLastResult() {

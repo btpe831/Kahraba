@@ -158,6 +158,7 @@ class MonitorService : Service(), SensorEventListener {
         latestLux = event.values[0].toDouble()
         detector.addReading(System.currentTimeMillis(), event.values[0].toDouble())
         data.raw(System.currentTimeMillis(), event.values[0].toDouble())
+        MonitorState.addRecentReading(System.currentTimeMillis(), event.values[0].toDouble())
         sensorEvents.addLast(System.currentTimeMillis())
     }
 
@@ -174,6 +175,7 @@ class MonitorService : Service(), SensorEventListener {
         if (detector.lastEvalMs != lastDataSecond) {
             lastDataSecond = detector.lastEvalMs
             data.write(now, detector.lightLevel, detector.flickerPct, plugged, detector.source, detector.lightStatus)
+            MonitorState.addRecentStatus(now, detector.source, plugged == false)
             calibration?.let { cal ->
                 detector.flickerPct?.let { cal += it }
                 detector.lightLevel?.takeIf { detector.flickerPct != null }?.let { calibrationLevels += it }

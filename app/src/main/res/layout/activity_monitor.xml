@@ -159,6 +159,49 @@
         </com.kahraba.power.NotchCard>
 
         <com.kahraba.power.NotchCard
+            android:id="@+id/graphCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            app:notchTitle="Light graph">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/graphRanges"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+
+                <com.kahraba.power.HistoryChart
+                    android:id="@+id/graphChart"
+                    android:layout_width="match_parent"
+                    android:layout_height="170dp"
+                    android:layout_marginTop="12dp" />
+
+                <TextView
+                    android:id="@+id/graphLegend"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textColor="?attr/appMuted"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/graphNote"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:lineSpacingExtra="2dp"
+                    android:textColor="?attr/appMuted"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </com.kahraba.power.NotchCard>
+
+        <com.kahraba.power.NotchCard
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="22dp"

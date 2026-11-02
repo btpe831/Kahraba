@@ -89,7 +89,7 @@ class LuxChart @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
             canvas.drawLine(left, y, right, y, grid)
             canvas.drawText(v.toInt().toString(), 0f, y + 4 * dp, label)
         }
-        canvas.drawText("-${windowSeconds}s", left, height - 4 * dp, label)
+        canvas.drawText("${windowSeconds}s ago", left, height - 4 * dp, label)
         canvas.drawText(endLabel, right - label.measureText(endLabel), height - 4 * dp, label)
 
         path.reset()
