@@ -1,6 +1,9 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.4.06
+- The Always-on light graph is now part of Live readings, with a new 30-second view that updates every second.
+
 ## 1.4.05
 - Checks show the light level, the wobble and a live graph again, and the result keeps them with a graph of the whole check.
 - Always-on mode has a light graph: the last 10 minutes, hour, 6 hours or 24 hours, shaded green for kahraba, orange for moteur and grey for power off.

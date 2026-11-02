@@ -82,8 +82,9 @@ object LightHistory {
             if (!any) {
                 val prev = statuses.getOrNull(si - 1)
                 val next = statuses.getOrNull(si)
-                // Inside a run of once-a-second rows (slices shorter than a second): use the one before.
-                if (prev != null && next != null && next.timeMs - prev.timeMs <= GAP_MS) {
+                // Inside a run of once-a-second rows (slices shorter than a second), or just after the
+                // latest row (the live edge): use the one before.
+                if (prev != null && (next?.timeMs ?: a) - prev.timeMs <= GAP_MS) {
                     any = true
                     if (prev.chargerOff || prev.source == Source.NO_POWER) off = true
                     if (prev.source == Source.KAHRABA) kahraba++

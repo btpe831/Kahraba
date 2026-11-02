@@ -178,10 +178,10 @@ class MonitorActivity : ThemedActivity() {
         val cutsOnly = Prefs.powerCutsOnly(this)
         findViewById<MaterialSwitch>(R.id.cutsOnlySwitch).let { if (it.isChecked != cutsOnly) it.isChecked = cutsOnly }
         findViewById<View>(R.id.roomCard).visibility = if (cutsOnly) View.GONE else View.VISIBLE
-        findViewById<View>(R.id.graphCard).visibility = if (cutsOnly) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.graphBox).visibility = if (cutsOnly) View.GONE else View.VISIBLE
         if (!cutsOnly) {
             loadGraph(force = false)
-            // Live every second for 10 minutes; the longer views change slowly.
+            // Live every second for 30 seconds and 10 minutes; the longer views change slowly.
             val now = System.currentTimeMillis()
             if (graphRangeMs <= 10 * 60_000L || now - graphDrawnMs >= 10_000) drawGraph()
         }
@@ -251,6 +251,7 @@ class MonitorActivity : ThemedActivity() {
     // ---- Light graph: what Always-on mode saved, plus the last few minutes live ----
 
     private val graphRanges = listOf(
+        "30 sec" to 30_000L,
         "10 min" to 10 * 60_000L,
         "1 hour" to 3_600_000L,
         "6 hours" to 6 * 3_600_000L,
@@ -272,7 +273,7 @@ class MonitorActivity : ThemedActivity() {
         for ((i, range) in graphRanges.withIndex()) {
             row.addView(TextView(this).apply {
                 text = range.first
-                textSize = 13f
+                textSize = 12f
                 gravity = android.view.Gravity.CENTER
                 maxLines = 1
                 setPadding((4 * dp).toInt(), (6 * dp).toInt(), (4 * dp).toInt(), (6 * dp).toInt())
@@ -301,9 +302,6 @@ class MonitorActivity : ThemedActivity() {
             key.append(" ").append(name)
         }
         findViewById<TextView>(R.id.graphLegend).text = key
-        findViewById<TextView>(R.id.graphNote).text =
-            "The shading shows what the app called. The moteur makes the light wobble (the soft band); " +
-                "kahraba keeps it still. Blank: Always-on mode wasn't running."
     }
 
     private fun paintRanges() {
@@ -382,7 +380,9 @@ class MonitorActivity : ThemedActivity() {
         val (liveR, liveS) = MonitorState.recent()
         val readings = LightHistory.merge(savedReadings, liveR) { it.timeMs }
         val statuses = LightHistory.merge(savedStatus, liveS) { it.timeMs }
-        val labels = if (graphRangeMs <= 10 * 60_000L) {
+        val labels = if (graphRangeMs <= 30_000L) {
+            listOf("30s ago", "15s ago", "now")
+        } else if (graphRangeMs <= 10 * 60_000L) {
             listOf("10 min ago", "5 min ago", "now")
         } else {
             listOf(

@@ -113,8 +113,9 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
-- Released: 1.4.05 (checks show lux, wobble and a live graph again; the result has LIGHT/WOBBLE boxes + the
-  check's graph; Always-on screen has a "Light graph" card: 10 min/1 h/6 h/24 h from the saved raw- and light-*.csv
+- Released: 1.4.06 (light graph moved into the Live readings card, `@id/graphBox`; new 30 sec range).
+  1.4.05 (checks show lux, wobble and a live graph again; the result has LIGHT/WOBBLE boxes + the
+  check's graph; Always-on screen light graph: 30 sec (1.4.06)/10 min/1 h/6 h/24 h from the saved raw- and light-*.csv
   files plus `MonitorState.recent()`, shaded by what the app called; `LightHistory.kt`, `HistoryChart.kt`).
   1.4.04: menu header: app name small + version, Check for updates. 1.4.03: top-right ☰ Menu sheet with Settings inside. 1.4.02: room pill at the top of home, `@id/homeRoom`. 1.4.01: Your power sheet and Tools sheet, like the mockup. 1.4.0: calm home screen. 1.3.02: pattern card colour key; default card order: advice, pattern, recent, history, tools,
   accuracy, wobble, facts; privacy line: only light sensor and charger). 1.3.01: today and week overview.

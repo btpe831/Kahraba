@@ -61,6 +61,16 @@ class LightHistoryTest {
     }
 
     @Test
+    fun theLiveEdgeIsNotBlank() {
+        // The last row is at 29 s; the graph runs to 30 s (now).
+        val statuses = (0 until 30).map { status(it, Source.KAHRABA) }
+        val sl = LightHistory.slices(listOf(reading(0, 3600.0)), statuses, 0, 30_000, 150)
+        assertTrue(sl.takeLast(5).all { it.recorded && it.meanLux == 3600.0 })
+        // Long after the last row (Always-on mode stopped): blank.
+        assertFalse(LightHistory.slices(listOf(reading(0, 3600.0)), statuses, 60_000, 90_000, 30).any { it.recorded })
+    }
+
+    @Test
     fun liveRowsOnlyAfterTheSavedOnes() {
         val saved = listOf(reading(1, 1.0), reading(2, 2.0))
         val live = listOf(reading(2, 2.0), reading(3, 3.0))
