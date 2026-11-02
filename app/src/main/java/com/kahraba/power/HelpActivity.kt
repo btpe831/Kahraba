@@ -28,7 +28,7 @@ class HelpActivity : ThemedActivity() {
         private val SECTIONS = listOf(
             "Quick start" to """
                 1. Turn on a <b>halogen</b> or old-style <b>filament</b> bulb.
-                2. Tap <b>Check now</b>.
+                2. Tap the big <b>Check</b> button on the home screen.
                 3. Within 3 seconds, lay the phone <b>face-up</b> right under the light and let go.
                 4. Wait for the beep:
                 &nbsp;&nbsp;• <b>1 long beep = Moteur</b> (usually within about 10 seconds)
@@ -105,6 +105,7 @@ class HelpActivity : ThemedActivity() {
             """,
 
             "Your results" to """
+                The <b>home screen</b> shows what's on now (from Always-on mode, or your last check in the past 30 minutes) and, once the app has learned it, when kahraba may come next. <b>Swipe up</b> or tap the chart icon for <b>Your power</b>: your room, the kahraba pattern, history and all your checks. Back, or the status at the bottom, returns home.
                 <b>Recent checks</b> shows your last checks; the list button in the bottom bar shows all of them. <b>Tap one to correct it</b>, or to delete it. Checks you confirmed or corrected are marked ✓.
                 <b>Accuracy</b> shows how often each result was correct, among the checks you confirmed.
                 <b>Move cards:</b> press and hold any card below the Check button, then drag it up or down. Show or hide cards in Settings › Cards: History (today, 7 days and the calendar), Tools, Did you know? and more.

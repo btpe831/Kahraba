@@ -113,11 +113,14 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
-- Released: 1.3.02 (pattern card colour key; default card order: advice, pattern, recent, history, tools,
+- Released: 1.4.0 (calm home screen). 1.3.02: pattern card colour key; default card order: advice, pattern, recent, history, tools,
   accuracy, wobble, facts; privacy line: only light sensor and charger). 1.3.01: today and week overview.
-- Mockup (not built): Shazam-style calm home, https://claude.ai/artifact/PZfEztQWriu3wSmfZLeVRs (one big
-  Check button tinted by state, "Always-on: active/inactive" chip, swipe up for Your power, gear for Tools;
-  power off greys the button). Would be 1.4.0; ask before building. 1.3.0: Kahraba pattern card. 1.2.05: kahraba confirmed for 5 min; level rule only from Not sure yet. 1.2.04: "Choose an option" light picker. 1.2.03: power cuts only. 1.2.02: am/pm times. 1.2.01: "What's new" window. 1.2.0: wobble-stops rule, phone-moved alert, power-back
+- Home screen (1.4.0; mockup https://claude.ai/artifact/PZfEztQWriu3wSmfZLeVRs): `@id/home` overlay on top of
+  the old screen, which is now "Your power" (swipe up / chart icon / handle; back or the bottom status tile
+  returns). One big Check button (tap = check, hold = Always-on screen), tinted by source (Always-on, else a
+  check < 30 min); "Always-on: active/inactive" chip; next-kahraba line from `KahrabaPattern`; power off greys
+  the button. Checks started there show a full-screen result with Correct/Incorrect. Tour targets home views.
+- Earlier: 1.3.0: Kahraba pattern card. 1.2.05: kahraba confirmed for 5 min; level rule only from Not sure yet. 1.2.04: "Choose an option" light picker. 1.2.03: power cuts only. 1.2.02: am/pm times. 1.2.01: "What's new" window. 1.2.0: wobble-stops rule, phone-moved alert, power-back
   buttons, timer-pitch beeps.
 - Shared with testers online. Play Protect asks to scan: testers tap More details > Install anyway.
 - Ideas not built (ask first): "Now kahraba / Now moteur" label buttons in the Light meter;

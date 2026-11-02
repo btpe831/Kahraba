@@ -178,11 +178,14 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         // Keep the always-on monitor running if it was on (e.g. after an update).
         if (monitoring && !MonitorState.running) MonitorService.send(this, MonitorService.ACTION_START)
 
-        // Back closes the tour if it's showing.
+        setUpHome()
+
+        // Back closes the tour if it's showing (added last, so it goes first).
         onBackPressedDispatcher.addCallback(this, tourBack)
 
         // First launch shows the welcome and tour (from onResume) instead of an automatic check.
         if (savedInstanceState == null && Tour.welcomeSeen(this) && Tour.tourSeen(this) && Prefs.autoCheck(this)) {
+            checkFromHome = true
             startCheck()
         }
     }
@@ -221,6 +224,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             renderBarStatus(animate = true)
             renderMonitorCard()
             renderWobble()
+            renderHome()
             if (++ticks % 30 == 0) {
                 renderHistoryCards()
                 renderPattern()
@@ -246,7 +250,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             startActivity(Intent(this, WelcomeActivity::class.java))
         } else if (!Tour.tourSeen(this)) {
             // After the screen has been laid out, so the highlights land in the right place.
-            findViewById<View>(R.id.scroll).post { startTour() }
+            showPower(false)
+            home.post { startTour() }
         } else if (whatsNew.isNotEmpty()) {
             val sections = whatsNew
             whatsNew = emptyList()
@@ -260,56 +265,314 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     private fun startTour() {
         if (tour != null || isFinishing) return
-        val scroll = findViewById<android.widget.ScrollView>(R.id.scroll)
-        val stack = findViewById<LinearLayout>(R.id.cardStack)
-        val firstCard = { (0 until stack.childCount).map { stack.getChildAt(it) }.firstOrNull { it.visibility == View.VISIBLE } }
-        /** The scroll position that puts the view about a third of the way down the screen. */
-        fun scrollFor(v: View?): Int {
-            v ?: return scroll.scrollY
-            val r = android.graphics.Rect()
-            v.getDrawingRect(r)
-            // Gives the view's position within the scrolled content (the scroll offset isn't included).
-            scroll.offsetDescendantRectToMyCoords(v, r)
-            return (r.top - scroll.height / 3).coerceAtLeast(0)
-        }
         val steps = listOf(
             TourOverlay.Step(
-                "Check now",
-                "Tap it, then lay the phone face-up under a halogen light. It beeps the answer: " +
+                "Check",
+                "Tap the button, then lay the phone face-up under a halogen light. It beeps the answer: " +
                     "1 long beep = moteur, 4 short = kahraba.",
-                { checkButton }, { scrollFor(checkButton) },
+                { homeButton },
             ),
             TourOverlay.Step(
-                "Your room",
-                "Choose the room you're in. After one check on each source there, the app can say kahraba for sure.",
-                { spotButton }, { scrollFor(spotButton) },
+                "Always-on mode",
+                "For a spare phone left on its charger under a light: it beeps when kahraba comes or goes. " +
+                    "Tap here, or press and hold the button.",
+                { findViewById(R.id.homeChip) },
             ),
             TourOverlay.Step(
-                "Your cards",
-                "Press and hold any card, then drag it up or down to move it. Hide cards in Settings.",
-                firstCard, { scrollFor(firstCard()) },
-            ),
-            // The bottom bar is always on screen: no scrolling.
-            TourOverlay.Step(
-                "All your checks",
-                "Tap a check to correct it. Corrections help the app learn and keep its accuracy score up to date.",
-                { findViewById(R.id.barHistory) },
+                "Your power",
+                "Swipe up or tap here for your room, the kahraba pattern, history and all your checks.",
+                { findViewById(R.id.homeHandle) },
             ),
             TourOverlay.Step(
                 "Settings and help",
                 "Sound, rooms, your area, backup, and the full guide.",
-                { findViewById(R.id.barSettings) },
+                { findViewById(R.id.homeSettings) },
             ),
         )
-        val overlay = TourOverlay(this, steps, scroll) {
+        val overlay = TourOverlay(this, steps, null) {
             tour = null
             tourBack.isEnabled = false
             Tour.setTourSeen(this)
-            scroll.smoothScrollTo(0, 0)
         }
         tour = overlay
         tourBack.isEnabled = true
         overlay.start(findViewById(android.R.id.content))
+    }
+
+    // ---- Home (1.4.0): one big button; everything else is in Your power ----
+
+    private lateinit var home: View
+    private lateinit var homeButton: View
+    private var homeSource = Source.UNKNOWN
+    private var homeColor = 0
+    private var homeTop = 0
+    private var homeBottom = 0
+    private var homePulse: android.animation.ObjectAnimator? = null
+    private var ringPulse: android.animation.ObjectAnimator? = null
+    /** The running check was started from the home screen, so its result shows there. */
+    private var checkFromHome = false
+
+    /** Back from Your power returns home. */
+    private val powerBack = object : androidx.activity.OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() { showPower(false) }
+    }
+    /** Back from a check result returns home. */
+    private val resultBack = object : androidx.activity.OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() { hideResult() }
+    }
+
+    @android.annotation.SuppressLint("ClickableViewAccessibility")
+    private fun setUpHome() {
+        home = findViewById(R.id.home)
+        homeButton = findViewById(R.id.homeButton)
+        homeButton.setOnClickListener {
+            when {
+                check != null -> stopCheck(null)
+                homeSource == Source.NO_POWER -> toast("The power is off. Nothing to check right now.")
+                else -> {
+                    checkFromHome = true
+                    startCheck()
+                }
+            }
+        }
+        homeButton.setOnLongClickListener {
+            if (check == null) openAlwaysOn()
+            true
+        }
+        findViewById<View>(R.id.homeChip).setOnClickListener { openAlwaysOn() }
+        findViewById<View>(R.id.homePower).setOnClickListener { showPower(true) }
+        findViewById<View>(R.id.homeHandle).setOnClickListener { showPower(true) }
+        findViewById<View>(R.id.homeSettings).setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
+        // In Your power, the status tile at the bottom goes back home.
+        barTile.setOnClickListener { showPower(false) }
+        barTile.contentDescription = "Home"
+        // Swipe up anywhere on the home screen opens Your power.
+        var downY = 0f
+        home.setOnTouchListener { _, e ->
+            when (e.actionMasked) {
+                android.view.MotionEvent.ACTION_DOWN -> downY = e.y
+                android.view.MotionEvent.ACTION_UP -> if (downY - e.y > 80 * dp) {
+                    showPower(true)
+                    return@setOnTouchListener true
+                }
+            }
+            false
+        }
+        findViewById<View>(R.id.resultDone).setOnClickListener { hideResult() }
+        onBackPressedDispatcher.addCallback(this, powerBack)
+        onBackPressedDispatcher.addCallback(this, resultBack)
+    }
+
+    private fun toast(text: String) = android.widget.Toast.makeText(this, text, android.widget.Toast.LENGTH_LONG).show()
+
+    private fun openAlwaysOn() = startActivity(Intent(this, MonitorActivity::class.java))
+
+    /** Slides home away to show Your power (the detailed screen), or back. */
+    private fun showPower(show: Boolean) {
+        if (!::home.isInitialized || show == powerBack.isEnabled) return
+        powerBack.isEnabled = show
+        home.animate().cancel()
+        val h = home.height.toFloat().coerceAtLeast(1f)
+        if (show) {
+            findViewById<android.widget.ScrollView>(R.id.scroll).scrollTo(0, 0)
+            home.animate().translationY(-h).setDuration(280)
+                .withEndAction { home.visibility = View.INVISIBLE }.start()
+        } else {
+            home.visibility = View.VISIBLE
+            home.animate().translationY(0f).setDuration(280).start()
+        }
+        colorSystemBars()
+    }
+
+    /** The status and navigation bars take the home colour on the home screen. */
+    private fun colorSystemBars() {
+        val onHome = !powerBack.isEnabled
+        val bg = themeColor(R.attr.appBg)
+        window.statusBarColor = if (onHome) homeTop else bg
+        window.navigationBarColor = if (onHome) homeBottom else bg
+        val light = !onHome && !Prefs.isDark(this)
+        androidx.core.view.WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = light
+            isAppearanceLightNavigationBars = light
+        }
+    }
+
+    /** The home screen: what's on now, from Always-on mode or a check in the last 30 minutes. */
+    private fun renderHome() {
+        if (!::home.isInitialized) return
+        val now = System.currentTimeMillis()
+        val recent = CheckHistory.read(this).firstOrNull { !it.fromMonitor }?.takeIf { now - it.timeMs < 30 * 60_000 }
+        var source = Source.UNKNOWN
+        var since = ""
+        var noFlicker = false
+        if (MonitorState.running && MonitorState.source != Source.UNKNOWN) {
+            source = MonitorState.source
+            since = "since ${PowerDetector.formatClock(MonitorState.sinceMs)}"
+        } else if (recent != null) {
+            when (recent.verdict) {
+                QuickCheck.Verdict.KAHRABA -> source = Source.KAHRABA
+                QuickCheck.Verdict.MOTEUR -> source = Source.MOTEUR
+                QuickCheck.Verdict.NO_FLICKER -> noFlicker = true
+                QuickCheck.Verdict.CANT_TELL -> {}
+            }
+            if (source != Source.UNKNOWN || noFlicker) since = "checked ${PowerDetector.formatClock(recent.timeMs)}"
+        }
+        homeSource = source
+
+        findViewById<TextView>(R.id.homeWord).text = when (source) {
+            Source.KAHRABA -> "Kahraba"
+            Source.MOTEUR -> "Moteur"
+            Source.NO_POWER -> "Power off"
+            Source.POWER_ON -> "Power on"
+            Source.UNKNOWN -> if (noFlicker) "Not sure" else "Kahraba or not?"
+        }
+        findViewById<TextView>(R.id.homeSince).text = since.ifEmpty { "Tap the button to check" }
+
+        val pattern = KahrabaPattern.summary(EventLog.read(this), now, MonitorState.running)
+        val nextKahraba = pattern.nextFromMs?.let { from ->
+            fun around(ms: Long) = PowerDetector.formatClock((ms + 150_000) / 300_000 * 300_000)
+            val to = pattern.nextToMs ?: from
+            if (from == to) "Next kahraba: around ${around(from)}" else "Next kahraba: ${around(from)} to ${around(to)}"
+        }
+        findViewById<TextView>(R.id.homeNext).text = when (source) {
+            Source.KAHRABA -> if (pattern.typicalMs != null && pattern.onSinceMs != null) {
+                "Usually lasts about ${DayData.hours(pattern.typicalMs)}"
+            } else "Good time for the big appliances"
+            Source.MOTEUR -> nextKahraba ?: "Keep it light: stay under your amps"
+            Source.NO_POWER -> "Kahraba and moteur are both off"
+            Source.POWER_ON -> ""
+            Source.UNKNOWN -> if (noFlicker) "No wobble: kahraba, or a calm moteur" else nextKahraba ?: ""
+        }
+        findViewById<View>(R.id.homeNext).visibility =
+            if (findViewById<TextView>(R.id.homeNext).text.isNullOrEmpty()) View.GONE else View.VISIBLE
+        findViewById<TextView>(R.id.homeChip).text = if (MonitorState.running) "Always-on: active" else "Always-on: inactive"
+
+        val color = if (source == Source.UNKNOWN) ContextCompat.getColor(this, R.color.idle) else MonitorService.colorFor(source)
+        if (color != homeColor) {
+            homeColor = color
+            home.background = GradientDrawable().apply {
+                gradientType = GradientDrawable.RADIAL_GRADIENT
+                colors = intArrayOf(lighten(color, 0.22f), color, darken(color, 0.38f))
+                setGradientCenter(0.5f, 0.42f)
+                gradientRadius = resources.displayMetrics.heightPixels * 0.75f
+            }
+            homeTop = darken(color, 0.08f)
+            homeBottom = darken(color, 0.3f)
+            colorSystemBars()
+        }
+        findViewById<ImageView>(R.id.homeButtonIcon).apply {
+            setImageResource(if (source == Source.MOTEUR) R.drawable.ic_moteur else R.drawable.ic_bolt)
+            setColorFilter(color)
+        }
+        findViewById<TextView>(R.id.homeButtonCap).setTextColor(color)
+        homeButton.alpha = if (source == Source.NO_POWER && check == null) 0.45f else 1f
+        if (check == null) {
+            findViewById<TextView>(R.id.homeButtonCap).text = if (source == Source.NO_POWER) "OFF" else "CHECK"
+            findViewById<TextView>(R.id.homeHint).text = if (source == Source.NO_POWER) {
+                "Nothing to check until the power's back"
+            } else "Tap to check · hold for Always-on mode"
+        }
+
+        // A soft ring around the button while Always-on mode is active.
+        val ring = findViewById<View>(R.id.homeRing)
+        if (MonitorState.running) {
+            ring.visibility = View.VISIBLE
+            if (ringPulse == null) {
+                ringPulse = android.animation.ObjectAnimator.ofFloat(ring, View.ALPHA, 1f, 0.25f).apply {
+                    duration = 1400
+                    repeatMode = android.animation.ValueAnimator.REVERSE
+                    repeatCount = android.animation.ValueAnimator.INFINITE
+                    start()
+                }
+            }
+        } else {
+            ringPulse?.cancel()
+            ringPulse = null
+            ring.visibility = View.INVISIBLE
+        }
+    }
+
+    /** The button pulses gently while a check runs. */
+    private fun homeChecking(on: Boolean) {
+        if (!::home.isInitialized) return
+        homePulse?.cancel()
+        homeButton.scaleX = 1f
+        homeButton.scaleY = 1f
+        homePulse = null
+        if (on) {
+            findViewById<TextView>(R.id.homeButtonCap).text = "CHECKING"
+            homePulse = android.animation.ObjectAnimator.ofPropertyValuesHolder(
+                homeButton,
+                android.animation.PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.05f),
+                android.animation.PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.05f),
+            ).apply {
+                duration = 800
+                repeatMode = android.animation.ValueAnimator.REVERSE
+                repeatCount = android.animation.ValueAnimator.INFINITE
+                start()
+            }
+        } else {
+            renderHome()
+        }
+    }
+
+    /** A check's result, full screen in its colour, with Correct / Incorrect. */
+    private fun showHomeResult(r: QuickCheck.Result) {
+        val color = ContextCompat.getColor(this, colorFor(r.verdict))
+        val box = findViewById<View>(R.id.homeResult)
+        box.setBackgroundColor(color)
+        findViewById<TextView>(R.id.resultWord).text = when (r.verdict) {
+            QuickCheck.Verdict.KAHRABA -> "Kahraba"
+            QuickCheck.Verdict.MOTEUR -> "Moteur"
+            QuickCheck.Verdict.NO_FLICKER -> "No flicker"
+            QuickCheck.Verdict.CANT_TELL -> "Can't tell"
+        }
+        findViewById<TextView>(R.id.resultAdvice).text = when (r.verdict) {
+            QuickCheck.Verdict.KAHRABA -> "Good time for the washing machine, water heater, oven or iron."
+            QuickCheck.Verdict.MOTEUR -> "Keep it light. Stay under your amps: avoid the heater, kettle and washing machine at the same time."
+            QuickCheck.Verdict.NO_FLICKER -> "Kahraba, or a calm moteur. Confirm before running several big appliances."
+            QuickCheck.Verdict.CANT_TELL -> "Try again with the phone face-up under a halogen light."
+        }
+        findViewById<TextView>(R.id.resultDetail).text = r.detail
+        val yes = findViewById<TextView>(R.id.resultYes)
+        val no = findViewById<TextView>(R.id.resultNo)
+        val canConfirm = r.verdict != QuickCheck.Verdict.CANT_TELL
+        findViewById<View>(R.id.resultPrompt).visibility = if (canConfirm) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.resultButtons).visibility = if (canConfirm) View.VISIBLE else View.GONE
+        yes.setTextColor(color)
+        // Each button: its text and what it says the source really was.
+        val choices: Pair<Pair<String, QuickCheck.Verdict>, Pair<String, QuickCheck.Verdict>> = when (r.verdict) {
+            QuickCheck.Verdict.KAHRABA -> ("Correct" to QuickCheck.Verdict.KAHRABA) to ("Incorrect" to QuickCheck.Verdict.MOTEUR)
+            QuickCheck.Verdict.MOTEUR -> ("Correct" to QuickCheck.Verdict.MOTEUR) to ("Incorrect" to QuickCheck.Verdict.KAHRABA)
+            else -> ("It was kahraba" to QuickCheck.Verdict.KAHRABA) to ("It was moteur" to QuickCheck.Verdict.MOTEUR)
+        }
+        yes.text = choices.first.first
+        no.text = choices.second.first
+        yes.setOnClickListener { answer(choices.first.second) }
+        no.setOnClickListener { answer(choices.second.second) }
+        box.alpha = 0f
+        box.visibility = View.VISIBLE
+        box.animate().alpha(1f).setDuration(220).start()
+        resultBack.isEnabled = true
+        window.statusBarColor = color
+        window.navigationBarColor = color
+        androidx.core.view.WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = false
+            isAppearanceLightNavigationBars = false
+        }
+    }
+
+    private fun answer(v: QuickCheck.Verdict) {
+        confirmLatest(v)
+        hideResult()
+        toast("Saved. Thanks, that helps the app learn this room.")
+    }
+
+    private fun hideResult() {
+        resultBack.isEnabled = false
+        findViewById<View>(R.id.homeResult).visibility = View.GONE
+        colorSystemBars()
+        renderHome()
     }
 
     private fun refreshAll() {
@@ -328,6 +591,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         renderSetup()
         renderAccuracy()
         renderUpdate()
+        renderHome()
         // The definition and the "lay the phone…" hint are for the first few checks only.
         val firstChecks = CheckHistory.read(this).count { !it.fromMonitor } < INTRO_CHECKS
         findViewById<View>(R.id.definition).visibility = if (firstChecks) View.VISIBLE else View.GONE
@@ -439,6 +703,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         heroChart.endLabel = "now"
         heroChart.setData(chartT, chartV, 0)
         heroChart.visibility = View.VISIBLE
+        homeChecking(true)
         ui.post(sampler)
     }
 
@@ -477,9 +742,11 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     /** The phone was picked up or moved during a check: stop, save nothing. */
     private fun onPhoneMoved() {
         if (check == null || System.currentTimeMillis() < measureFromMs) return
+        val fromHome = checkFromHome && !powerBack.isEnabled
         stopCheck(null)
         beeper.cancel()
         showHero(R.color.idle, R.drawable.ic_bolt, "Check stopped", "The phone was moved", "Place it down and try again")
+        if (fromHome) toast("Check stopped: the phone was moved. Place it down and try again.")
     }
 
     private fun stopCheck(result: QuickCheck.Result?) {
@@ -492,6 +759,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         check = null
         checkButton.text = "Check now"
         heroProgress.visibility = View.GONE
+        val fromHome = checkFromHome
+        checkFromHome = false
+        homeChecking(false)
         if (result == null) {
             showLastResult()
             return
@@ -513,6 +783,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         val room = Prefs.currentSpot(this)
         findViewById<TextView>(R.id.confirmPrompt).text =
             if (room.isEmpty()) "Know for sure? Confirm it:" else "Know for sure? Confirm it to teach “$room”:"
+        if (fromHome && !powerBack.isEnabled) showHomeResult(result)
     }
 
     override fun onSensorChanged(event: SensorEvent) {
@@ -584,6 +855,11 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         heroSub.text = sub
         heroMeta.text = meta
         heroMeta.visibility = if (meta.isEmpty()) View.GONE else View.VISIBLE
+        if (check != null && ::home.isInitialized) {
+            findViewById<TextView>(R.id.homeHint).text = if (title.isNotEmpty() && title.all { it.isDigit() }) {
+                "Put the phone down, face-up · $title"
+            } else "Checking the light… keep the phone still. Tap to cancel."
+        }
     }
 
     // ---- TODAY: clock and calendar ----

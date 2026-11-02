@@ -1,6 +1,12 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.4.0
+- A calmer home screen: one big Check button, what's on now, and when kahraba may come next.
+- Press and hold the button, or tap the Always-on chip, for Always-on mode.
+- Swipe up for Your power: your room, the kahraba pattern, history and all your checks.
+- Check results fill the screen, with Correct and Incorrect buttons.
+
 ## 1.3.02
 - The Kahraba pattern card has a clearer colour key for its bars.
 - Always-on mode says clearly what it uses: only the light sensor and the charger. No camera, microphone or internet.
