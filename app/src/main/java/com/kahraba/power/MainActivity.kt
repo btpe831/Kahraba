@@ -273,6 +273,11 @@ class MainActivity : ThemedActivity(), SensorEventListener {
                 { homeButton },
             ),
             TourOverlay.Step(
+                "Your room",
+                "Choose the room you're in. After one check on each source there, the app can say kahraba for sure.",
+                { findViewById(R.id.homeRoom) },
+            ),
+            TourOverlay.Step(
                 "Always-on mode",
                 "For a spare phone left on its charger under a light: it beeps when kahraba comes or goes. " +
                     "Tap here, or press and hold the button.",
@@ -343,6 +348,14 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         findViewById<View>(R.id.homePower).setOnClickListener { showPower(true) }
         findViewById<View>(R.id.homeHandle).setOnClickListener { showPower(true) }
         findViewById<View>(R.id.homeSettings).setOnClickListener { showTools() }
+        findViewById<TextView>(R.id.homeRoom).apply {
+            setOnClickListener { if (check == null) pickRoom() }
+            // A small white pin before the room name.
+            val pin = ContextCompat.getDrawable(this@MainActivity, R.drawable.ic_place)?.mutate()
+            pin?.setTint(0xFFFFFFFF.toInt())
+            pin?.setBounds(0, 0, (16 * dp).toInt(), (16 * dp).toInt())
+            setCompoundDrawablesRelative(pin, null, null, null)
+        }
         setUpPowerSheet()
         // Swipe up anywhere on the home screen opens Your power.
         var downY = 0f
@@ -585,6 +598,11 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         findViewById<View>(R.id.homeNext).visibility =
             if (findViewById<TextView>(R.id.homeNext).text.isNullOrEmpty()) View.GONE else View.VISIBLE
         findViewById<TextView>(R.id.homeChip).text = if (MonitorState.running) "Always-on: active" else "Always-on: inactive"
+        findViewById<TextView>(R.id.homeRoom).apply {
+            val room = Prefs.currentSpot(this@MainActivity)
+            text = room.ifEmpty { "Choose room" } + "  ▾"
+            contentDescription = if (room.isEmpty()) "Choose the room you're in" else "Room: $room. Tap to change."
+        }
 
         val color = if (source == Source.UNKNOWN) ContextCompat.getColor(this, R.color.idle) else MonitorService.colorFor(source)
         if (color != homeColor) {
