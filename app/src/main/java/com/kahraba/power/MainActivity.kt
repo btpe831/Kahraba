@@ -289,8 +289,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
                 { findViewById(R.id.homeHandle) },
             ),
             TourOverlay.Step(
-                "Settings and help",
-                "Sound, rooms, your area, backup, and the full guide.",
+                "Menu",
+                "Always-on mode, the Light meter, the Amps calculator, all your checks, settings and help.",
                 { findViewById(R.id.homeSettings) },
             ),
         )
@@ -452,12 +452,12 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         )) v.visibility = View.GONE
     }
 
-    /** TOOLS (the gear on home): Always-on mode, the tools, rooms, all checks, settings and help. */
+    /** MENU (top right of home): Always-on mode, the tools, rooms, all checks, then settings and help. */
     private fun showTools() {
         val sheet = BottomSheetDialog(this)
         val v = layoutInflater.inflate(R.layout.sheet_day, null)
-        v.findViewById<TextView>(R.id.sheetTitle).text = "Tools"
-        v.findViewById<TextView>(R.id.sheetDate).text = "Always-on mode, tools and settings"
+        v.findViewById<TextView>(R.id.sheetTitle).text = "Menu"
+        v.findViewById<View>(R.id.sheetDate).visibility = View.GONE
         v.findViewById<View>(R.id.sheetNote).visibility = View.GONE
         val content = v.findViewById<LinearLayout>(R.id.sheetContent)
         fun item(icon: Int, title: String, sub: String, action: () -> Unit) {
@@ -505,6 +505,12 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         }
         item(R.drawable.ic_place, "Rooms", Prefs.currentSpot(this).ifEmpty { "Choose the room you're in" }) { pickRoom() }
         item(R.drawable.ic_list, "All checks", "Correct or delete a check") { showAllChecks() }
+        // Settings and help after a thin line, set apart from the tools.
+        content.addView(View(this).apply { setBackgroundColor(themeColor(R.attr.appBorder)) },
+            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, (1 * dp).toInt().coerceAtLeast(1)).apply {
+                topMargin = (8 * dp).toInt()
+                bottomMargin = (8 * dp).toInt()
+            })
         item(R.drawable.ic_settings, "Settings", "Sound, cards, backup and more") {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
