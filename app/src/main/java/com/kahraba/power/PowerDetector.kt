@@ -104,6 +104,15 @@ class PowerDetector(
     private var phoneMovedAlert = false
 
     /**
+     * The light went dark while the charger stayed on: someone switched it off (or the bulb went),
+     * not a power cut. When it went dark and how bright it was before; alerted once until it's back.
+     */
+    private var lightOffSinceMs = -1L
+    private var lightOffBaseline = 0.0
+    private var lightOffAlerted = false
+    private var lightOffAlert = false
+
+    /**
      * The last [BUSY_KEEP_MS] of light, second by second, to remember the latest busy moteur (light
      * wobbling again and again: surely the moteur) and how bright it was. Kept through power cuts
      * (the phone hasn't moved), cleared when the phone moves.
@@ -147,6 +156,7 @@ class PowerDetector(
 
         if (lux != null) {
             if (!everPlugged) handleLightCut(nowMs, lux, out)
+            watchLightSwitch(nowMs, lux)
             samples.addLast(Sample(nowMs, lux))
             while (samples.isNotEmpty() && samples.first().t < nowMs - SAMPLE_KEEP_MS) samples.removeFirst()
         }
@@ -154,6 +164,7 @@ class PowerDetector(
         if (nowMs - lastEvalMs >= 1000) {
             lastEvalMs = nowMs
             evaluate(nowMs, out)
+            if (lightOffAlerted) lightStatus = LIGHT_OFF
         }
         return out
     }
@@ -185,6 +196,9 @@ class PowerDetector(
      * the app then said "Power off"). The caller alerts the user to check the phone.
      */
     fun takePhoneMoved(): Boolean = phoneMovedAlert.also { phoneMovedAlert = false }
+
+    /** True once when the light has been off for [LIGHT_OFF_MS] with the charger still on. */
+    fun takeLightOff(): Boolean = lightOffAlert.also { lightOffAlert = false }
 
     /** The user says which source it is (when they know for sure). */
     fun setManual(nowMs: Long, to: Source): Transition {
@@ -282,6 +296,41 @@ class PowerDetector(
             }
             out += change(now, Source.MOTEUR, reason)
             resetHistory(now)
+        }
+    }
+
+    // ---- The light switched off, with the charger still on ----
+
+    /**
+     * In a power cut the charger goes off too. Dark light with the charger still on for
+     * [LIGHT_OFF_MS] means the light itself was switched off (it happened three times on 3 Nov in
+     * the washroom): alert once, so someone can switch it back on. When it's back, the light history
+     * starts again, so the dark spell is never compared with the light after it.
+     */
+    private fun watchLightSwitch(now: Long, lux: Double) {
+        if (plugged != true) {
+            lightOffSinceMs = -1L
+            return
+        }
+        if (lightOffAlerted) {
+            if (lux >= 0.5 * lightOffBaseline) {
+                lightOffAlerted = false
+                resetHistory(now)
+            }
+            return
+        }
+        if (lightOffSinceMs < 0) {
+            val base = median(samples.filter { it.t in (now - 20_000)..(now - 2_000) }.map { it.lux })
+            if (base != null && base >= config.minLux && lux < 0.2 * base) {
+                lightOffSinceMs = now
+                lightOffBaseline = base
+            }
+        } else if (lux >= 0.5 * lightOffBaseline) {
+            lightOffSinceMs = -1L // only a short dip
+        } else if (now - lightOffSinceMs >= LIGHT_OFF_MS) {
+            lightOffSinceMs = -1L
+            lightOffAlerted = true
+            lightOffAlert = true
         }
     }
 
@@ -584,6 +633,9 @@ class PowerDetector(
         /** The charger coming off this soon after the phone moved means it fell or was picked up. */
         const val MOVED_UNPLUG_MS = 10_000L
         const val PHONE_MOVED = "Phone moved – please check"
+        /** Dark this long with the charger still on: the light was switched off, not a power cut. */
+        const val LIGHT_OFF_MS = 30_000L
+        const val LIGHT_OFF = "The light is off – please switch it back on"
         const val CUTS_ONLY = "Power cuts only – the light isn't used"
         /** Minutes of completely still light needed after a busy moteur. */
         const val CALM_MINUTES = 5.0

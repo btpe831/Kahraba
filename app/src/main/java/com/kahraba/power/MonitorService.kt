@@ -168,6 +168,7 @@ class MonitorService : Service(), SensorEventListener {
         val now = System.currentTimeMillis()
         for (t in detector.tick(now, latestLux, plugged)) onTransition(t)
         if (detector.takePhoneMoved()) onPhoneMoved()
+        if (detector.takeLightOff()) onLightOff()
 
         while (sensorEvents.isNotEmpty() && sensorEvents.first() < now - 60_000) sensorEvents.removeFirst()
 
@@ -248,6 +249,22 @@ class MonitorService : Service(), SensorEventListener {
         val n = NotificationCompat.Builder(this, CHANNEL_ALERTS)
             .setSmallIcon(R.drawable.ic_bolt)
             .setContentTitle(PowerDetector.PHONE_MOVED)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setContentIntent(openApp())
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .build()
+        notifications().notify(ALERT_ID, n)
+    }
+
+    /** The light went dark but the charger stayed on: someone switched it off, not a power cut. */
+    private fun onLightOff() {
+        val text = "${PowerDetector.formatClock(System.currentTimeMillis())} – The light went dark but the charger is " +
+            "still on, so it's not a power cut. If someone switched it off, switch it back on so the app can keep checking."
+        val n = NotificationCompat.Builder(this, CHANNEL_ALERTS)
+            .setSmallIcon(R.drawable.ic_bolt)
+            .setContentTitle(PowerDetector.LIGHT_OFF)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setContentIntent(openApp())

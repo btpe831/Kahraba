@@ -85,6 +85,8 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 - Wobble stops (1.2.0): the moteur was busy (>= 10 wobbling seconds in a minute; its level = median
   of the 10 min before), then 5 min of completely still light >= 10% brighter -> kahraba. The still
   stretch must start within 5 min of the last busy moment, or after a power cut/outage since then.
+- Light switched off (1.4.08): light < 20% of the level before for 30 s while the charger stays on -> alert (no
+  beep, no switch); in a cut the charger goes off too. When it's back (>= 50%), the light history starts again.
 - Phone moved (1.2.0): motion, then the charger off within 10 s -> not a cut: "Phone moved – please
   check" alert; carries on when plugged back in. Power back after an outage: alert with
   "It's kahraba" / "It's moteur" buttons.
@@ -113,7 +115,9 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
-- Released: 1.4.07 (graph ranges 30 s, 1/3/5/10 min, 1/6/24 h in two rows; graph 130dp; "Teach it" card moved under
+- Released: 1.4.08 (light-off alert: dark >= 30 s with the charger on -> "The light is off – please switch it back
+  on" notification, once until the light is back; then history resets. `PowerDetector.watchLightSwitch`, `LightOffTest`;
+  the washroom light was switched off 3 times on 3 Nov). 1.4.07 (graph ranges 30 s, 1/3/5/10 min, 1/6/24 h in two rows; graph 130dp; "Teach it" card moved under
   Start/Stop; Settings › Text size Smaller 0.88 / Default / Larger 1.12, `Prefs.textScale`, applied in
   `ThemedActivity.attachBaseContext`). 1.4.06 (light graph moved into the Live readings card, `@id/graphBox`; new 30 sec range).
   1.4.05 (checks show lux, wobble and a live graph again; the result has LIGHT/WOBBLE boxes + the
