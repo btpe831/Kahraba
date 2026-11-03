@@ -95,7 +95,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   (1.2.04, `Prefs.monitorLight`): Halogen or filament bulb / LED / Other light / Power cuts only; all but
   halogen turn power cuts only on. Light ignored, nothing learned, kahraba/moteur buttons hidden. States POWER_ON / NO_POWER; logs
   "Power went off" and "Power back after X" (blinks too); 1 long beep off, quick beeps back.
-- Kahraba confirmation (1.2.05): every light rule only *proposes* kahraba; the alert comes after 5 more
+- Kahraba confirmation (1.2.05; 3 min since 1.4.08, was 5): every light rule only *proposes* kahraba; the alert comes after 3 more
   minutes unless the light wobbles 3+ separate times (episodes after >= 5 calm s). Kahraba never had more than
   1 episode in 5 min; moteur 3+, even calm (1 Nov 18:37, 222 V). The transition is dated when kahraba came on
   (level start / power back / blink), so the NOW card and alert show "Kahraba since 4:01 PM".
@@ -115,7 +115,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
-- Released: 1.4.08 (light-off alert: dark >= 30 s with the charger on -> "The light is off – please switch it back
+- Released: 1.4.08 (kahraba check 3 min instead of 5; light-off alert: dark >= 30 s with the charger on -> "The light is off – please switch it back
   on" notification, once until the light is back; then history resets. `PowerDetector.watchLightSwitch`, `LightOffTest`;
   the washroom light was switched off 3 times on 3 Nov). 1.4.07 (graph ranges 30 s, 1/3/5/10 min, 1/6/24 h in two rows; graph 130dp; "Teach it" card moved under
   Start/Stop; Settings › Text size Smaller 0.88 / Default / Larger 1.12, `Prefs.textScale`, applied in

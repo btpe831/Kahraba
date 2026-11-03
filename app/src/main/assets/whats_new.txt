@@ -3,6 +3,7 @@
 
 ## 1.4.08
 - Always-on mode tells you when the light is switched off but the charger is still on, so you can switch it back on. It's not mistaken for a power cut.
+- Kahraba alerts come 2 minutes sooner: the app now checks the light for 3 minutes instead of 5.
 
 ## 1.4.07
 - The Always-on light graph has more views: 30 seconds, 1, 3, 5 and 10 minutes, 1 hour, 6 hours and 24 hours. It's also a little shorter.

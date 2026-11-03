@@ -643,8 +643,11 @@ class PowerDetector(
         const val CALM_RISE_PCT = 10.0
         /** The still light must start within this long after the moteur was last busy (the switch can take a few minutes to settle). */
         const val CALM_AFTER_BUSY_MS = 5 * 60_000L
-        /** Kahraba seen in the light is confirmed for this long before the alert. */
-        const val CONFIRM_MS = 5 * 60_000L
+        /**
+         * Kahraba seen in the light is confirmed for this long before the alert (5 min until 1.4.08; every
+         * recording still came out right at 3 min, and the calm moteur of 1 Nov wobbled again within 2).
+         */
+        const val CONFIRM_MS = 3 * 60_000L
         /** Separate wobbles during that time that mean it was a calm moteur after all. */
         const val CONFIRM_WOBBLES = 3
         /** Calm seconds between two wobbles for them to count as separate. */

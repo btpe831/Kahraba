@@ -222,7 +222,7 @@ class PowerDetectorTest {
         }
         assertEquals(Source.KAHRABA, d.source)
         println("Kahraba seen ${(cameOn!! - end) / 1000}s after the silent switch, alert after ${(switchedAt!! - end) / 1000}s")
-        // Shown from when it came on; the alert waits for 5 minutes of still light to be sure.
+        // Shown from when it came on; the alert waits for [CONFIRM_MS] of still light to be sure.
         assertTrue(cameOn!! - end <= 150_000)
         assertTrue(switchedAt!! - end <= 150_000 + PowerDetector.CONFIRM_MS)
     }
@@ -378,7 +378,7 @@ class PowerDetectorTest {
 
     @Test
     fun brightStillMoteurThatWobblesAgainIsNeverAnnounced() {
-        // Looks like kahraba (24% brighter, still), but wobbles again within 5 minutes: no alert.
+        // Looks like kahraba (24% brighter, still), but wobbles again within the check: no alert.
         val r = Run(PowerDetector(initialSource = Source.MOTEUR))
         r.run(10 * min) { calmMoteur(it) }
         r.run(3 * min) { kahraba(it) }
