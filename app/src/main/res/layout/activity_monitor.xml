@@ -307,6 +307,15 @@
                     android:layout_gravity="center_horizontal"
                     android:layout_marginTop="6dp"
                     android:text="None" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/monitorLearned"
+                    style="@style/OutlinePill"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="2dp"
+                    android:text="What it learned…" />
             </LinearLayout>
         </com.kahraba.power.NotchCard>
 

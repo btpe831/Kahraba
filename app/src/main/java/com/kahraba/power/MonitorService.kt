@@ -124,7 +124,7 @@ class MonitorService : Service(), SensorEventListener {
             ACTION_SET -> {
                 val s = runCatching { Source.valueOf(intent.getStringExtra(EXTRA_SOURCE)!!) }.getOrNull()
                 val calibrate = intent.getBooleanExtra(EXTRA_CALIBRATE, false)
-                if (intent.getBooleanExtra(EXTRA_FROM_ALERT, false)) notifications().cancel(ALERT_ID)
+                if (intent.getBooleanExtra(EXTRA_FROM_ALERT, false)) notifications().cancel(lastAlertId)
                 if (s != null) handler.post { setManual(s, calibrate) }
             }
             ACTION_TEST_KAHRABA -> beeper.kahraba(respectQuiet = false)
@@ -238,7 +238,7 @@ class MonitorService : Service(), SensorEventListener {
             b.addAction(0, "It's kahraba", setFromAlert(Source.KAHRABA))
             b.addAction(0, "It's moteur", setFromAlert(Source.MOTEUR))
         }
-        notifications().notify(ALERT_ID, b.build())
+        notifications().notify(nextAlertId(), b.build())
     }
 
     /** The phone moved and its charger came off (it may have fallen): not a power cut. */
@@ -255,7 +255,15 @@ class MonitorService : Service(), SensorEventListener {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()
-        notifications().notify(ALERT_ID, n)
+        notifications().notify(nextAlertId(), n)
+    }
+
+    /** The latest alert's notification (cancelled when its button is tapped). */
+    private var lastAlertId = ALERT_ID_FIRST
+
+    private fun nextAlertId(): Int {
+        lastAlertId = ALERT_ID_FIRST + (lastAlertId - ALERT_ID_FIRST + 1) % ALERT_ID_COUNT
+        return lastAlertId
     }
 
     /** The light went dark but the charger stayed on: someone switched it off, not a power cut. */
@@ -271,7 +279,7 @@ class MonitorService : Service(), SensorEventListener {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()
-        notifications().notify(ALERT_ID, n)
+        notifications().notify(nextAlertId(), n)
     }
 
     private fun setFromAlert(s: Source): PendingIntent {
@@ -388,7 +396,12 @@ class MonitorService : Service(), SensorEventListener {
         const val CHANNEL_STATUS = "status"
         const val CHANNEL_ALERTS = "alerts"
         private const val STATUS_ID = 1
-        private const val ALERT_ID = 2
+        /**
+         * Alerts get their own notification each (from 1.4.10): an alert that replaced the one
+         * before it wasn't seen as new by apps that forward notifications (MacroDroid + ntfy).
+         */
+        private const val ALERT_ID_FIRST = 1000
+        private const val ALERT_ID_COUNT = 50
         private const val TICK_MS = 200L
         const val CALIBRATION_MS = 120_000L
 

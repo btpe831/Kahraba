@@ -86,6 +86,7 @@ class MonitorActivity : ThemedActivity() {
             if (MonitorState.running) MonitorService.send(this, MonitorService.ACTION_SILENCE)
         }
         findViewById<Button>(R.id.shareData).setOnClickListener { shareRecordings() }
+        findViewById<Button>(R.id.monitorLearned).setOnClickListener { showTeachings() }
         findViewById<Button>(R.id.monitorRoomButton).setOnClickListener {
             RoomPicker.pick(this, Prefs.monitorRoom(this)) { room ->
                 Prefs.setMonitorRoom(this, room)
@@ -267,6 +268,9 @@ class MonitorActivity : ThemedActivity() {
     private var graphLoadedAt = 0L
     private var graphLoading = false
     private var graphDrawnMs = 0L
+    /** The switch log, for colouring the graph from when each source really came on. */
+    private var switches: List<Pair<Long, Source>> = emptyList()
+    private var switchesReadMs = 0L
 
     private fun setUpGraph() {
         graphRangeMs = Prefs.sp(this).getLong(GRAPH_RANGE, 3_600_000L)
@@ -403,7 +407,11 @@ class MonitorActivity : ThemedActivity() {
         val from = now - graphRangeMs
         val (liveR, liveS) = MonitorState.recent()
         val readings = LightHistory.merge(savedReadings, liveR) { it.timeMs }
-        val statuses = LightHistory.merge(savedStatus, liveS) { it.timeMs }
+        if (now - switchesReadMs > 10_000) {
+            switches = EventLog.read(this).sortedBy { it.timeMs }.map { it.timeMs to it.source }
+            switchesReadMs = now
+        }
+        val statuses = LightHistory.relabel(LightHistory.merge(savedStatus, liveS) { it.timeMs }, switches)
         val labels = if (graphRangeMs <= 10 * 60_000L) {
             listOf(agoText(graphRangeMs), agoText(graphRangeMs / 2), "now")
         } else {
@@ -441,6 +449,45 @@ class MonitorActivity : ThemedActivity() {
             "Optional: the room this phone is in. Once that room is learned, " +
                 "the app can tell kahraba from a steady moteur.",
         )
+    }
+
+    /** What "It's kahraba / It's moteur" taught here, newest first; tap one to remove it. */
+    private fun showTeachings() {
+        val taught = CheckHistory.read(this).filter { it.fromMonitor && it.lux != null }
+        if (taught.isEmpty()) {
+            com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                .setTitle("Nothing taught yet")
+                .setMessage("When you tap “It's kahraba” or “It's moteur”, the light level it learns shows here.")
+                .setPositiveButton("OK", null)
+                .show()
+            return
+        }
+        val fmt = java.text.SimpleDateFormat("EEE d MMM, h:mm a", java.util.Locale.US)
+        val items = taught.map { e ->
+            "${CheckHistory.label(e.verdict)} · ${"%,d".format(java.util.Locale.US, Math.round(e.lux!!))} lux · " +
+                e.spot.ifEmpty { "no room" } + "\n" + fmt.format(java.util.Date(e.timeMs))
+        }.toTypedArray()
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle("What it learned")
+            .setItems(items) { _, i ->
+                val e = taught[i]
+                com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                    .setTitle("Remove this?")
+                    .setMessage(
+                        "${CheckHistory.label(e.verdict)}, ${"%,d".format(java.util.Locale.US, Math.round(e.lux!!))} lux, " +
+                            "taught for “${e.spot.ifEmpty { "no room" }}” on ${fmt.format(java.util.Date(e.timeMs))}.\n\n" +
+                            "The app forgets just this one. Everything else it learned stays.",
+                    )
+                    .setPositiveButton("Remove") { _, _ ->
+                        // Always-on mode picks this up by itself (it watches the saved settings).
+                        CheckHistory.delete(this, e.timeMs)
+                        renderRoom()
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            }
+            .setNegativeButton("Close", null)
+            .show()
     }
 
     private fun confirmSet(s: Source) {

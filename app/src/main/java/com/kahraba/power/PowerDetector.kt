@@ -614,7 +614,9 @@ class PowerDetector(
         var start: Long? = null
         for (sec in seconds.reversed()) {
             val l = sec.level ?: break
-            if (kotlin.math.abs(l / recent - 1) > SAME_LEVEL) break
+            // The same level, or a little brighter: kahraba can overshoot and settle down a step
+            // (4 Nov, 22:00: 2,209 lux, then 2,068 a minute later and still).
+            if (l < recent * (1 - SAME_LEVEL) || l > recent * (1 + SETTLE_OVERSHOOT)) break
             start = sec.t
         }
         if (start == null) return null
@@ -718,6 +720,8 @@ class PowerDetector(
         const val REFERENCE_MINUTES = 3.0
         /** Levels within this share of each other count as the same brightness (the sensor steps ~5%). */
         const val SAME_LEVEL = 0.06
+        /** How much brighter than the current level the light may have been just after the switch (1.4.10). */
+        const val SETTLE_OVERSHOOT = 0.15
         /** Time skipped around a switch, where the light can step and bounce. */
         const val SWITCH_MS = 45_000L
         /** A power cut shorter than this is a changeover, not the moteur starting (that took 61 s or more). */

@@ -127,7 +127,7 @@ class HelpActivity : ThemedActivity() {
                 • Keep other lights the same: switching a lamp on can look like the brightness change.
                 • Every switch is logged with its time, and it beeps on each change. Night silence and beep volume are in Settings.
                 • When Always-on mode is off, it shows “Off”. After you start it, it shows “Not sure yet” until it sees a wobble or a power cut (moteur), matches a learned level, or you tap “It's kahraba” / “It's moteur”.
-                • Tap “It's kahraba” or “It's moteur” when you're sure, so it learns your setup.
+                • Tap “It's kahraba” or “It's moteur” when you're sure, so it learns your setup. Saved one to the wrong room? Under Room, tap <b>What it learned…</b> and remove just that one.
                 • Unplugging the phone without moving it looks like a power cut.
                 • If the phone is picked up or moved, it stops judging the light until the phone has been still for 10 seconds (power cuts are still noticed). A move is never mistaken for kahraba coming back.
                 • If the phone moves and its charger comes off straight after (for example, it fell off its stand), that's not a power cut: it beeps and shows “Phone moved – please check”. Put it back and plug it in; it carries on from there.

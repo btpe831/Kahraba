@@ -65,6 +65,8 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   `nov03-pixel2-raw-quiet-kahraba-light-off.csv` (washroom, from 19:00 2 Nov to 06:44 4 Nov: kahraba 20:01-22:02;
   light switched off 4 times on 3 Nov; quiet kahraba 10:35-12:42 only ~5% brighter, cut 1m 13s; moteur 227 V green at
   17:27; kahraba ~21:00 (234 V, blink seen by the owner) to the midnight cut; calm night moteur).
+  `nov04-pixel2-raw-kahraba-settles.csv` (from 07:00 4 Nov: kahraba 07:59-10:00 and 12:01-13:59; outage 13:59 5m 31s;
+  light switched off 17:21, 18:06, 19:59-20:51; kahraba 22:00 at 238 V, jumped ~30% then settled ~7%).
   `nov02-night-pixel2-raw-kahraba-cut-moteur-kahraba.csv` (from 21:00 1 Nov: moteur 223 V; kahraba 01:01 ~3,600
   still; cut 03:30:33 for 1m 14s (heater reset); moteur ~2,600-3,200 wobbling, 227 V at 6 AM = as bright as the
   later kahraba; kahraba 09:59 at 227-228 V under 8 A. Same voltage = same light: only wobble separates them).
@@ -122,7 +124,11 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
-- Released: 1.4.09 (daytime stillness rule). 1.4.08 (kahraba check 3 min instead of 5; light-off alert: dark >= 30 s with the charger on -> "The light is off – please switch it back
+- Released: 1.4.10 (each alert its own notification id 1000-1049, so MacroDroid forwards it (a replaced alert
+  wasn't seen as new: no ntfy for 4 Nov 22:09 kahraba); `SETTLE_OVERSHOOT` 15%: the level trace accepts a brighter
+  step just after the switch (4 Nov 22:00: alert 22:06 not 22:09, `SettlingKahrabaTest`); graph shading relabelled from
+  the switch log, `LightHistory.relabel`; Room › "What it learned…" removes one Always-on teaching (owner's
+  1,784 lux moteur saved to Main Bathroom instead of Guest bathroom)). 1.4.09 (daytime stillness rule). 1.4.08 (kahraba check 3 min instead of 5; light-off alert: dark >= 30 s with the charger on -> "The light is off – please switch it back
   on" notification, once until the light is back; then history resets. `PowerDetector.watchLightSwitch`, `LightOffTest`;
   the washroom light was switched off 3 times on 3 Nov). 1.4.07 (graph ranges 30 s, 1/3/5/10 min, 1/6/24 h in two rows; graph 130dp; "Teach it" card moved under
   Start/Stop; Settings › Text size Smaller 0.88 / Default / Larger 1.12, `Prefs.textScale`, applied in

@@ -78,3 +78,26 @@ class LightHistoryTest {
         assertEquals(listOf(2000L, 3000L), LightHistory.merge(emptyList(), live) { it.timeMs }.map { it.timeMs })
     }
 }
+
+class LightHistoryRelabelTest {
+    private fun st(s: Int, source: Source) = LightHistory.Status(s * 1000L, source, false)
+
+    @Test
+    fun kahrabaShowsFromWhenItCameOnNotWhenItWasAnnounced() {
+        // Kahraba came on at 100 s; the app said so at 400 s (the check), dating it from 100 s.
+        val statuses = (0 until 500).map { st(it, if (it < 400) Source.MOTEUR else Source.KAHRABA) }
+        val log = listOf(0L to Source.MOTEUR, 100_000L to Source.KAHRABA)
+        val out = LightHistory.relabel(statuses, log)
+        assertTrue(out.take(100).all { it.source == Source.MOTEUR })
+        assertTrue(out.drop(100).all { it.source == Source.KAHRABA })
+    }
+
+    @Test
+    fun aStopEndsTheRelabelling() {
+        val statuses = (0 until 300).map { st(it, if (it < 200) Source.KAHRABA else Source.MOTEUR) }
+        // Kahraba, then Always-on stopped at 150 s; after a restart the saved rows say moteur.
+        val log = listOf(0L to Source.KAHRABA, 150_000L to Source.UNKNOWN)
+        val out = LightHistory.relabel(statuses, log)
+        assertTrue(out.drop(200).all { it.source == Source.MOTEUR })
+    }
+}

@@ -139,6 +139,24 @@ object LightHistory {
         return out
     }
 
+    /**
+     * What the app called, corrected by its own switch log: a kahraba is announced a few minutes
+     * after it came on, but the log dates it from when it came on, so the graph shows it from there.
+     * [switches] are (time, source) pairs sorted by time.
+     */
+    fun relabel(statuses: List<Status>, switches: List<Pair<Long, Source>>): List<Status> {
+        // A stop (UNKNOWN) ends what came before: after it the saved rows speak for themselves.
+        val known = switches.filter { it.second != Source.POWER_ON }
+        if (known.isEmpty()) return statuses
+        var j = -1
+        return statuses.map { st ->
+            while (j + 1 < known.size && known[j + 1].first <= st.timeMs) j++
+            val s = known.getOrNull(j)?.second
+            if (s == null || s == Source.UNKNOWN || s == st.source || st.source == Source.UNKNOWN || st.source == Source.POWER_ON) st
+            else Status(st.timeMs, s, st.chargerOff)
+        }
+    }
+
     /** Joins saved rows with the newer live ones: live rows only after the last saved one. */
     fun <T> merge(saved: List<T>, live: List<T>, timeOf: (T) -> Long): List<T> {
         val last = saved.lastOrNull()?.let(timeOf) ?: Long.MIN_VALUE

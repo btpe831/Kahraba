@@ -1,6 +1,12 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.4.10
+- Every alert now comes as its own notification, so apps that pass alerts on to your other phones never miss one.
+- Kahraba is announced sooner when the light jumps up and then settles a little.
+- The light graph shows kahraba in green from when it actually came on.
+- New “What it learned…” button under Room on the Always-on screen: remove a single “It's kahraba” or “It's moteur” teaching, for example one saved to the wrong room.
+
 ## 1.4.09
 - Always-on mode now also spots kahraba in the daytime when it's barely brighter than the moteur: a light that stays almost perfectly still for 45 minutes. It still shows the time kahraba came on.
 
