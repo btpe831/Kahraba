@@ -26,7 +26,7 @@ class CalmKahrabaTest {
     private fun replay(): List<Transition> {
         val rows = javaClass.classLoader!!.getResourceAsStream("oct31-day-pixel2-raw-calm-kahraba.csv")!!.bufferedReader()
             .readLines().drop(1).filter { it.isNotBlank() }.map { it.split(",") }.map { it[0].toLong() to it[1].toDouble() }
-        val d = PowerDetector()
+        val d = PowerDetector(hourOf = recordingClock(10))
         val start = hms(10, 56, 0) // the app had just said moteur (wobbling light)
         val out = mutableListOf(d.setManual(start, Source.MOTEUR))
         var i = rows.indexOfFirst { it.first > start }

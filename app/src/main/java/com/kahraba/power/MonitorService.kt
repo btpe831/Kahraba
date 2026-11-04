@@ -83,7 +83,7 @@ class MonitorService : Service(), SensorEventListener {
         handler = Handler(thread.looper)
         beeper = Beeper(this)
         data = DataLogger(this)
-        detector = PowerDetector(Prefs.config(this), Prefs.savedSource(this), Prefs.savedSince(this))
+        detector = PowerDetector(Prefs.config(this), Prefs.savedSource(this), Prefs.savedSince(this), PowerDetector::localHour)
 
         sensors = getSystemService(SENSOR_SERVICE) as SensorManager
         val light = sensors.getDefaultSensor(Sensor.TYPE_LIGHT)

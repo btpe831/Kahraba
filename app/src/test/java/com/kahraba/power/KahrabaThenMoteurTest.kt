@@ -17,7 +17,7 @@ class KahrabaThenMoteurTest {
     private fun replay(): List<Transition> {
         val rows = javaClass.classLoader!!.getResourceAsStream("nov01-morning-pixel2-raw-kahraba-cut-moteur.csv")!!.bufferedReader()
             .readLines().drop(1).filter { it.isNotBlank() }.map { it.split(",") }.map { it[0].toLong() to it[1].toDouble() }
-        val d = PowerDetector()
+        val d = PowerDetector(hourOf = recordingClock(8))
         val start = 780_000L // 08:13:00, just after "It's kahraba" was tapped
         val out = mutableListOf(d.setManual(start, Source.KAHRABA))
         var i = rows.indexOfFirst { it.first > start }

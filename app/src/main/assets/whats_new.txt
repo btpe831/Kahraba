@@ -1,6 +1,9 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.4.09
+- Always-on mode now also spots kahraba in the daytime when it's barely brighter than the moteur: a light that stays almost perfectly still for 45 minutes. It still shows the time kahraba came on.
+
 ## 1.4.08
 - Always-on mode tells you when the light is switched off but the charger is still on, so you can switch it back on. It's not mistaken for a power cut.
 - Kahraba alerts come 2 minutes sooner: the app now checks the light for 3 minutes instead of 5.

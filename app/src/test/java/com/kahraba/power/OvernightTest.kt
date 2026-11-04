@@ -43,7 +43,7 @@ class OvernightTest {
     private val morningKahraba get() = switchToKahraba + 1000..morning.end
 
     private fun monitor(r: Rec, startAs: Source, pluggedAt: (Long) -> Boolean): List<Transition> {
-        val d = PowerDetector()
+        val d = PowerDetector(hourOf = recordingClock(if (r === night) 22 else 6))
         d.setManual(r.start, startAs)
         val out = mutableListOf<Transition>()
         var i = 0

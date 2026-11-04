@@ -18,7 +18,7 @@ class NightSwitchesTest {
     private fun replay(): List<Transition> {
         val rows = javaClass.classLoader!!.getResourceAsStream("nov02-night-pixel2-raw-kahraba-cut-moteur-kahraba.csv")!!.bufferedReader()
             .readLines().drop(1).filter { it.isNotBlank() }.map { it.split(",") }.map { it[0].toLong() to it[1].toDouble() }
-        val d = PowerDetector()
+        val d = PowerDetector(hourOf = recordingClock(21))
         val start = 2_673_000L // 21:44:33, "It's moteur"
         val out = mutableListOf(d.setManual(start, Source.MOTEUR))
         var i = rows.indexOfFirst { it.first > start }

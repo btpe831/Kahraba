@@ -17,7 +17,7 @@ class BlinkTest {
     private fun replay(): List<Transition> {
         val rows = javaClass.classLoader!!.getResourceAsStream("oct30-night-pixel2-raw-blink-to-kahraba.csv")!!.bufferedReader()
             .readLines().drop(1).map { it.split(",") }.map { it[0].toLong() to it[1].toDouble() }
-        val d = PowerDetector()
+        val d = PowerDetector(hourOf = recordingClock(18))
         val start = 4_191_000L // 19:09:51, when "It's moteur" was tapped
         val out = mutableListOf(d.setManual(start, Source.MOTEUR))
         var i = rows.indexOfFirst { it.first > start }

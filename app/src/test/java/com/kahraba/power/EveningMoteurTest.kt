@@ -21,7 +21,7 @@ class EveningMoteurTest {
     private fun replay(): List<Transition> {
         val rows = javaClass.classLoader!!.getResourceAsStream("nov01-evening-pixel2-raw-kahraba-cut-calm-moteur.csv")!!.bufferedReader()
             .readLines().drop(1).filter { it.isNotBlank() }.map { it.split(",") }.map { it[0].toLong() to it[1].toDouble() }
-        val d = PowerDetector(config)
+        val d = PowerDetector(config, hourOf = recordingClock(14))
         val start = 2_280_000L // 14:38:00, once the phone was set down
         val out = mutableListOf<Transition>()
         var i = rows.indexOfFirst { it.first > start }

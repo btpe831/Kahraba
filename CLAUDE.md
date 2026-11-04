@@ -62,6 +62,9 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   episode per 5 min) matches kahraba, so very likely kahraba. Still: ask for a voltmeter photo at alerts.
   `nov01-evening-pixel2-raw-kahraba-cut-calm-moteur.csv` (from 14:00: busy moteur; kahraba 16:01, ~4,600
   still; cut 18:00:14 for 1m 14s; moteur 222 V, pole light green, ~3,600-4,150 calm: 1.2.04 false kahraba 18:37).
+  `nov03-pixel2-raw-quiet-kahraba-light-off.csv` (washroom, from 19:00 2 Nov to 06:44 4 Nov: kahraba 20:01-22:02;
+  light switched off 4 times on 3 Nov; quiet kahraba 10:35-12:42 only ~5% brighter, cut 1m 13s; moteur 227 V green at
+  17:27; kahraba ~21:00 (234 V, blink seen by the owner) to the midnight cut; calm night moteur).
   `nov02-night-pixel2-raw-kahraba-cut-moteur-kahraba.csv` (from 21:00 1 Nov: moteur 223 V; kahraba 01:01 ~3,600
   still; cut 03:30:33 for 1m 14s (heater reset); moteur ~2,600-3,200 wobbling, 227 V at 6 AM = as bright as the
   later kahraba; kahraba 09:59 at 227-228 V under 8 A. Same voltage = same light: only wobble separates them).
@@ -85,6 +88,10 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 - Wobble stops (1.2.0): the moteur was busy (>= 10 wobbling seconds in a minute; its level = median
   of the 10 min before), then 5 min of completely still light >= 10% brighter -> kahraba. The still
   stretch must start within 5 min of the last busy moment, or after a power cut/outage since then.
+- Daytime stillness (1.4.09, `quietDaytime`, `QuietKahrabaTest`): from moteur, 45 min with <= 2 separate wobbles,
+  all judged, both ends 7 AM-7 PM (`hourOf`, `PowerDetector.localHour` in the app; tests pass `recordingClock`), light
+  now >= the 15 min before -> kahraba since the start of the 45 min. Longest still spell: daytime moteur 24 min, kahraba
+  71; night moteur 39 (2 Nov) and 31 (4 Nov), so never at night. 3 Nov 10:35 kahraba was only ~5% brighter: alert 11:23.
 - Light switched off (1.4.08): light < 20% of the level before for 30 s while the charger stays on -> alert (no
   beep, no switch); in a cut the charger goes off too. When it's back (>= 50%), the light history starts again.
 - Phone moved (1.2.0): motion, then the charger off within 10 s -> not a cut: "Phone moved – please
@@ -115,7 +122,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
-- Released: 1.4.08 (kahraba check 3 min instead of 5; light-off alert: dark >= 30 s with the charger on -> "The light is off – please switch it back
+- Released: 1.4.09 (daytime stillness rule). 1.4.08 (kahraba check 3 min instead of 5; light-off alert: dark >= 30 s with the charger on -> "The light is off – please switch it back
   on" notification, once until the light is back; then history resets. `PowerDetector.watchLightSwitch`, `LightOffTest`;
   the washroom light was switched off 3 times on 3 Nov). 1.4.07 (graph ranges 30 s, 1/3/5/10 min, 1/6/24 h in two rows; graph 130dp; "Teach it" card moved under
   Start/Stop; Settings › Text size Smaller 0.88 / Default / Larger 1.12, `Prefs.textScale`, applied in

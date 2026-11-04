@@ -65,6 +65,11 @@ class PowerDetector(
     var config: DetectorConfig = DetectorConfig(),
     initialSource: Source = Source.UNKNOWN,
     initialSinceMs: Long = 0L,
+    /**
+     * The local hour (0-23) of a time, for rules that only hold in the daytime. Null turns those
+     * rules off (tests replaying recordings pass the recording's own clock).
+     */
+    private val hourOf: ((Long) -> Int)? = null,
 ) {
     private data class Sample(val t: Long, val lux: Double)
     private data class Second(val t: Long, val flicker: Double?, val level: Double?)
@@ -388,13 +393,18 @@ class PowerDetector(
         while (longSeconds.isNotEmpty() && longSeconds.first().t < now - BUSY_KEEP_MS) longSeconds.removeFirst()
         // Separate wobbles: kahraba has at most one in 5 minutes (a step in brightness), a moteur
         // three or more, even when calm (1 Nov: 222 V evening moteur).
+        if (level == null) judgedSinceMs = -1L else if (judgedSinceMs < 0) judgedSinceMs = now
         if (flicker != null && flicker > config.flickerThresholdPct) {
-            if (calmSeconds >= EPISODE_GAP_S) wobbleEpisodes.addLast(now)
+            if (calmSeconds >= EPISODE_GAP_S) {
+                wobbleEpisodes.addLast(now)
+                quietEpisodes.addLast(now)
+            }
             calmSeconds = 0
         } else {
             calmSeconds++
         }
         while (wobbleEpisodes.isNotEmpty() && wobbleEpisodes.first() < now - CONFIRM_MS * 2) wobbleEpisodes.removeFirst()
+        while (quietEpisodes.isNotEmpty() && quietEpisodes.first() < now - QUIET_MS - 60_000) quietEpisodes.removeFirst()
         if (flicker != null && flicker > config.flickerThresholdPct) {
             // Busy: wobbling again and again within a minute (one step in brightness only shows for a
             // few seconds). Its level is the typical light over the minutes before.
@@ -413,6 +423,10 @@ class PowerDetector(
 
     /** Start times of separate wobbles (after [EPISODE_GAP_S] calm seconds). */
     private val wobbleEpisodes = ArrayDeque<Long>()
+    /** The same, kept for [QUIET_MS], for the daytime stillness rule. */
+    private val quietEpisodes = ArrayDeque<Long>()
+    /** Since when every second could be judged (not too dim, no gap): the stillness must be seen. */
+    private var judgedSinceMs = -1L
     private var calmSeconds = EPISODE_GAP_S
 
     /**
@@ -526,6 +540,16 @@ class PowerDetector(
                 }
             }
 
+            // 2b) Daytime stillness. In the day the moteur never stayed still for long (at most 24 min
+            //    without a wobble), kahraba often for an hour; at night a calm moteur can be as still
+            //    as kahraba (4 Nov), so only 7 AM-7 PM. On 3 Nov, 10:35, kahraba came only ~5% brighter
+            //    than the morning moteur and every other rule missed it; it ended with a 1m 13s cut.
+            if (source == Source.MOTEUR && quietDaytime(now)) {
+                val from = now - QUIET_MS
+                propose(now, from, "Light stayed still for ${QUIET_MS / 60_000} minutes – a daytime moteur doesn't – kahraba is back")
+                return
+            }
+
             // 3) Not sure yet: the steady level matches what was learned for this spot. Never from
             //    moteur: an evening moteur at 222 V reached the kahraba level (1 Nov, 18:37).
             val k = config.kahrabaLevel
@@ -558,6 +582,24 @@ class PowerDetector(
     }
 
     private fun minutesMs(minutes: Double) = (minutes * 60_000).roundToLong()
+
+    /**
+     * The last [QUIET_MS], all in the daytime, all judged, with at most [QUIET_MAX_WOBBLES] separate
+     * wobbles, and the light now not dimmer than in the [QUIET_REF_MS] before (the moteur it followed).
+     */
+    private fun quietDaytime(now: Long): Boolean {
+        val hour = hourOf ?: return false
+        val from = now - QUIET_MS
+        // Both ends in the daytime (and it's only 45 minutes, so the same day).
+        if (hour(from) !in QUIET_DAY_FROM until QUIET_DAY_TO || hour(now) !in QUIET_DAY_FROM until QUIET_DAY_TO) return false
+        if (judgedSinceMs < 0 || judgedSinceMs > from || historyStartMs > from) return false
+        if (quietEpisodes.count { it > from } > QUIET_MAX_WOBBLES) return false
+        val before = longSeconds.filter { it.t in (from - QUIET_REF_MS) until from }.mapNotNull { it.level }
+        if (before.size < QUIET_REF_MS / 2_000) return false
+        val nowLevel = median(longSeconds.filter { it.t > now - 10 * 60_000 }.mapNotNull { it.level }) ?: return false
+        val ref = median(before) ?: return false
+        return nowLevel >= ref
+    }
 
     /**
      * The steady brightness before the current one, or null if there wasn't one.
@@ -619,6 +661,8 @@ class PowerDetector(
     private fun resetHistory(now: Long) {
         pending = null
         wobbleEpisodes.clear()
+        quietEpisodes.clear()
+        judgedSinceMs = -1L
         calmSeconds = EPISODE_GAP_S
         samples.clear()
         seconds.clear()
@@ -654,6 +698,18 @@ class PowerDetector(
         const val EPISODE_GAP_S = 5
         /** A busy moteur is remembered this long. */
         const val BUSY_KEEP_MS = 60 * 60_000L
+        /** Daytime stillness (1.4.09): this long with at most [QUIET_MAX_WOBBLES] wobbles. */
+        const val QUIET_MS = 45 * 60_000L
+        const val QUIET_MAX_WOBBLES = 2
+        /** The light before the still stretch it must not be dimmer than. */
+        const val QUIET_REF_MS = 15 * 60_000L
+        /** Daytime, local hours: the whole still stretch must fall in it. */
+        const val QUIET_DAY_FROM = 7
+        const val QUIET_DAY_TO = 19
+
+        /** The local hour of a time, on this phone's clock. */
+        fun localHour(ms: Long): Int =
+            java.util.Calendar.getInstance().apply { timeInMillis = ms }.get(java.util.Calendar.HOUR_OF_DAY)
         /** Wobbling seconds within a minute that make the moteur "busy". */
         const val BUSY_WOBBLES = 10
         /** The busy moteur's level: the typical light over this long. */
