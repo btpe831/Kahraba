@@ -31,6 +31,11 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   commit subjects/bodies since the last tag.
 - **Release notes: just what's improved, in plain words. No dates, times or recording details.**
 - Download link for testers: https://github.com/btpe831/Kahraba/releases/latest
+- **Test builds (owner's choice, 5 Nov):** `testBuild=true` in `gradle.properties` makes every push a private
+  draft release "Kahraba Test X (test N)" (app id `com.kahraba.power.test`, label "Kahraba Test", version
+  "X test N"), installed next to the real app; the previous test draft is deleted; nothing is published. The owner
+  copies data with Settings › Backup. To publish a version the owner approved: set `testBuild=false` (and the
+  confirmed `appVersion`), push; then set it back to `true` for the next round. Give the owner the draft's link.
 - Detection logic is pure Kotlin (`PowerDetector.kt`, `QuickCheck.kt`, `CheckHistory.kt`,
   `CardOrder.kt`, `Area.kt`, `OldDefaults.kt`, `KahrabaPattern.kt`, `LightHistory.kt`) and is tested with JUnit in `app/src/test`. To run them
   locally without the SDK, a plain Kotlin/JVM Gradle project can compile those files plus tiny stubs

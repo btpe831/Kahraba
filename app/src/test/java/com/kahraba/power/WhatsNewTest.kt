@@ -18,6 +18,8 @@ class WhatsNewTest {
         assertTrue(WhatsNew.compare("1.1.04", "1.2.0") < 0)
         assertTrue(WhatsNew.compare("1.2.0", "1.2.01") < 0)
         assertEquals(0, WhatsNew.compare("1.2.01", "1.2.1"))
+        assertEquals(0, WhatsNew.compare("1.5.0 test 212", "1.5.0"))
+        assertTrue(WhatsNew.compare("1.4.10 test 212", "1.4.11") < 0)
     }
 
     @Test

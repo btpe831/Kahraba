@@ -54,10 +54,10 @@ object WhatsNew {
         return out
     }
 
-    /** Compares versions part by part: 1.0.10 < 1.1.0 < 1.1.04 < 1.2.0 < 1.2.01. */
+    /** Compares versions part by part: 1.0.10 < 1.1.0 < 1.1.04 < 1.2.0 < 1.2.01. A test build's "1.5.0 test 12" counts as 1.5.0. */
     fun compare(a: String, b: String): Int {
-        val x = a.split(".").map { it.toIntOrNull() ?: 0 }
-        val y = b.split(".").map { it.toIntOrNull() ?: 0 }
+        val x = a.substringBefore(" ").split(".").map { it.toIntOrNull() ?: 0 }
+        val y = b.substringBefore(" ").split(".").map { it.toIntOrNull() ?: 0 }
         for (i in 0 until maxOf(x.size, y.size)) {
             val c = (x.getOrElse(i) { 0 }).compareTo(y.getOrElse(i) { 0 })
             if (c != 0) return c

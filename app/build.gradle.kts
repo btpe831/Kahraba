@@ -7,17 +7,21 @@ plugins {
 // build a rising number, used as the internal version code so each APK installs over the last.
 val buildNumber = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
 val appVersion = providers.gradleProperty("appVersion").get()
+// Test builds (testBuild=true in gradle.properties) install next to the real app as a separate app,
+// "Kahraba Test", so trying one never touches the real app or its data.
+val testBuild = providers.gradleProperty("testBuild").orNull == "true"
 
 android {
     namespace = "com.kahraba.power"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.kahraba.power"
+        applicationId = if (testBuild) "com.kahraba.power.test" else "com.kahraba.power"
         minSdk = 26
         targetSdk = 34
         versionCode = buildNumber
-        versionName = appVersion
+        versionName = if (testBuild) "$appVersion test $buildNumber" else appVersion
+        manifestPlaceholders["appLabel"] = if (testBuild) "Kahraba Test" else "Kahraba or Not"
     }
 
     signingConfigs {

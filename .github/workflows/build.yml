@@ -38,13 +38,20 @@ jobs:
 
       - name: Read the app version
         id: version
-        run: echo "name=$(grep '^appVersion=' gradle.properties | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "name=$(grep '^appVersion=' gradle.properties | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+          echo "test=$(grep '^testBuild=' gradle.properties | cut -d= -f2)" >> "$GITHUB_OUTPUT"
 
       - name: Name the APK
         run: |
-          cp app/build/outputs/apk/release/app-release.apk "KahrabaOrNot-${{ steps.version.outputs.name }}.apk"
+          if [ "${{ steps.version.outputs.test }}" = "true" ]; then
+            name="KahrabaTest-${{ steps.version.outputs.name }}-test-${{ github.run_number }}.apk"
+          else
+            name="KahrabaOrNot-${{ steps.version.outputs.name }}.apk"
+          fi
+          cp app/build/outputs/apk/release/app-release.apk "$name"
           # Stop here if it isn't signed with the release key.
-          "$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner" verify --print-certs KahrabaOrNot-*.apk \
+          "$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner" verify --print-certs Kahraba*.apk \
             | grep -i "SHA-256 digest: 77e93fa7e7c94c4e5304da0550bc84442694977a9650e52d926babf0fe5f6776"
 
       - name: Write the release notes
@@ -56,8 +63,30 @@ jobs:
           name: KahrabaOrNot-apk
           path: "*.apk"
 
+      # Test builds: a draft release only the owner sees (signed in on github.com), replacing the
+      # previous test draft. Nothing is published, and the public "latest" release stays as it is.
+      - name: Save as a private test build
+        if: steps.version.outputs.test == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for id in $(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+              --jq '.[] | select(.draft and (.tag_name | startswith("test-"))) | .id'); do
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/$id"
+          done
+          {
+            echo "**Test build, not published.** It installs next to Kahraba or Not as a separate app, Kahraba Test, so your current app and its data stay as they are."
+            echo ""
+            echo "To try it with your rooms and history: in Kahraba or Not, Settings › Backup › back up; then in Kahraba Test, restore that file. To stop testing, uninstall Kahraba Test."
+            echo ""
+            sed -n '/^## Install/q;p' release-notes.md
+          } > test-notes.md
+          gh release create "test-${{ github.run_number }}" KahrabaTest-*.apk --draft \
+            --target "$GITHUB_SHA" --title "Kahraba Test ${{ steps.version.outputs.name }} (test ${{ github.run_number }})" \
+            --notes-file test-notes.md
+
       - name: Publish as a release (download this on the phone)
-        if: steps.notes.outputs.publish == 'true'
+        if: steps.notes.outputs.publish == 'true' && steps.version.outputs.test != 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.name }}-build-${{ github.run_number }}
