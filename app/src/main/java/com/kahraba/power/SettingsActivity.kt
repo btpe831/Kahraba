@@ -4,6 +4,7 @@ import android.app.TimePickerDialog
 import android.content.Intent
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.util.TypedValue
@@ -26,6 +27,12 @@ import java.util.Locale
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.materialswitch.MaterialSwitch
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.qrcode.QRCodeWriter
 
 /** Settings, in the same card style as the main screen. Built in code to keep it in one place. */
 class SettingsActivity : ThemedActivity() {
@@ -146,7 +153,7 @@ class SettingsActivity : ThemedActivity() {
 
         // Header: title and Close.
         val header = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
-        val title = when (page) { PAGE_ADVANCED -> "Advanced"; PAGE_BACKUP -> "Backup"; else -> "Settings" }
+        val title = when (page) { PAGE_ADVANCED -> "Advanced"; PAGE_BACKUP -> "Backup"; PAGE_REMOTE -> "Other phones"; else -> "Settings" }
         header.addView(text(title, 32f, R.attr.appText, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(MaterialButton(this, null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
             text = "Close"
@@ -181,6 +188,10 @@ class SettingsActivity : ThemedActivity() {
                         "when the light keeps flickering. Can give false alarms, so it's off by default.",
                     Prefs.MOTEUR_ON_FLICKER, false))
             }, lp(top = 16))
+            return
+        }
+        if (page == PAGE_REMOTE) {
+            buildRemote()
             return
         }
         if (page == PAGE_BACKUP) {
@@ -256,6 +267,16 @@ class SettingsActivity : ThemedActivity() {
             })
         }, lp(top = 12))
 
+        // ALERTS ON OTHER PHONES
+        section("Alerts on other phones")
+        body.addView(card {
+            val getting = RemoteAlerts.getPairing(this@SettingsActivity) != null
+            addView(link("Alerts on other phones",
+                if (getting) "This phone gets alerts from your other phone." else "Get Always-on mode's alerts on your other Android phones.") {
+                openRemote(this@SettingsActivity)
+            })
+        })
+
         // BACKUP
         section("Backup")
         body.addView(card {
@@ -305,7 +326,8 @@ class SettingsActivity : ThemedActivity() {
             }
             addView(divider())
             addView(text("Privacy", 17f, R.attr.appText, bold = true), lp(top = 12))
-            addView(text("Everything stays on this phone. Kahraba or Not has no internet access; data only leaves if you tap Share or Send feedback.",
+            addView(text("Everything stays on this phone, except the alerts you send to your other phones: they go encrypted, " +
+                "through the free ntfy.sh service. Nothing else uses the internet; data only leaves if you tap Share or Send feedback.",
                 14f, R.attr.appMuted), lp(top = 4))
             val version = runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull() ?: ""
             addView(text("Version $version · Created by Aubrey Arenas\n© 2026 Aubrey Arenas. All rights reserved.", 14f, R.attr.appMuted), lp(top = 14))
@@ -344,6 +366,185 @@ class SettingsActivity : ThemedActivity() {
             "Your theme colours the whole app. Green always means kahraba and amber always means moteur, in every theme.",
             14f, R.attr.appMuted,
         ).apply { setPadding(px(4), px(14), px(4), 0) })
+    }
+
+    // ---- Alerts on other phones ----
+
+    private val notifyPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
+    private fun buildRemote() {
+        val ctx = this
+        val getting = RemoteAlerts.getPairing(ctx)
+
+        // Getting alerts here.
+        section("Get alerts on this phone")
+        body.addView(card {
+            if (getting == null) {
+                addView(text("Get the alerts from a phone running Always-on mode, with the same beeps. " +
+                    "On that phone, open this page and tap Add a phone, then:", 15f, R.attr.appMuted))
+                addView(link("Scan its code", "Point this phone's camera at the code on the other phone.") { scanCode() }, lp(top = 8))
+                addView(divider())
+                addView(link("Paste a code", "If the code was sent to you in a message: copy it, then paste it here.") { pasteCode() })
+            } else {
+                addView(text(RemoteAlerts.statusLine(ctx), 16f, R.attr.appText, bold = true))
+                addView(remoteSwitch("Beep on this phone", "Off: notifications only, no beeps. Quiet hours apply too.",
+                    RemoteAlerts.beepHere(ctx)) { RemoteAlerts.setBeepHere(ctx, it) }, lp(top = 8))
+                if (!ignoringBattery()) {
+                    addView(divider())
+                    addView(link("Allow alerts in the background", "Needed so alerts arrive with the screen off.") { askBattery() })
+                }
+                addView(divider())
+                addView(link("Stop getting alerts", "This phone stops listening. Scan the code again to start.") {
+                    MaterialAlertDialogBuilder(ctx)
+                        .setTitle("Stop getting alerts?")
+                        .setPositiveButton("Stop") { _, _ ->
+                            RemoteAlerts.setGetPairing(ctx, null)
+                            AlertsService.stop(ctx)
+                            build()
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
+                })
+            }
+        }, lp(top = 4))
+
+        // Sending from here.
+        section("Send from this phone")
+        body.addView(card {
+            addView(remoteSwitch("Send alerts to my other phones",
+                "While Always-on mode runs here, every alert also goes to the phones you add, encrypted.",
+                RemoteAlerts.sendOn(ctx)) { RemoteAlerts.setSendOn(ctx, it) })
+            addView(divider())
+            addView(link("Add a phone", "Shows a code to scan with the other phone. Every phone you add uses the same code.") { showCode() })
+            if (RemoteAlerts.sendPairing(ctx) != null) {
+                addView(divider())
+                addView(link("Remove all phones", "Makes a new code. Phones added before stop getting alerts until they scan it.") {
+                    MaterialAlertDialogBuilder(ctx)
+                        .setTitle("Remove all phones?")
+                        .setMessage("Phones that scanned the old code stop getting alerts. You can add them again with the new code.")
+                        .setPositiveButton("Remove") { _, _ ->
+                            RemoteAlerts.newSendPairing(ctx)
+                            toast("New code ready")
+                            build()
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
+                })
+            }
+            if (RemoteAlerts.waiting()) addView(text("Some alerts are waiting for the internet. They go as soon as it's back.",
+                14f, R.attr.appMuted), lp(top = 8))
+        })
+        body.addView(text("Alerts travel through ntfy.sh, a free service, encrypted with a key that's only in your code: " +
+            "ntfy.sh can't read them. Android phones only for now.", 14f, R.attr.appMuted).apply {
+            setPadding(px(4), px(14), px(4), 0)
+        })
+    }
+
+    private fun showCode() {
+        val p = RemoteAlerts.sendPairingOrNew(this)
+        val size = px(240)
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(px(20), px(8), px(20), 0)
+        }
+        box.addView(ImageView(this).apply {
+            setImageBitmap(qr(p.code, size))
+            setBackgroundColor(android.graphics.Color.WHITE)
+            setPadding(px(8), px(8), px(8), px(8))
+        }, LinearLayout.LayoutParams(size + px(16), size + px(16)))
+        box.addView(text("On the other phone: open the app › Menu › Alerts on other phones › Scan its code.",
+            15f, R.attr.appMuted).apply { gravity = Gravity.CENTER }, lp(top = 12))
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Add a phone")
+            .setView(box)
+            .setPositiveButton("Done") { _, _ -> build() }
+            .setNeutralButton("Send the code") { _, _ ->
+                val msg = "To get my power alerts on your phone: install Kahraba or Not, then open Menu › Alerts on other phones › " +
+                    "Paste a code. Copy this whole message first.\n\n${p.code}"
+                runCatching {
+                    startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain")
+                        .putExtra(Intent.EXTRA_TEXT, msg), "Send the code"))
+                }
+                build()
+            }
+            .show()
+    }
+
+    private fun qr(text: String, size: Int): android.graphics.Bitmap {
+        val m = QRCodeWriter().encode(text, BarcodeFormat.QR_CODE, size, size, mapOf(EncodeHintType.MARGIN to 0))
+        val pixels = IntArray(size * size) { i ->
+            if (m.get(i % size, i / size)) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+        }
+        return android.graphics.Bitmap.createBitmap(pixels, size, size, android.graphics.Bitmap.Config.ARGB_8888)
+    }
+
+    private fun scanCode() {
+        val options = GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
+        runCatching {
+            GmsBarcodeScanning.getClient(this, options).startScan()
+                .addOnSuccessListener { pairWith(it.rawValue ?: "") }
+                .addOnFailureListener { toast("Couldn't open the scanner. Try Paste a code instead.") }
+        }.onFailure { toast("Couldn't open the scanner. Try Paste a code instead.") }
+    }
+
+    private fun pasteCode() {
+        val clip = runCatching {
+            (getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager).primaryClip
+                ?.getItemAt(0)?.coerceToText(this)?.toString()
+        }.getOrNull() ?: ""
+        val input = EditText(this).apply {
+            hint = "Paste the code or the whole message"
+            if (RemoteCodec.parse(clip) != null) setText(clip)
+        }
+        val box = FrameLayout(this).apply { setPadding(px(20), px(8), px(20), 0); addView(input) }
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Paste a code")
+            .setView(box)
+            .setPositiveButton("Connect") { _, _ -> pairWith(input.text.toString()) }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun pairWith(text: String) {
+        val p = RemoteCodec.parse(text)
+        when {
+            p == null -> toast("That isn't an alerts code. On the other phone, tap Add a phone.")
+            p.topic == RemoteAlerts.sendPairing(this)?.topic -> toast("That's this phone's own code. Scan it with your other phone.")
+            else -> {
+                RemoteAlerts.setGetPairing(this, p)
+                if (Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(
+                        this, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    notifyPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                }
+                AlertsService.start(this, reconnect = true)
+                toast("Connected. News from the other phone arrives within 15 minutes.")
+                if (!ignoringBattery()) askBattery()
+                build()
+            }
+        }
+    }
+
+    private fun ignoringBattery(): Boolean =
+        (getSystemService(POWER_SERVICE) as android.os.PowerManager).isIgnoringBatteryOptimizations(packageName)
+
+    private fun askBattery() {
+        runCatching {
+            startActivity(Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName")))
+        }
+    }
+
+    private fun remoteSwitch(title: String, sub: String, on: Boolean, onChange: (Boolean) -> Unit): View {
+        val row = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL; setPadding(0, px(6), 0, px(6)) }
+        val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        texts.addView(text(title, 18f, R.attr.appText, bold = true))
+        texts.addView(text(sub, 14f, R.attr.appMuted), lp(top = 2))
+        row.addView(texts, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = px(12) })
+        row.addView(MaterialSwitch(this).apply {
+            isChecked = on
+            setOnCheckedChangeListener { _, v -> onChange(v) }
+        })
+        return row
     }
 
     // ---- Theme rows ----
@@ -569,5 +770,10 @@ class SettingsActivity : ThemedActivity() {
         private const val PAGE = "page"
         private const val PAGE_ADVANCED = "advanced"
         private const val PAGE_BACKUP = "backup"
+        private const val PAGE_REMOTE = "remote"
+
+        fun openRemote(ctx: android.content.Context) {
+            ctx.startActivity(Intent(ctx, SettingsActivity::class.java).putExtra(PAGE, PAGE_REMOTE))
+        }
     }
 }

@@ -10,6 +10,8 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- Only for Alerts on other phones (1.5.0): sends and gets encrypted alerts through ntfy.sh. -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:name=".KahrabaApp"
@@ -71,6 +73,15 @@
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Watches the light sensor and charger to tell grid power from generator power" />
+        </service>
+
+        <service
+            android:name=".AlertsService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Receives power alerts sent by the user's other phone running Always-on mode" />
         </service>
 
         <receiver

@@ -45,6 +45,8 @@ class MonitorService : Service(), SensorEventListener {
     private var plugged: Boolean? = null
     private val sensorEvents = ArrayDeque<Long>()
     private var lastNotifyMs = 0L
+    private var lastAliveMs = 0L
+    private var lastRetryMs = 0L
     private var lastDataSecond = 0L
     private var lastCalEval = 0L
     private var calibration: MutableList<Double>? = null
@@ -116,6 +118,7 @@ class MonitorService : Service(), SensorEventListener {
                 // Forget the source: once off, it can't know what happens next.
                 val now = System.currentTimeMillis()
                 EventLog.append(this, Transition(now, MonitorState.source, Source.UNKNOWN, "Always-on mode stopped"))
+                remote(RemoteCodec.Kind.STOPPED, Source.UNKNOWN, now)
                 Prefs.saveSource(this, Source.UNKNOWN, now)
                 MonitorState.source = Source.UNKNOWN
                 stopSelf()
@@ -192,6 +195,16 @@ class MonitorService : Service(), SensorEventListener {
         MonitorState.plugged = plugged
         MonitorState.sensorUpdatesPerMin = sensorEvents.size
 
+        // Other phones: "still here" every 15 minutes, and another try for alerts that are waiting.
+        if (now - lastAliveMs >= RemoteAlerts.ALIVE_EVERY_MS) {
+            lastAliveMs = now
+            remote(RemoteCodec.Kind.ALIVE, detector.source, detector.sinceMs)
+        }
+        if (now - lastRetryMs >= 30_000) {
+            lastRetryMs = now
+            RemoteAlerts.retry(this)
+        }
+
         if (now - lastNotifyMs > 15_000) {
             lastNotifyMs = now
             data.flush()
@@ -205,7 +218,12 @@ class MonitorService : Service(), SensorEventListener {
         MonitorState.source = t.to
         MonitorState.sinceMs = t.timeMs
         updateStatusNotification()
-        if (t.manual) return
+        if (t.manual) {
+            // "Set by you": other phones update quietly.
+            remote(RemoteCodec.Kind.ALIVE, t.to, t.timeMs)
+            lastAliveMs = System.currentTimeMillis()
+            return
+        }
 
         val cutsOnly = detector.config.powerCutsOnly
         when (t.to) {
@@ -239,6 +257,21 @@ class MonitorService : Service(), SensorEventListener {
             b.addAction(0, "It's moteur", setFromAlert(Source.MOTEUR))
         }
         notifications().notify(nextAlertId(), b.build())
+        val beep = when (t.to) {
+            Source.KAHRABA -> RemoteCodec.BEEP_KAHRABA
+            Source.MOTEUR -> RemoteCodec.BEEP_MOTEUR
+            Source.NO_POWER -> if (cutsOnly) RemoteCodec.BEEP_OFF else ""
+            Source.POWER_ON -> RemoteCodec.BEEP_BACK
+            Source.UNKNOWN -> ""
+        }
+        remote(RemoteCodec.Kind.ALERT, t.to, t.timeMs, if (ask) "Power's back. Kahraba or moteur?" else title,
+            "${PowerDetector.formatClock(t.timeMs)} – ${t.reason}", beep)
+    }
+
+    /** Tells the phones added in Settings › Alerts on other phones (nothing is sent if none were). */
+    private fun remote(kind: RemoteCodec.Kind, source: Source, sinceMs: Long, title: String = "", text: String = "", beep: String = "") {
+        RemoteAlerts.send(this, RemoteCodec.Message(kind, source, sinceMs, System.currentTimeMillis(),
+            RemoteAlerts.deviceName(this), Prefs.monitorRoom(this), title, text, beep))
     }
 
     /** The phone moved and its charger came off (it may have fallen): not a power cut. */
@@ -256,6 +289,7 @@ class MonitorService : Service(), SensorEventListener {
             .setAutoCancel(true)
             .build()
         notifications().notify(nextAlertId(), n)
+        remote(RemoteCodec.Kind.ALERT, detector.source, detector.sinceMs, PowerDetector.PHONE_MOVED, text, RemoteCodec.BEEP_MOVED)
     }
 
     /** The latest alert's notification (cancelled when its button is tapped). */
@@ -280,6 +314,7 @@ class MonitorService : Service(), SensorEventListener {
             .setAutoCancel(true)
             .build()
         notifications().notify(nextAlertId(), n)
+        remote(RemoteCodec.Kind.ALERT, detector.source, detector.sinceMs, PowerDetector.LIGHT_OFF, text)
     }
 
     private fun setFromAlert(s: Source): PendingIntent {

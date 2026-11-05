@@ -115,7 +115,7 @@ class HelpActivity : ThemedActivity() {
 
             "Always-on mode (optional)" to """
                 For a spare phone that stays in one place. Open it from the <b>Always-on</b> chip on the home screen (or press and hold the big button), or the menu (☰).
-                • It uses only the light sensor and the charger. No camera, microphone or internet, and nothing leaves the phone.
+                • It uses only the light sensor and the charger. No camera or microphone. Nothing leaves the phone, except alerts to your other phones if you add one (see “Alerts on other phones”).
                 • Plug the phone into a <b>wall socket</b> (not a UPS) and leave it face-up under a halogen light. The screen can be off.
                 • A power cut is seen through the charger. A cut of a minute or more means the moteur took over (it takes about a minute to start). A blink of a few seconds is a changeover: once the light settles, brighter means kahraba is back, dimmer means moteur.
                 • It says Kahraba is back when the light gets clearly <b>brighter</b> (no blackout) and stays steady for 2 minutes – kahraba's higher voltage makes the bulb brighter. Steady light alone is not enough, because a calm moteur is steady too.
@@ -138,8 +138,17 @@ class HelpActivity : ThemedActivity() {
                 • <b>No halogen light?</b> When you start, choose LED, Other light or Power cuts only, or turn on the <b>Power cuts only</b> switch. It then just logs when the power goes off and comes back (1 long beep when it goes off, quick beeps when it's back). The light isn't used and nothing is learned.
             """,
 
+            "Alerts on other phones" to """
+                Get Always-on mode's alerts on your everyday phone, with the same beeps, while the spare phone stays under the light.
+                • On the phone running Always-on mode: menu (☰) › <b>Alerts on other phones</b> › <b>Add a phone</b>. It shows a code.
+                • On the other phone (Android): install the app, then menu › Alerts on other phones › <b>Scan its code</b>. Or tap “Send the code” on the first phone and use <b>Paste a code</b>.
+                • The other phone's home screen then shows what's on, from the spare phone (“From Pixel 2 · 3 min ago”). Allow it to run in the background when asked, so alerts arrive with the screen off.
+                • The spare phone also says it's still there every 15 minutes. If nothing comes for 40 minutes (it's off, unplugged, or the internet is down, e.g. the router has no power), the other phone tells you once. Alerts that couldn't be sent go as soon as the internet is back.
+                • Alerts travel through ntfy.sh, a free service, <b>encrypted</b> with a key that's only in your code: ntfy.sh can't read them. To stop all phones, tap Remove all phones (a new code).
+            """,
+
             "Privacy" to """
-                Everything stays on this phone. Kahraba or Not has <b>no internet access</b>. Nothing is sent anywhere unless you tap Share or Send feedback yourself. Settings › Check for updates just opens the download page in your browser. Your area (Settings › Your area) is optional, chosen by you rather than from GPS, and only included in feedback emails. Uninstalling the app deletes all its data.
+                Everything stays on this phone, except <b>alerts to your other phones</b>, if you add one: they're encrypted and go through ntfy.sh. Nothing else uses the internet, and nothing else is sent anywhere unless you tap Share or Send feedback yourself. Settings › Check for updates just opens the download page in your browser. Your area (Settings › Your area) is optional, chosen by you rather than from GPS, and only included in feedback emails. Uninstalling the app deletes all its data.
             """,
 
             "Disclaimer" to """

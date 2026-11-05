@@ -197,6 +197,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         refreshAll()
         ui.post(ticker)
         showIntroIfNew()
+        // Getting alerts from another phone: make sure it's listening (e.g. after Android stopped it).
+        AlertsService.start(this)
     }
 
     override fun onPause() {
@@ -355,7 +357,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             if (check == null) openAlwaysOn()
             true
         }
-        findViewById<View>(R.id.homeChip).setOnClickListener { openAlwaysOn() }
+        findViewById<View>(R.id.homeChip).setOnClickListener {
+            if (!MonitorState.running && RemoteAlerts.getPairing(this) != null) SettingsActivity.openRemote(this) else openAlwaysOn()
+        }
         findViewById<View>(R.id.homePower).setOnClickListener { showPower(true) }
         findViewById<View>(R.id.homeHandle).setOnClickListener { showPower(true) }
         findViewById<View>(R.id.homeSettings).setOnClickListener { showTools() }
@@ -515,6 +519,10 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             content.addView(row)
         }
         item(R.drawable.ic_bolt, "Always-on mode", if (MonitorState.running) "Active" else "Inactive") { openAlwaysOn() }
+        item(R.drawable.ic_bolt, "Alerts on other phones",
+            if (RemoteAlerts.getPairing(this) != null) "Getting alerts from your other phone" else "Get the alerts on another phone") {
+            SettingsActivity.openRemote(this)
+        }
         item(R.drawable.ic_chart, "Light meter", "Live light and wobble, recordings") {
             startActivity(Intent(this, LightMeterActivity::class.java))
         }
@@ -582,9 +590,14 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         var source = Source.UNKNOWN
         var since = ""
         var noFlicker = false
+        // Alerts from another phone running Always-on mode, when this one isn't.
+        val remote = if (MonitorState.running) null else RemoteAlerts.current(this, now)
         if (MonitorState.running && MonitorState.source != Source.UNKNOWN) {
             source = MonitorState.source
             since = "since ${PowerDetector.formatClock(MonitorState.sinceMs)}"
+        } else if (remote != null && remote.source != Source.UNKNOWN) {
+            source = remote.source
+            since = "since ${PowerDetector.formatClock(remote.sinceMs)}"
         } else if (recent != null) {
             when (recent.verdict) {
                 QuickCheck.Verdict.KAHRABA -> source = Source.KAHRABA
@@ -622,7 +635,15 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         }
         findViewById<View>(R.id.homeNext).visibility =
             if (findViewById<TextView>(R.id.homeNext).text.isNullOrEmpty()) View.GONE else View.VISIBLE
-        findViewById<TextView>(R.id.homeChip).text = if (MonitorState.running) "Always-on: active" else "Always-on: inactive"
+        findViewById<TextView>(R.id.homeChip).text = when {
+            MonitorState.running -> "Always-on: active"
+            RemoteAlerts.getPairing(this) != null -> RemoteAlerts.heard(this)?.let {
+                if (now - it.heardMs < RemoteAlerts.SILENT_MS && it.kind != RemoteCodec.Kind.STOPPED) {
+                    "From ${it.device} · ${RemoteCodec.ago(now - it.heardMs)}"
+                } else "No news from ${it.device}"
+            } ?: "Waiting for your other phone"
+            else -> "Always-on: inactive"
+        }
         findViewById<TextView>(R.id.homeRoom).apply {
             val room = Prefs.currentSpot(this@MainActivity)
             text = room.ifEmpty { "Choose room" } + "  ▾"

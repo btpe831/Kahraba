@@ -230,7 +230,7 @@ class MonitorActivity : ThemedActivity() {
         }
         detailText.text = if (!running) {
             "Tap Start, then leave the phone plugged into a wall socket under a halogen light. The screen can be off.\n\n" +
-                "It uses only the light sensor and the charger. No camera, microphone or internet."
+                "It uses only the light sensor and the charger. No camera or microphone, and the internet only for alerts to your other phones."
         } else buildString {
             if (!MonitorState.hasLightSensor) append("This phone has no light sensor, so only power cuts can be seen.\n")
             append(MonitorState.lightStatus)
