@@ -70,6 +70,9 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   `nov02-night-pixel2-raw-kahraba-cut-moteur-kahraba.csv` (from 21:00 1 Nov: moteur 223 V; kahraba 01:01 ~3,600
   still; cut 03:30:33 for 1m 14s (heater reset); moteur ~2,600-3,200 wobbling, 227 V at 6 AM = as bright as the
   later kahraba; kahraba 09:59 at 227-228 V under 8 A. Same voltage = same light: only wobble separates them).
+  `nov05-pixel2-raw-day-moteur-evening-kahraba.csv` (`DayMoteurTest`; night moteur dead still 60 min 02:13-03:13; kahraba
+  06:01; restarted 07:36 as moteur; daytime moteur to 17:00, calmest 45 min still 6 wobbles; ~1 min cuts at 12:35 and 12:45
+  with moteur on both sides; kahraba 17:00, alert 17:05; outage 19:00 12m 16s, then busy moteur).
 - Kahraba is dead still (zero wobble for 20+ min); a daytime moteur wobbles most minutes. In the
   evening a moteur also calms down and creeps brighter, but gradually (30 Oct 20:40-21:45).
 - Voltmeter: moteur 208 V (31 Oct, 8 pm) to 223 V; kahraba 231-234 V (1 Nov morning too).
@@ -93,7 +96,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 - Daytime stillness (1.4.09, `quietDaytime`, `QuietKahrabaTest`): from moteur, 45 min with <= 2 separate wobbles,
   all judged, both ends 7 AM-7 PM (`hourOf`, `PowerDetector.localHour` in the app; tests pass `recordingClock`), light
   now >= the 15 min before -> kahraba since the start of the 45 min. Longest still spell: daytime moteur 24 min, kahraba
-  71; night moteur 39 (2 Nov) and 31 (4 Nov), so never at night. 3 Nov 10:35 kahraba was only ~5% brighter: alert 11:23.
+  71; night moteur 39 (2 Nov), 31 (4 Nov) and 60 (5 Nov), so never at night. 3 Nov 10:35 kahraba was only ~5% brighter: alert 11:23.
 - Light switched off (1.4.08): light < 20% of the level before for 30 s while the charger stays on -> alert (no
   beep, no switch); in a cut the charger goes off too. When it's back (>= 50%), the light history starts again.
 - Phone moved (1.2.0): motion, then the charger off within 10 s -> not a cut: "Phone moved – please
