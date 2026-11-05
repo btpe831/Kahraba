@@ -32,6 +32,7 @@ class AlertsService : Service() {
     @Volatile private var conn: HttpURLConnection? = null
     private var worker: Thread? = null
     private var lastAlertId = ALERT_ID_FIRST
+    private val history = RemoteCodec.HistoryCollector()
 
     private val watch = object : Runnable {
         override fun run() {
@@ -128,6 +129,12 @@ class AlertsService : Service() {
         if (RemoteAlerts.getPairing(this)?.topic != p.topic) return
         RemoteAlerts.setLastId(this, j.optString("id"))
         val m = RemoteCodec.open(p.key, j.optString("message"))?.let(RemoteCodec::decode) ?: return
+        // The other phone's switch log, for the pattern card, history and log on this phone.
+        if (m.log.isNotEmpty()) EventLog.mergeRemote(this, listOf(m.log))
+        if (m.kind == RemoteCodec.Kind.HISTORY) {
+            history.add(m)?.let { EventLog.mergeRemote(this, it) }
+            return
+        }
         val newer = RemoteAlerts.saveHeard(this, m)
         val fresh = System.currentTimeMillis() - m.timeMs < RemoteAlerts.FRESH_MS
         main.post {

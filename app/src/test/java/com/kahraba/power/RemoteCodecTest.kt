@@ -50,6 +50,38 @@ class RemoteCodecTest {
     }
 
     @Test
+    fun theSwitchLogTravelsInPartsThatFit() {
+        // The Pixel 2's real log, 30 Oct to 5 Nov (94 lines).
+        val lines = javaClass.classLoader!!.getResourceAsStream("switch-log-nov05.csv")!!.bufferedReader()
+            .readLines().filter { it.isNotBlank() }
+        val p = RemoteCodec.newPairing()
+        val parts = RemoteCodec.historyParts(lines)
+        assertTrue("${parts.size} parts", parts.size in 2..6)
+        val messages = parts.mapIndexed { i, chunk ->
+            RemoteCodec.Message(RemoteCodec.Kind.HISTORY, Source.UNKNOWN, 0, 1, "Pixel 2", text = chunk.joinToString("\n"),
+                part = "b1/$i/${parts.size}")
+        }
+        for (m in messages) {
+            val sealed = RemoteCodec.seal(p.key, RemoteCodec.encode(m))
+            assertTrue("sealed ${sealed.length} bytes", sealed.length < 4096)
+        }
+        // Parts can arrive in any order; the log comes back whole, in order, once all are in.
+        val c = RemoteCodec.HistoryCollector()
+        val shuffled = messages.reversed().map { RemoteCodec.decode(RemoteCodec.open(p.key, RemoteCodec.seal(p.key, RemoteCodec.encode(it)))!!)!! }
+        shuffled.dropLast(1).forEach { assertNull(c.add(it)) }
+        assertEquals(lines, c.add(shuffled.last()))
+    }
+
+    @Test
+    fun aLiveSwitchCarriesItsLogLine() {
+        val m = msg.copy(log = "1793841665000;KAHRABA;Light got 23% brighter and stayed steady – kahraba is back")
+        assertEquals(m, RemoteCodec.decode(RemoteCodec.encode(m)))
+        // Messages from the first test build (no log field) still open.
+        val old = RemoteCodec.encode(msg).split("|").take(10).joinToString("|")
+        assertEquals(msg, RemoteCodec.decode(old))
+    }
+
+    @Test
     fun agoReadsNaturally() {
         assertEquals("just now", RemoteCodec.ago(20_000))
         assertEquals("3 min ago", RemoteCodec.ago(3 * 60_000L + 5_000))

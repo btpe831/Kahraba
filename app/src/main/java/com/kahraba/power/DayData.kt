@@ -36,13 +36,13 @@ object DayData {
 
     /** Milliseconds of kahraba per day, from the monitor's switch log. */
     fun kahrabaByDay(ctx: Context, nowMs: Long = System.currentTimeMillis()): Map<String, Long> {
-        val entries = EventLog.read(ctx).sortedBy { it.timeMs }
+        val entries = EventLog.shown(ctx).sortedBy { it.timeMs }
         val out = HashMap<String, Long>()
         for (i in entries.indices) {
             if (entries[i].source != Source.KAHRABA) continue
             var start = entries[i].timeMs
             val end = minOf(
-                if (i + 1 < entries.size) entries[i + 1].timeMs else if (MonitorState.running) nowMs else start,
+                if (i + 1 < entries.size) entries[i + 1].timeMs else if (EventLog.shownLive(ctx)) nowMs else start,
                 nowMs,
             )
             while (start < end) {
@@ -66,12 +66,12 @@ object DayData {
 
     /** What the always-on monitor recorded, as time spans (up to now while it's running). */
     fun monitorSpans(ctx: Context, nowMs: Long = System.currentTimeMillis()): List<Span> {
-        val entries = EventLog.read(ctx).sortedBy { it.timeMs }
+        val entries = EventLog.shown(ctx).sortedBy { it.timeMs }
         val out = ArrayList<Span>()
         for (i in entries.indices) {
             val start = entries[i].timeMs
             val end = minOf(
-                if (i + 1 < entries.size) entries[i + 1].timeMs else if (MonitorState.running) nowMs else start,
+                if (i + 1 < entries.size) entries[i + 1].timeMs else if (EventLog.shownLive(ctx)) nowMs else start,
                 nowMs,
             )
             if (end > start) out += Span(start, end, entries[i].source)
@@ -91,7 +91,7 @@ object DayData {
 
     /** Monitor log entries that happened on a given day. */
     fun monitorEvents(ctx: Context, day: String): List<EventLog.Entry> =
-        EventLog.read(ctx).filter { key(it.timeMs) == day }.sortedBy { it.timeMs }
+        EventLog.shown(ctx).filter { key(it.timeMs) == day }.sortedBy { it.timeMs }
 
     /** "5h 12m" style. */
     fun hours(ms: Long): String {

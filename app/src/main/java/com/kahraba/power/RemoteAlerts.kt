@@ -25,6 +25,7 @@ object RemoteAlerts {
     private const val HEARD_DEVICE = "heard_device"
     private const val HEARD_ROOM = "heard_room"
     private const val WARNED = "warned_silent"
+    private const val HISTORY_AT = "history_at"
 
     /** The sending phone says it's still there every 15 minutes, about 100 messages a day. */
     const val ALIVE_EVERY_MS = 15 * 60_000L
@@ -32,6 +33,9 @@ object RemoteAlerts {
     const val SILENT_MS = 40 * 60_000L
     /** Alerts older than this (the phone was offline) update the status quietly instead of beeping. */
     const val FRESH_MS = 15 * 60_000L
+    /** The switch log goes to the other phones every 6 hours (and when a phone is added), to fill any gaps. */
+    const val HISTORY_EVERY_MS = 6 * 3_600_000L
+    private const val HISTORY_DAYS_MS = 7 * 86_400_000L
     /** Alerts waiting for the internet are dropped after this long. */
     private const val KEEP_MS = 6 * 3_600_000L
 
@@ -65,10 +69,35 @@ object RemoteAlerts {
         synchronized(queue) {
             // Only the latest "still here" matters.
             if (m.kind == RemoteCodec.Kind.ALIVE) queue.removeAll { it.second.kind == RemoteCodec.Kind.ALIVE }
+            // Only the latest copy of the log matters too.
+            if (m.kind == RemoteCodec.Kind.HISTORY) {
+                val batch = m.part.substringBefore("/")
+                queue.removeAll { it.second.kind == RemoteCodec.Kind.HISTORY && it.second.part.substringBefore("/") != batch }
+            }
             queue.addLast(System.currentTimeMillis() to m)
             while (queue.size > 50) queue.removeFirst()
         }
         exec.execute { flush(app) }
+    }
+
+    fun historyDue(ctx: Context, now: Long = System.currentTimeMillis()) =
+        now - sp(ctx).getLong(HISTORY_AT, 0L) >= HISTORY_EVERY_MS
+
+    /** Sends the last 7 days of the switch log (and the switch before them), in parts. */
+    fun sendHistory(ctx: Context) {
+        if (!sendOn(ctx) || sendPairing(ctx) == null) return
+        val now = System.currentTimeMillis()
+        sp(ctx).edit().putLong(HISTORY_AT, now).apply()
+        val entries = EventLog.read(ctx).sortedBy { it.timeMs }
+        if (entries.isEmpty()) return
+        val first = entries.indexOfFirst { it.timeMs >= now - HISTORY_DAYS_MS }.let { if (it < 0) entries.size - 1 else maxOf(0, it - 1) }
+        val parts = RemoteCodec.historyParts(entries.drop(first).map { EventLog.line(it) })
+        val batch = now.toString(36)
+        val device = deviceName(ctx)
+        parts.forEachIndexed { i, lines ->
+            send(ctx, RemoteCodec.Message(RemoteCodec.Kind.HISTORY, Source.UNKNOWN, 0L, now, device,
+                text = lines.joinToString("\n"), part = "$batch/$i/${parts.size}"))
+        }
     }
 
     fun waiting(): Boolean = synchronized(queue) { queue.isNotEmpty() }
@@ -119,6 +148,7 @@ object RemoteAlerts {
             .remove(LAST_ID).remove(HEARD_MS).remove(HEARD_KIND).remove(HEARD_SOURCE).remove(HEARD_SINCE)
             .remove(HEARD_DEVICE).remove(HEARD_ROOM).remove(WARNED)
             .apply()
+        EventLog.clearRemote(ctx)
     }
 
     fun beepHere(ctx: Context) = sp(ctx).getBoolean(GET_BEEP, true)

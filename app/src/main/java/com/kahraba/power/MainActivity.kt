@@ -618,7 +618,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         }
         findViewById<TextView>(R.id.homeSince).text = since.ifEmpty { "Tap the button to check" }
 
-        val pattern = KahrabaPattern.summary(EventLog.read(this), now, MonitorState.running)
+        val pattern = KahrabaPattern.summary(EventLog.shown(this), now, EventLog.shownLive(this))
         val nextKahraba = pattern.nextFromMs?.let { from ->
             fun around(ms: Long) = PowerDetector.formatClock((ms + 150_000) / 300_000 * 300_000)
             val to = pattern.nextToMs ?: from
@@ -1318,8 +1318,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
      */
     private fun renderPattern() {
         val now = System.currentTimeMillis()
-        val entries = EventLog.read(this)
-        val running = MonitorState.running
+        val entries = EventLog.shown(this)
+        val running = EventLog.shownLive(this)
         val s = KahrabaPattern.summary(entries, now, running)
         val title = findViewById<TextView>(R.id.patternTitle)
         val sub = findViewById<TextView>(R.id.patternSub)
@@ -1614,10 +1614,10 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         val ids = cardIds
         for ((key, id) in ids) findViewById<View>(id).visibility = if (Prefs.cardOn(this, key)) View.VISIBLE else View.GONE
         // History stays hidden until there is something to show: a check, or the monitor's log.
-        val hasHistory = CheckHistory.read(this).any { !it.fromMonitor } || EventLog.read(this).isNotEmpty()
+        val hasHistory = CheckHistory.read(this).any { !it.fromMonitor } || EventLog.shown(this).isNotEmpty()
         if (!hasHistory) findViewById<View>(R.id.historyCard).visibility = View.GONE
         // Kahraba pattern: only once Always-on mode has recorded something.
-        if (EventLog.read(this).isEmpty()) findViewById<View>(R.id.patternCard).visibility = View.GONE
+        if (EventLog.shown(this).isEmpty()) findViewById<View>(R.id.patternCard).visibility = View.GONE
 
         // The saved order (from dragging a card, or Arrange cards); only moves views when it changed.
         val stack = findViewById<LinearLayout>(R.id.cardStack)
@@ -1767,9 +1767,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         val scroll = findViewById<android.widget.HorizontalScrollView>(R.id.timelineScroll)
         scroll.post { scroll.fullScroll(View.FOCUS_RIGHT) }
 
-        val lastSwitch = EventLog.read(this).lastOrNull { it.source == Source.KAHRABA || it.source == Source.MOTEUR }
+        val lastSwitch = EventLog.shown(this).lastOrNull { it.source == Source.KAHRABA || it.source == Source.MOTEUR }
         findViewById<TextView>(R.id.timelineNote).text = when {
-            lastSwitch != null && MonitorState.running ->
+            lastSwitch != null && EventLog.shownLive(this) ->
                 "${EventLog.label(lastSwitch.source).lowercase().replaceFirstChar { it.uppercase() }} since ${PowerDetector.formatClock(lastSwitch.timeMs)}"
             anyData -> "Minutes are kahraba time recorded by Always-on mode; other hours show your checks."
             else -> "No data yet. Do a check, or turn on Always-on mode."
@@ -1892,7 +1892,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         val values = listOf(R.id.statValue1, R.id.statValue2, R.id.statValue3, R.id.statValue4).map { findViewById<TextView>(it) }
         val note = findViewById<TextView>(R.id.statNote)
         if (k + m > 0) {
-            val events = EventLog.read(this).filter { it.timeMs >= dayStart && (it.source == Source.KAHRABA || it.source == Source.MOTEUR) }
+            val events = EventLog.shown(this).filter { it.timeMs >= dayStart && (it.source == Source.KAHRABA || it.source == Source.MOTEUR) }
             val last = events.lastOrNull()
             val longest = spans.filter { it.source == Source.KAHRABA }
                 .maxOfOrNull { maxOf(0L, minOf(it.end, now) - maxOf(it.start, dayStart)) } ?: 0L

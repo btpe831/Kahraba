@@ -38,7 +38,8 @@ object RemoteCodec {
         return if (key.size == 32) Pairing(m.groupValues[1], key) else null
     }
 
-    enum class Kind { ALERT, ALIVE, STOPPED }
+    /** HISTORY: part of the sending phone's switch log (the last 7 days), so other phones can show it too. */
+    enum class Kind { ALERT, ALIVE, STOPPED, HISTORY }
 
     const val BEEP_KAHRABA = "kahraba"
     const val BEEP_MOTEUR = "moteur"
@@ -61,11 +62,15 @@ object RemoteCodec {
         val text: String = "",
         /** Which beep the sending phone played ([BEEP_KAHRABA] and so on), or empty for none. */
         val beep: String = "",
+        /** For HISTORY: "batch/index/count". */
+        val part: String = "",
+        /** A switch-log line ("timeMs;SOURCE;reason") this message adds to the other phones' copy, if any. */
+        val log: String = "",
     )
 
     fun encode(m: Message): String = listOf(
         FORMAT, m.kind.name, m.source.name, m.sinceMs.toString(), m.timeMs.toString(),
-        esc(m.device), esc(m.room), esc(m.title), esc(m.text), m.beep,
+        esc(m.device), esc(m.room), esc(m.title), esc(m.text), m.beep, m.part, esc(m.log),
     ).joinToString("|")
 
     fun decode(s: String): Message? = runCatching {
@@ -81,6 +86,8 @@ object RemoteCodec {
             title = unesc(p[7]),
             text = unesc(p[8]),
             beep = p[9],
+            part = p.getOrElse(10) { "" },
+            log = unesc(p.getOrElse(11) { "" }),
         )
     }.getOrNull()
 
@@ -99,6 +106,42 @@ object RemoteCodec {
         c.init(Cipher.DECRYPT_MODE, SecretKeySpec(key, "AES"), GCMParameterSpec(128, all, 0, 12))
         String(c.doFinal(all, 12, all.size - 12), Charsets.UTF_8)
     }.getOrNull()
+
+    /**
+     * Splits switch-log lines into HISTORY messages small enough for ntfy (4,096 bytes once sealed):
+     * at most [budget] characters of encoded text each.
+     */
+    fun historyParts(lines: List<String>, budget: Int = 2600): List<List<String>> {
+        val out = mutableListOf<MutableList<String>>()
+        var size = budget
+        for (l in lines) {
+            val n = esc(l).length + 3
+            if (size + n > budget) {
+                out += mutableListOf<String>()
+                size = 0
+            }
+            out.last() += l
+            size += n
+        }
+        return out
+    }
+
+    /** Collects the parts of HISTORY messages; returns the whole log once every part of a batch is in. */
+    class HistoryCollector {
+        private val batches = HashMap<String, Array<String?>>()
+
+        fun add(m: Message): List<String>? {
+            val (batch, index, count) = m.part.split("/").takeIf { it.size == 3 } ?: return null
+            val i = index.toIntOrNull() ?: return null
+            val n = count.toIntOrNull()?.takeIf { it in 1..100 } ?: return null
+            val parts = batches.getOrPut(batch) { arrayOfNulls(n) }
+            if (i !in parts.indices) return null
+            parts[i] = m.text
+            if (parts.any { it == null }) return null
+            batches.clear()
+            return parts.flatMap { it!!.split("\n") }.filter { it.isNotBlank() }
+        }
+    }
 
     /** How long ago, for "last heard 3 min ago". */
     fun ago(ms: Long): String {

@@ -24,7 +24,7 @@ class LogActivity : ThemedActivity() {
             com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
                 .setMessage("Delete the whole switch log?")
                 .setPositiveButton("Delete") { _, _ ->
-                    EventLog.clear(this)
+                    if (EventLog.showsRemote(this)) EventLog.clearRemote(this) else EventLog.clear(this)
                     text.text = EventLog.formatted(this)
                 }
                 .setNegativeButton("Cancel", null)

@@ -117,8 +117,9 @@ class MonitorService : Service(), SensorEventListener {
                 monitoring = false
                 // Forget the source: once off, it can't know what happens next.
                 val now = System.currentTimeMillis()
-                EventLog.append(this, Transition(now, MonitorState.source, Source.UNKNOWN, "Always-on mode stopped"))
-                remote(RemoteCodec.Kind.STOPPED, Source.UNKNOWN, now)
+                val stop = Transition(now, MonitorState.source, Source.UNKNOWN, "Always-on mode stopped")
+                EventLog.append(this, stop)
+                remote(RemoteCodec.Kind.STOPPED, Source.UNKNOWN, now, log = EventLog.line(stop))
                 Prefs.saveSource(this, Source.UNKNOWN, now)
                 MonitorState.source = Source.UNKNOWN
                 stopSelf()
@@ -203,6 +204,7 @@ class MonitorService : Service(), SensorEventListener {
         if (now - lastRetryMs >= 30_000) {
             lastRetryMs = now
             RemoteAlerts.retry(this)
+            if (RemoteAlerts.historyDue(this, now)) RemoteAlerts.sendHistory(this)
         }
 
         if (now - lastNotifyMs > 15_000) {
@@ -220,7 +222,7 @@ class MonitorService : Service(), SensorEventListener {
         updateStatusNotification()
         if (t.manual) {
             // "Set by you": other phones update quietly.
-            remote(RemoteCodec.Kind.ALIVE, t.to, t.timeMs)
+            remote(RemoteCodec.Kind.ALIVE, t.to, t.timeMs, log = EventLog.line(t))
             lastAliveMs = System.currentTimeMillis()
             return
         }
@@ -265,13 +267,15 @@ class MonitorService : Service(), SensorEventListener {
             Source.UNKNOWN -> ""
         }
         remote(RemoteCodec.Kind.ALERT, t.to, t.timeMs, if (ask) "Power's back. Kahraba or moteur?" else title,
-            "${PowerDetector.formatClock(t.timeMs)} – ${t.reason}", beep)
+            "${PowerDetector.formatClock(t.timeMs)} – ${t.reason}", beep, EventLog.line(t))
     }
 
     /** Tells the phones added in Settings › Alerts on other phones (nothing is sent if none were). */
-    private fun remote(kind: RemoteCodec.Kind, source: Source, sinceMs: Long, title: String = "", text: String = "", beep: String = "") {
+    private fun remote(
+        kind: RemoteCodec.Kind, source: Source, sinceMs: Long, title: String = "", text: String = "", beep: String = "", log: String = "",
+    ) {
         RemoteAlerts.send(this, RemoteCodec.Message(kind, source, sinceMs, System.currentTimeMillis(),
-            RemoteAlerts.deviceName(this), Prefs.monitorRoom(this), title, text, beep))
+            RemoteAlerts.deviceName(this), Prefs.monitorRoom(this), title, text, beep, log = log))
     }
 
     /** The phone moved and its charger came off (it may have fallen): not a power cut. */
