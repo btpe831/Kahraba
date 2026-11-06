@@ -26,6 +26,7 @@ object RemoteAlerts {
     private const val HEARD_ROOM = "heard_room"
     private const val WARNED = "warned_silent"
     private const val HISTORY_AT = "history_at"
+    private const val SHOW_REMOTE = "show_remote"
 
     /** The sending phone says it's still there every 15 minutes, about 100 messages a day. */
     const val ALIVE_EVERY_MS = 15 * 60_000L
@@ -75,7 +76,7 @@ object RemoteAlerts {
                 queue.removeAll { it.second.kind == RemoteCodec.Kind.HISTORY && it.second.part.substringBefore("/") != batch }
             }
             queue.addLast(System.currentTimeMillis() to m)
-            while (queue.size > 50) queue.removeFirst()
+            while (queue.size > 300) queue.removeFirst()
         }
         exec.execute { flush(app) }
     }
@@ -83,14 +84,18 @@ object RemoteAlerts {
     fun historyDue(ctx: Context, now: Long = System.currentTimeMillis()) =
         now - sp(ctx).getLong(HISTORY_AT, 0L) >= HISTORY_EVERY_MS
 
-    /** Sends the last 7 days of the switch log (and the switch before them), in parts. */
-    fun sendHistory(ctx: Context) {
+    /**
+     * Sends the switch log in parts: all of it ([all], when a phone is added), or the last 7 days
+     * and the switch before them (every 6 hours).
+     */
+    fun sendHistory(ctx: Context, all: Boolean = false) {
         if (!sendOn(ctx) || sendPairing(ctx) == null) return
         val now = System.currentTimeMillis()
         sp(ctx).edit().putLong(HISTORY_AT, now).apply()
         val entries = EventLog.read(ctx).sortedBy { it.timeMs }
         if (entries.isEmpty()) return
-        val first = entries.indexOfFirst { it.timeMs >= now - HISTORY_DAYS_MS }.let { if (it < 0) entries.size - 1 else maxOf(0, it - 1) }
+        val first = if (all) 0 else
+            entries.indexOfFirst { it.timeMs >= now - HISTORY_DAYS_MS }.let { if (it < 0) entries.size - 1 else maxOf(0, it - 1) }
         val parts = RemoteCodec.historyParts(entries.drop(first).map { EventLog.line(it) })
         val batch = now.toString(36)
         val device = deviceName(ctx)
@@ -150,6 +155,10 @@ object RemoteAlerts {
             .apply()
         EventLog.clearRemote(ctx)
     }
+
+    /** Your power shows the other phone's data (true, the default) or this phone's own. */
+    fun showRemote(ctx: Context) = sp(ctx).getBoolean(SHOW_REMOTE, true)
+    fun setShowRemote(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean(SHOW_REMOTE, on).apply()
 
     fun beepHere(ctx: Context) = sp(ctx).getBoolean(GET_BEEP, true)
     fun setBeepHere(ctx: Context, on: Boolean) = sp(ctx).edit().putBoolean(GET_BEEP, on).apply()

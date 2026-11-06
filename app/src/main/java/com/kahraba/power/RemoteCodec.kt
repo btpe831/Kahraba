@@ -133,7 +133,7 @@ object RemoteCodec {
         fun add(m: Message): List<String>? {
             val (batch, index, count) = m.part.split("/").takeIf { it.size == 3 } ?: return null
             val i = index.toIntOrNull() ?: return null
-            val n = count.toIntOrNull()?.takeIf { it in 1..100 } ?: return null
+            val n = count.toIntOrNull()?.takeIf { it in 1..1000 } ?: return null
             val parts = batches.getOrPut(batch) { arrayOfNulls(n) }
             if (i !in parts.indices) return null
             parts[i] = m.text

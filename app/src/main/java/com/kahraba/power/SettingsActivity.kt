@@ -442,8 +442,8 @@ class SettingsActivity : ThemedActivity() {
 
     private fun showCode() {
         val p = RemoteAlerts.sendPairingOrNew(this)
-        // The new phone gets this phone's switch log straight away (then every 6 hours).
-        RemoteAlerts.sendHistory(this)
+        // The new phone gets this phone's whole switch log straight away (then the last 7 days every 6 hours).
+        RemoteAlerts.sendHistory(this, all = true)
         val size = px(240)
         val box = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL

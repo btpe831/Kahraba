@@ -319,6 +319,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     private var homeBottom = 0
     private var homePulse: android.animation.ObjectAnimator? = null
     private var ringPulse: android.animation.ObjectAnimator? = null
+    /** "Showing: Pixel 2 ▾" at the top of Your power, when this phone gets alerts from another. */
+    private var powerShowing: TextView? = null
     /** The running check was started from the home screen, so its result shows there. */
     private var checkFromHome = false
 
@@ -449,7 +451,56 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             setOnClickListener { showPower(false) }
         }, LinearLayout.LayoutParams((40 * dp).toInt(), (40 * dp).toInt()))
         inner.addView(header, 0)
+        powerShowing = TextView(this).apply {
+            textSize = 15f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setTextColor(themeColor(R.attr.appText))
+            setPadding((16 * dp).toInt(), (8 * dp).toInt(), (16 * dp).toInt(), (8 * dp).toInt())
+            background = GradientDrawable().apply {
+                cornerRadius = 999f
+                setColor(themeColor(R.attr.appSurface))
+                setStroke((1 * dp).toInt(), themeColor(R.attr.appBorder))
+            }
+            setOnClickListener { pickShowing() }
+        }
+        inner.addView(powerShowing, 1, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT,
+        ).apply {
+            marginStart = (4 * dp).toInt()
+            topMargin = (6 * dp).toInt()
+            bottomMargin = (4 * dp).toInt()
+        })
+        renderShowing()
         hideOldMain()
+    }
+
+    /** Whose data Your power shows: the phone running Always-on mode that sends alerts here, or this one. */
+    private fun renderShowing() {
+        val v = powerShowing ?: return
+        if (RemoteAlerts.getPairing(this) == null) {
+            v.visibility = View.GONE
+            return
+        }
+        v.visibility = View.VISIBLE
+        v.text = "Showing: " + (if (EventLog.showsRemote(this)) otherPhoneName() else "This phone") + "  ▾"
+    }
+
+    private fun otherPhoneName() = RemoteAlerts.heard(this)?.device?.takeIf { it.isNotEmpty() } ?: "Your other phone"
+
+    private fun pickShowing() {
+        val remote = EventLog.showsRemote(this)
+        val items = arrayOf(
+            otherPhoneName() + " (sends you alerts)" + if (remote) "  ✓" else "",
+            "This phone" + if (!remote) "  ✓" else "",
+        )
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Show whose data?")
+            .setItems(items) { _, i ->
+                RemoteAlerts.setShowRemote(this, i == 0)
+                refreshAll()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     /** The old main screen's own parts, which Your power doesn't show. */
@@ -821,6 +872,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         renderWobble()
         renderFact()
         applyCardSettings()
+        renderShowing()
         renderSetup()
         renderAccuracy()
         renderUpdate()

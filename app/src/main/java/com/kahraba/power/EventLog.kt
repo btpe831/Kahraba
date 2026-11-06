@@ -39,11 +39,11 @@ object EventLog {
 
     fun remoteFile(ctx: Context) = File(ctx.filesDir, "remote-switch-log.csv")
 
-    /** Adds lines from the other phone's log (repeats are ignored), keeping 30 days, in time order. */
+    /** Adds lines from the other phone's log (repeats are ignored), keeping a year, in time order. */
     @Synchronized
     fun mergeRemote(ctx: Context, lines: List<String>) {
         val f = remoteFile(ctx)
-        val cutoff = System.currentTimeMillis() - 30 * 86_400_000L
+        val cutoff = System.currentTimeMillis() - 365 * 86_400_000L
         val all = (if (f.exists()) f.readLines() else emptyList()) + lines
         val kept = all.mapNotNull { l -> parse(l)?.let { l to it } }
             .distinctBy { it.first }
@@ -59,10 +59,10 @@ object EventLog {
 
     /**
      * Whether the screens show the other phone's log: this phone gets alerts from a phone running
-     * Always-on mode, and doesn't run it itself.
+     * Always-on mode, and "Showing" at the top of Your power is set to that phone (the default).
+     * The two logs are never mixed: both phones see the same power cuts, and could disagree.
      */
-    fun showsRemote(ctx: Context): Boolean =
-        !MonitorState.running && RemoteAlerts.getPairing(ctx) != null && remoteFile(ctx).let { it.exists() && it.length() > 0 }
+    fun showsRemote(ctx: Context): Boolean = RemoteAlerts.getPairing(ctx) != null && RemoteAlerts.showRemote(ctx)
 
     /** The log the screens show: this phone's, or the other phone's ([showsRemote]). */
     @Synchronized
@@ -70,7 +70,7 @@ object EventLog {
 
     /** Whether the shown log is still being written, so its last state runs up to now. */
     fun shownLive(ctx: Context): Boolean =
-        MonitorState.running || (showsRemote(ctx) && RemoteAlerts.current(ctx) != null)
+        if (showsRemote(ctx)) RemoteAlerts.current(ctx) != null else MonitorState.running
 
     @Synchronized
     fun clear(ctx: Context) {
