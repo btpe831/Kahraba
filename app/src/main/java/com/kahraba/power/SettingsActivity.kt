@@ -415,6 +415,9 @@ class SettingsActivity : ThemedActivity() {
                 "While Always-on mode runs here, every alert also goes to the phones you add, encrypted.",
                 RemoteAlerts.sendOn(ctx)) { RemoteAlerts.setSendOn(ctx, it) })
             addView(divider())
+            addView(link("Name of this phone: ${RemoteAlerts.deviceName(ctx)}",
+                "What your other phones call it, e.g. “From ${RemoteAlerts.deviceName(ctx)} · 2 min ago”. Tap to change.") { nameThisPhone() })
+            addView(divider())
             addView(link("Add a phone", "Shows a code to scan with the other phone. Every phone you add uses the same code.") { showCode() })
             if (RemoteAlerts.sendPairing(ctx) != null) {
                 addView(divider())
@@ -438,6 +441,35 @@ class SettingsActivity : ThemedActivity() {
             "ntfy.sh can't read them. Android phones only for now.", 14f, R.attr.appMuted).apply {
             setPadding(px(4), px(14), px(4), 0)
         })
+    }
+
+    private fun nameThisPhone() {
+        val input = EditText(this).apply {
+            hint = RemoteAlerts.systemName(this@SettingsActivity)
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
+            filters = arrayOf(android.text.InputFilter.LengthFilter(RemoteAlerts.NAME_MAX))
+            setText(RemoteAlerts.deviceName(this@SettingsActivity))
+            setSelection(text.length)
+        }
+        val box = FrameLayout(this).apply { setPadding(px(20), px(8), px(20), 0); addView(input) }
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Name of this phone")
+            .setMessage("For example Kitchen phone or Bathroom spare.")
+            .setView(box)
+            .setPositiveButton("Save") { _, _ -> renamed(input.text.toString()) }
+            .setNeutralButton("Use the phone's name") { _, _ -> renamed("") }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    /** Saves the name and, while Always-on mode runs, tells the other phones straight away. */
+    private fun renamed(name: String) {
+        RemoteAlerts.setCustomName(this, if (name.trim() == RemoteAlerts.systemName(this)) "" else name)
+        if (MonitorState.running) {
+            RemoteAlerts.send(this, RemoteCodec.Message(RemoteCodec.Kind.ALIVE, MonitorState.source, MonitorState.sinceMs,
+                System.currentTimeMillis(), RemoteAlerts.deviceName(this), Prefs.monitorRoom(this)))
+        }
+        build()
     }
 
     private fun showCode() {

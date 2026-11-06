@@ -27,6 +27,8 @@ object RemoteAlerts {
     private const val WARNED = "warned_silent"
     private const val HISTORY_AT = "history_at"
     private const val SHOW_REMOTE = "show_remote"
+    private const val PHONE_NAME = "phone_name"
+    const val NAME_MAX = 30
 
     /** The sending phone says it's still there every 15 minutes, about 100 messages a day. */
     const val ALIVE_EVERY_MS = 15 * 60_000L
@@ -42,9 +44,29 @@ object RemoteAlerts {
 
     fun sp(ctx: Context) = ctx.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 
-    fun deviceName(ctx: Context): String =
-        runCatching { android.provider.Settings.Global.getString(ctx.contentResolver, "device_name") }.getOrNull()
-            ?.takeIf { it.isNotBlank() } ?: Build.MODEL
+    /** The name other phones see: the one typed in Alerts on other phones, else the phone's own ([systemName]). */
+    fun deviceName(ctx: Context): String = customName(ctx).ifEmpty { systemName(ctx) }
+
+    fun customName(ctx: Context): String = sp(ctx).getString(PHONE_NAME, "")?.trim() ?: ""
+
+    fun setCustomName(ctx: Context, name: String) =
+        sp(ctx).edit().putString(PHONE_NAME, name.trim().take(NAME_MAX)).apply()
+
+    /**
+     * The phone's own name (Settings › About phone), e.g. "Pixel 2" or "Galaxy A54 5G". Pixels keep it
+     * in one place, some Samsungs in another; if neither is readable, the maker and model code.
+     */
+    fun systemName(ctx: Context): String {
+        val cr = ctx.contentResolver
+        val found = listOf(
+            { android.provider.Settings.Global.getString(cr, "device_name") },
+            { android.provider.Settings.System.getString(cr, "device_name") },
+            { android.provider.Settings.Secure.getString(cr, "bluetooth_name") },
+        ).firstNotNullOfOrNull { read -> runCatching(read).getOrNull()?.trim()?.takeIf { it.isNotEmpty() } }
+        if (found != null) return found.take(NAME_MAX)
+        val maker = Build.MANUFACTURER.replaceFirstChar { it.uppercase() }
+        return if (Build.MODEL.startsWith(maker, ignoreCase = true)) Build.MODEL else "$maker ${Build.MODEL}"
+    }
 
     // ---- Sending ----
 

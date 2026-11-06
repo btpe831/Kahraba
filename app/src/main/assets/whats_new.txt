@@ -6,6 +6,7 @@
 - Your other phone's home screen shows what's on now, and tells you if the spare phone goes quiet (off, unplugged, or no internet).
 - Your other phone also shows the spare phone's kahraba pattern, history and whole switch log, kept up to date automatically. At the top of Your power, choose whose data to see.
 - Alerts are encrypted. If the internet is down, they wait and go as soon as it's back.
+- Give the spare phone a clear name, like Kitchen phone, so your other phones show “From Kitchen phone”.
 
 ## 1.4.10
 - Every alert now comes as its own notification, so apps that pass alerts on to your other phones never miss one.
