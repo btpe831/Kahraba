@@ -753,7 +753,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         val today = sorted.withIndex().filter { it.value.timeMs >= dayStart && it.value.source != Source.UNKNOWN }
             .sortedByDescending { it.value.timeMs }.take(4).reversed() // the last 4, in time order
         if (today.isNotEmpty()) {
-            line("LATEST", 12f, R.attr.appMuted, bold = true, top = 12)
+            line("TODAY'S TIMELINE", 12f, R.attr.appMuted, bold = true, top = 12)
             for ((i, e) in today) {
                 val next = sorted.getOrNull(i + 1)
                 val lasted = when {
