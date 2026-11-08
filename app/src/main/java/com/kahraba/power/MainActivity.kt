@@ -407,7 +407,33 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             pageReady = false
             settleTo(fullP(), 300)
         } else {
-            settleTo(0f, 260)
+            closePower(260)
+        }
+    }
+
+    /**
+     * Your power slides straight down to home, from wherever the finger left it: it doesn't stop at
+     * Today on the way (that showed Today flashing behind it).
+     */
+    private fun closePower(ms: Long, open: Boolean = false) {
+        settle?.cancel()
+        val page = findViewById<android.widget.ScrollView>(R.id.scroll)
+        val h = home.height.toFloat()
+        peek.visibility = View.INVISIBLE
+        settle = android.animation.ValueAnimator.ofFloat(page.translationY, if (open) 0f else h).apply {
+            duration = ms
+            interpolator = android.view.animation.DecelerateInterpolator()
+            addUpdateListener { page.translationY = it.animatedValue as Float }
+            addListener(object : android.animation.AnimatorListenerAdapter() {
+                private var cancelled = false
+                override fun onAnimationCancel(animation: android.animation.Animator) { cancelled = true }
+                override fun onAnimationEnd(animation: android.animation.Animator) {
+                    if (cancelled) return
+                    if (open) sheetP = fullP() else place(0f)
+                    settled()
+                }
+            })
+            start()
         }
     }
 
@@ -420,6 +446,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     /** Your power was refreshed for this trip up. */
     private var pageReady = false
     private var settle: android.animation.ValueAnimator? = null
+    /** This drag started on an open Your power: it only goes down to home (or back up). */
+    private var closing = false
 
     private fun fullP() = peekH + home.height.toFloat().coerceAtLeast(1f)
 
@@ -475,7 +503,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         powerBack.isEnabled = atFull
         peekOpen = atPeek
         peekBack.isEnabled = atPeek
-        if (!atFull) pageReady = false
+        if (sheetP <= 0f) pageReady = false
         colorSystemBars()
     }
 
@@ -483,25 +511,45 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         override fun dragStart(): Boolean {
             if (check != null || tour != null || findViewById<View>(R.id.homeResult).visibility == View.VISIBLE) return false
             settle?.cancel()
-            // Fresh content (and height) for Today when it's closed or open, not mid-way.
+            closing = powerBack.isEnabled
+            if (closing) return true
+            // Fresh content (and height) for Today when it's closed or open, not mid-way; and Your power
+            // refreshed now, so the drag doesn't pause when it comes into view.
             if (sheetP <= 0f || peekOpen) {
                 measurePeek()
                 if (peekOpen) sheetP = peekH
+            }
+            if (!pageReady) {
+                pageReady = true
+                refreshAll()
+                findViewById<android.widget.ScrollView>(R.id.scroll).scrollTo(0, 0)
             }
             dragFrom = sheetP
             return true
         }
 
-        override fun dragBy(dy: Float) = place(dragFrom - dy)
+        override fun dragBy(dy: Float) {
+            if (closing) {
+                findViewById<android.widget.ScrollView>(R.id.scroll).translationY = dy.coerceIn(0f, home.height.toFloat())
+            } else {
+                place(dragFrom - dy)
+            }
+        }
 
         override fun dragEnd(velocityY: Float) {
+            val fling = 500 * dp
+            if (closing) {
+                // Pulled down a quarter of the way, or flicked down: close. Otherwise back up.
+                val down = findViewById<android.widget.ScrollView>(R.id.scroll).translationY
+                val close = velocityY > fling || (velocityY > -fling && down > home.height / 4f)
+                closePower(220, open = !close)
+                return
+            }
             val full = fullP()
             val stops = listOf(0f, peekH, full)
-            val fling = 500 * dp
             val target = when {
                 velocityY < -fling -> stops.firstOrNull { it > sheetP + 1f } ?: full
-                // Flung down from Your power: straight home, like closing it.
-                velocityY > fling -> if (dragFrom >= full - 1f) 0f else stops.lastOrNull { it < sheetP - 1f } ?: 0f
+                velocityY > fling -> stops.lastOrNull { it < sheetP - 1f } ?: 0f
                 else -> stops.minByOrNull { kotlin.math.abs(it - sheetP) } ?: 0f
             }
             settleTo(target)
