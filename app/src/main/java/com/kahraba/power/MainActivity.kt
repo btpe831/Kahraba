@@ -423,7 +423,10 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         settle = android.animation.ValueAnimator.ofFloat(page.translationY, if (open) 0f else h).apply {
             duration = ms
             interpolator = android.view.animation.DecelerateInterpolator()
-            addUpdateListener { page.translationY = it.animatedValue as Float }
+            addUpdateListener {
+                page.translationY = it.animatedValue as Float
+                blendBars(page.translationY)
+            }
             addListener(object : android.animation.AnimatorListenerAdapter() {
                 private var cancelled = false
                 override fun onAnimationCancel(animation: android.animation.Animator) { cancelled = true }
@@ -476,9 +479,11 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             }
             page.visibility = View.VISIBLE
             page.translationY = full - sheetP
+            blendBars(page.translationY)
         } else {
             page.visibility = View.GONE
             page.translationY = home.height.toFloat()
+            blendBars(page.translationY)
         }
         findViewById<View>(R.id.homeHandle).alpha = 1f - (sheetP / peekH.coerceAtLeast(1f)).coerceIn(0f, 1f)
     }
@@ -530,7 +535,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
         override fun dragBy(dy: Float) {
             if (closing) {
-                findViewById<android.widget.ScrollView>(R.id.scroll).translationY = dy.coerceIn(0f, home.height.toFloat())
+                val page = findViewById<android.widget.ScrollView>(R.id.scroll)
+                page.translationY = dy.coerceIn(0f, home.height.toFloat())
+                blendBars(page.translationY)
             } else {
                 place(dragFrom - dy)
             }
@@ -942,6 +949,24 @@ class MainActivity : ThemedActivity(), SensorEventListener {
                 )
                 .setPositiveButton("Got it", null)
                 .show()
+        }
+    }
+
+    /**
+     * While Your power slides, the bars blend between its background and home's colour, so they don't
+     * jump at the end. [pageTy] is how far down the page is (0: fully open). The colour is all home's
+     * once the page is 30% of the way down.
+     */
+    private fun blendBars(pageTy: Float) {
+        if (!::home.isInitialized) return
+        val f = (pageTy / (home.height * 0.3f).coerceAtLeast(1f)).coerceIn(0f, 1f)
+        val bg = themeColor(R.attr.appBg)
+        window.statusBarColor = androidx.core.graphics.ColorUtils.blendARGB(bg, homeTop, f)
+        window.navigationBarColor = androidx.core.graphics.ColorUtils.blendARGB(bg, homeBottom, f)
+        val light = f < 0.5f && !Prefs.isDark(this)
+        androidx.core.view.WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = light
+            isAppearanceLightNavigationBars = light
         }
     }
 
