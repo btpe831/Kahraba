@@ -61,13 +61,34 @@ class SettingsActivity : ThemedActivity() {
                 toast("That file isn't a Kahraba or Not backup")
             } else {
                 MaterialAlertDialogBuilder(this)
-                    .setTitle("Restore this backup?")
-                    .setMessage("It has $summary. Everything currently in this app will be replaced.")
-                    .setPositiveButton("Restore") { _, _ -> restore(json) }
+                    .setTitle("Use this backup?")
+                    .setMessage("It has $summary.\n\n" +
+                        "Combine: adds its switch log, checks, rooms and notes to what's here. Nothing here is removed, " +
+                        "and your settings stay.\n\n" +
+                        "Replace: everything in this app is replaced by the backup.")
+                    .setPositiveButton("Combine") { _, _ -> combine(json) }
+                    .setNeutralButton("Replace") { _, _ ->
+                        MaterialAlertDialogBuilder(this)
+                            .setTitle("Replace everything?")
+                            .setMessage("Everything currently in this app will be replaced by the backup.")
+                            .setPositiveButton("Replace") { _, _ -> restore(json) }
+                            .setNegativeButton("Cancel", null)
+                            .show()
+                    }
                     .setNegativeButton("Cancel", null)
                     .show()
             }
         }
+    }
+
+    private fun combine(json: String) {
+        if (!Backup.combine(this, json)) {
+            toast("Couldn't combine that file")
+            return
+        }
+        toast("Combined")
+        startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
+        finish()
     }
 
     private fun restore(json: String) {
@@ -200,7 +221,7 @@ class SettingsActivity : ThemedActivity() {
                     launchSafely { saveBackup.launch("kahraba-or-not-backup-" + SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date()) + ".json") }
                 })
                 addView(divider())
-                addView(link("Restore from a file", "Replaces everything here with a backup, e.g. from another phone or Google Drive.") {
+                addView(link("Restore from a file", "Combine a backup with what's here, or replace everything with it. You choose after picking the file.") {
                     launchSafely { openBackup.launch(arrayOf("application/json", "application/octet-stream", "text/plain", "*/*")) }
                 })
             })

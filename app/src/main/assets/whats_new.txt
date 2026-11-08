@@ -9,6 +9,7 @@
 - Give the spare phone a clear name, like Kitchen phone, so your other phones show “From Kitchen phone”.
 - Share recordings now asks how far back: today, since yesterday, the last 3 days or everything, so files are much smaller.
 - New in Settings › Always-on mode: keep recordings for 1, 3, 7 or 30 days.
+- Backups can now be combined with what's in the app instead of replacing it: switch logs, checks, rooms and notes from both are kept.
 - Drag up on the home screen and Today follows your finger: today's bar, the latest switches and the next kahraba. Keep going for everything; drag down to close. The menu moved to the top left.
 - New Glance screen (on the Always-on screen and in the menu): a dim black screen with one big word, KAHRABA or MOTEUR, readable across the room. It moves a little every minute, so it's kind to a screen left on all day.
 - The status icon now shows which it is, also on the phone's own Always-on display: a bolt for kahraba, the pump for moteur.

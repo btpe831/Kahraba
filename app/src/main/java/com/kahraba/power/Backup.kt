@@ -57,6 +57,34 @@ object Backup {
         "$checks checks, $rooms rooms and $notes notes"
     }.getOrNull()
 
+    /**
+     * Joins a backup into this app instead of replacing it (1.5.0): its switch log, checks, rooms and
+     * notes are added to what's here; nothing here is removed, and this app's settings stay. Returns
+     * false if the file isn't a backup.
+     */
+    fun combine(ctx: Context, json: String): Boolean {
+        val root = runCatching { JSONObject(json) }.getOrNull() ?: return false
+        if (root.optString("format") != FORMAT) return false
+        val prefs = root.optJSONObject("prefs") ?: JSONObject()
+        fun theirs(key: String): String =
+            prefs.optJSONObject(key)?.takeIf { it.optString("t") == "s" }?.optString("v", "") ?: ""
+        val sp = Prefs.sp(ctx)
+        val edit = sp.edit()
+        edit.putString("check_history", Combine.checks(sp.getString("check_history", "") ?: "", theirs("check_history")))
+        edit.putString("spots", Combine.rooms(sp.getString("spots", "") ?: "", theirs("spots")))
+        for (key in prefs.keys()) {
+            if (key.startsWith("note_")) edit.putString(key, Combine.note(sp.getString(key, ""), theirs(key)))
+        }
+        edit.commit()
+        val log = root.optJSONObject("files")?.optString("switch-log.csv", "") ?: ""
+        if (log.isNotEmpty()) synchronized(EventLog) {
+            val f = EventLog.file(ctx)
+            val mine = if (f.exists()) f.readLines() else emptyList()
+            f.writeText(Combine.log(mine, log.lines()).joinToString("") { it + "\n" })
+        }
+        return true
+    }
+
     /** Replaces everything in this app with the backup. Returns false if the file isn't a backup. */
     fun restore(ctx: Context, json: String): Boolean {
         val root = runCatching { JSONObject(json) }.getOrNull() ?: return false
