@@ -30,8 +30,15 @@ import java.util.Locale
  */
 class AmpsActivity : ThemedActivity() {
 
-    /** [surge]: an older motor without an inverter, which briefly draws 3–5× when it starts. */
-    private data class Item(val name: String, val watts: Int, val surge: Boolean = false, val count: Int = 0)
+    /**
+     * [surge]: an older motor without an inverter, which briefly draws 3–5× when it starts.
+     * [amps] (1.5.04): set when the owner only knows the amps (e.g. a water heater that uses 4 A);
+     * then it counts as those amps at any voltage, and [watts] is unused.
+     */
+    private data class Item(val name: String, val watts: Int, val surge: Boolean = false, val count: Int = 0, val amps: Double? = null) {
+        fun ampsAt(volts: Int): Double = amps ?: watts.toDouble() / volts
+        fun wattsAt(volts: Int): Double = amps?.times(volts) ?: watts.toDouble()
+    }
     private data class Category(val name: String, val items: List<Item>)
 
     private var categories = mutableListOf<Category>()
@@ -44,6 +51,8 @@ class AmpsActivity : ThemedActivity() {
     private lateinit var totalTrack: FrameLayout
     private lateinit var convertResult: TextView
     private var convertWatts: Double? = null
+    /** Quick convert: from watts (false) or from amps (true). */
+    private var convertFromAmps = false
 
     private val subscription get() = Prefs.sp(this).getInt(SUB_KEY, 10)
     private val volts get() = Prefs.sp(this).getInt(VOLT_KEY, 220)
@@ -96,14 +105,14 @@ class AmpsActivity : ThemedActivity() {
         body.addView(card {
             val row = LinearLayout(this@AmpsActivity).apply { gravity = Gravity.CENTER_VERTICAL }
             val input = EditText(this@AmpsActivity).apply {
-                hint = "e.g. 1200"
+                hint = if (convertFromAmps) "e.g. 4" else "e.g. 1200"
                 inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
                 textSize = 22f
                 setTextColor(color(R.attr.appText))
                 setHintTextColor(color(R.attr.appMuted))
                 background = rounded(color(R.attr.appBg), color(R.attr.appBorder), 16f)
                 setPadding(px(16), px(10), px(16), px(10))
-                convertWatts?.let { setText(it.toInt().toString()) }
+                convertWatts?.let { setText(if (convertFromAmps) fmt1(it) else it.toInt().toString()) }
                 addTextChangedListener(object : TextWatcher {
                     override fun afterTextChanged(e: Editable?) {
                         convertWatts = e?.toString()?.replace(',', '.')?.toDoubleOrNull()
@@ -114,9 +123,17 @@ class AmpsActivity : ThemedActivity() {
                 })
             }
             row.addView(input, LinearLayout.LayoutParams(0, -2, 1f))
-            row.addView(text("watts", 17f, R.attr.appMuted), LinearLayout.LayoutParams(-2, -2).apply { marginStart = px(12) })
-            addView(row)
-            convertResult = text("Type the watts on the appliance's label.", 20f, R.attr.appText, bold = true)
+            row.addView(text(if (convertFromAmps) "amps" else "watts", 17f, R.attr.appMuted), LinearLayout.LayoutParams(-2, -2).apply { marginStart = px(12) })
+            // From watts or from amps (1.5.04): labels show one or the other.
+            addView(segmented(listOf("Watts → amps" to 0, "Amps → watts" to 1), if (convertFromAmps) 1 else 0) {
+                if ((it == 1) != convertFromAmps) {
+                    convertFromAmps = it == 1
+                    convertWatts = null
+                    build(); update()
+                }
+            })
+            addView(row, lp(top = 12))
+            convertResult = text(convertHint(), 20f, R.attr.appText, bold = true)
             addView(convertResult, lp(top = 12))
         })
 
@@ -139,7 +156,7 @@ class AmpsActivity : ThemedActivity() {
         if (categories.isEmpty()) {
             body.addView(card {
                 addView(text("Add your own appliances", 18f, R.attr.appText, bold = true))
-                addView(text("Make a category (e.g. Kitchen), then add what's in it with the watts from its label. " +
+                addView(text("Make a category (e.g. Kitchen), then add what's in it with the watts from its label, or the amps if that's what you know. " +
                     "Tap + for everything you'd run at the same time.", 14f, R.attr.appMuted), lp(top = 4))
                 addView(primaryButton("+ Add a category") { addCategory() }, lp(top = 14))
                 addView(text("Or start from a typical list you can edit", 15f, R.attr.appAccent, bold = true).apply {
@@ -195,8 +212,9 @@ class AmpsActivity : ThemedActivity() {
         }
         val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         texts.addView(text(item.name, 16f, R.attr.appText, bold = true))
-        texts.addView(text("${item.watts} W · ${amps(item.watts.toDouble())} A" +
-            if (item.surge) " · ⚡ start-up surge" else "", 13f, R.attr.appMuted))
+        val load = if (item.amps != null) "${fmt1(item.amps)} A (about ${item.wattsAt(volts).toInt()} W)"
+        else "${item.watts} W · ${amps(item.watts.toDouble())} A"
+        texts.addView(text(load + if (item.surge) " · ⚡ start-up surge" else "", 13f, R.attr.appMuted))
         row.addView(texts, LinearLayout.LayoutParams(0, -2, 1f))
         val count = text("${item.count}", 18f, R.attr.appText, bold = true).apply { gravity = Gravity.CENTER }
         fun step(d: Int) {
@@ -253,10 +271,17 @@ class AmpsActivity : ThemedActivity() {
         val old = ii?.let { categories[ci].items[it] }
         val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(px(20), px(8), px(20), 0) }
         val name = EditText(this).apply { hint = "Name, e.g. Coffee machine"; setSingleLine(); setText(old?.name ?: "") }
+        // Watts from the label, or amps when that's all you know (1.5.04).
+        var inAmps = old?.amps != null
         val watts = EditText(this).apply {
-            hint = "Watts, e.g. 1200"
-            inputType = InputType.TYPE_CLASS_NUMBER
-            setText(old?.watts?.toString() ?: "")
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+            setText(old?.let { o -> o.amps?.let { fmt1(it) } ?: o.watts.toString() } ?: "")
+        }
+        fun hintFor() { watts.hint = if (inAmps) "Amps, e.g. 4" else "Watts, e.g. 1200" }
+        hintFor()
+        val unit = segmented(listOf("Watts" to 0, "Amps" to 1), if (inAmps) 1 else 0) {
+            inAmps = it == 1
+            hintFor()
         }
         val surgeRow = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL; setPadding(0, px(12), 0, 0) }
         val surgeTexts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -265,7 +290,10 @@ class AmpsActivity : ThemedActivity() {
         surgeRow.addView(surgeTexts, LinearLayout.LayoutParams(0, -2, 1f))
         val surge = MaterialSwitch(this).apply { isChecked = old?.surge ?: false }
         surgeRow.addView(surge)
-        box.addView(name); box.addView(watts); box.addView(surgeRow)
+        box.addView(name)
+        box.addView(unit, lp(top = 10))
+        box.addView(watts)
+        box.addView(surgeRow)
         val builder = MaterialAlertDialogBuilder(this)
             .setTitle(if (old == null) "Add an appliance" else "Edit appliance")
             .setView(box)
@@ -281,12 +309,13 @@ class AmpsActivity : ThemedActivity() {
         // Check the fields before closing: show what's missing instead of quietly doing nothing.
         dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE).setOnClickListener {
             val n = clean(name.text.toString())
-            val w = watts.text.toString().toIntOrNull()
+            val v = watts.text.toString().replace(',', '.').toDoubleOrNull()
             when {
                 n.isEmpty() -> name.error = "Enter a name"
-                w == null || w <= 0 -> watts.error = "Enter the watts from the label"
+                v == null || v <= 0 -> watts.error = if (inAmps) "Enter the amps it uses" else "Enter the watts from the label"
                 else -> {
-                    val item = Item(n, w, surge.isChecked, old?.count ?: 0)
+                    val item = if (inAmps) Item(n, 0, surge.isChecked, old?.count ?: 0, amps = v)
+                    else Item(n, v.toInt().coerceAtLeast(1), surge.isChecked, old?.count ?: 0)
                     if (ii == null) {
                         categories[ci] = categories[ci].copy(items = categories[ci].items + item)
                     } else {
@@ -333,7 +362,8 @@ class AmpsActivity : ThemedActivity() {
                     val items = c.getJSONArray("items")
                     Category(c.getString("name"), (0 until items.length()).map { j ->
                         val o = items.getJSONObject(j)
-                        Item(o.getString("name"), o.getInt("watts"), o.optBoolean("surge"), o.optInt("count"))
+                        Item(o.getString("name"), o.optInt("watts"), o.optBoolean("surge"), o.optInt("count"),
+                            if (o.has("amps")) o.getDouble("amps") else null)
                     })
                 }.toMutableList()
             }.getOrDefault(mutableListOf())
@@ -351,7 +381,8 @@ class AmpsActivity : ThemedActivity() {
         for (c in categories) {
             val items = JSONArray()
             for (item in c.items) {
-                items.put(JSONObject().put("name", item.name).put("watts", item.watts).put("surge", item.surge).put("count", item.count))
+                items.put(JSONObject().put("name", item.name).put("watts", item.watts).put("surge", item.surge).put("count", item.count)
+                    .apply { item.amps?.let { put("amps", it) } })
             }
             arr.put(JSONObject().put("name", c.name).put("items", items))
         }
@@ -378,14 +409,19 @@ class AmpsActivity : ThemedActivity() {
 
     private fun amps(watts: Double) = String.format(Locale.US, "%.1f", watts / volts)
 
+    private fun fmt1(x: Double) = String.format(Locale.US, "%.1f", x).removeSuffix(".0")
+
+    private fun convertHint() = if (convertFromAmps) "Type the amps the appliance uses." else "Type the watts on the appliance's label."
+
     private fun update() {
         val on = categories.flatMap { it.items }.filter { it.count > 0 }
-        val totalW = on.sumOf { it.count * it.watts.toDouble() }
+        // Amps appliances count as their amps at any voltage; watts ones are divided by the voltage.
+        val totalA = on.sumOf { it.count * it.ampsAt(volts) }
+        val totalW = on.sumOf { it.count * it.wattsAt(volts) }
         // Biggest start-up kick from an older motor (about 3× its running draw, briefly).
-        val surgeW = on.filter { it.surge }.maxOfOrNull { it.watts * 2.0 } ?: 0.0
-        val totalA = totalW / volts
+        val surgeW = on.filter { it.surge }.maxOfOrNull { it.wattsAt(volts) * 2.0 } ?: 0.0
         val sub = subscription.toDouble()
-        totalText.text = "${amps(totalW)} A of $subscription A"
+        totalText.text = "${String.format(Locale.US, "%.1f", totalA)} A of $subscription A"
         val spare = sub - totalA
         totalSub.text = when {
             totalW == 0.0 -> "Tap + on appliances to see the total"
@@ -405,9 +441,10 @@ class AmpsActivity : ThemedActivity() {
         totalTrack.post { totalBar.layoutParams = totalBar.layoutParams.apply { width = (totalTrack.width * share).toInt() } }
 
         if (::convertResult.isInitialized) {
-            convertResult.text = convertWatts?.let { w ->
-                "${w.toInt()} W = ${amps(w)} A  ·  ${(w / volts / sub * 100).toInt()}% of $subscription A"
-            } ?: "Type the watts on the appliance's label."
+            convertResult.text = convertWatts?.let { x ->
+                if (convertFromAmps) "${fmt1(x)} A = ${(x * volts).toInt()} W  ·  ${(x / sub * 100).toInt()}% of $subscription A"
+                else "${x.toInt()} W = ${amps(x)} A  ·  ${(x / volts / sub * 100).toInt()}% of $subscription A"
+            } ?: convertHint()
         }
     }
 
