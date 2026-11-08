@@ -413,9 +413,9 @@ class SettingsActivity : ThemedActivity() {
             if (getting == null) {
                 addView(text("Get the alerts from a phone running Always-on mode, with the same beeps. " +
                     "On that phone, open this page and tap Add a phone, then:", 15f, R.attr.appMuted))
-                addView(link("Scan its code", "Point this phone's camera at the code on the other phone.") { scanCode() }, lp(top = 8))
+                addView(link("Scan QR code", "Point this phone's camera at the code on the other phone.") { scanCode() }, lp(top = 8))
                 addView(divider())
-                addView(link("Paste a code", "If the code was sent to you in a message: copy it, then paste it here.") { pasteCode() })
+                addView(link("Paste code", "If the code was sent to you in a message: copy it, then paste it here.") { pasteCode() })
             } else {
                 addView(text(RemoteAlerts.statusLine(ctx), 16f, R.attr.appText, bold = true))
                 addView(remoteSwitch("Beep on this phone", "Off: notifications only, no beeps. Quiet hours apply too.",
@@ -518,7 +518,7 @@ class SettingsActivity : ThemedActivity() {
             setBackgroundColor(android.graphics.Color.WHITE)
             setPadding(px(8), px(8), px(8), px(8))
         }, LinearLayout.LayoutParams(size + px(16), size + px(16)))
-        box.addView(text("On the other phone: open the app › Menu › Alerts on other phones › Scan its code.",
+        box.addView(text("On the other phone: open the app › Menu › Alerts on other phones › Scan QR code.",
             15f, R.attr.appMuted).apply { gravity = Gravity.CENTER }, lp(top = 12))
         MaterialAlertDialogBuilder(this)
             .setTitle("Add a phone")
@@ -526,7 +526,7 @@ class SettingsActivity : ThemedActivity() {
             .setPositiveButton("Done") { _, _ -> build() }
             .setNeutralButton("Send the code") { _, _ ->
                 val msg = "To get my power alerts on your phone: install Kahraba or Not, then open Menu › Alerts on other phones › " +
-                    "Paste a code. Copy this whole message first.\n\n${p.code}"
+                    "Paste code. Copy this whole message first.\n\n${p.code}"
                 runCatching {
                     startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain")
                         .putExtra(Intent.EXTRA_TEXT, msg), "Send the code"))
@@ -549,8 +549,8 @@ class SettingsActivity : ThemedActivity() {
         runCatching {
             GmsBarcodeScanning.getClient(this, options).startScan()
                 .addOnSuccessListener { pairWith(it.rawValue ?: "") }
-                .addOnFailureListener { toast("Couldn't open the scanner. Try Paste a code instead.") }
-        }.onFailure { toast("Couldn't open the scanner. Try Paste a code instead.") }
+                .addOnFailureListener { toast("Couldn't open the scanner. Try Paste code instead.") }
+        }.onFailure { toast("Couldn't open the scanner. Try Paste code instead.") }
     }
 
     private fun pasteCode() {
@@ -564,7 +564,7 @@ class SettingsActivity : ThemedActivity() {
         }
         val box = FrameLayout(this).apply { setPadding(px(20), px(8), px(20), 0); addView(input) }
         MaterialAlertDialogBuilder(this)
-            .setTitle("Paste a code")
+            .setTitle("Enter code")
             .setView(box)
             .setPositiveButton("Connect") { _, _ -> pairWith(input.text.toString()) }
             .setNegativeButton("Cancel", null)

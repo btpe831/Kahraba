@@ -143,7 +143,7 @@ class HelpActivity : ThemedActivity() {
             "Alerts on other phones" to """
                 Get Always-on mode's alerts on your everyday phone, with the same beeps, while the spare phone stays under the light.
                 • On the phone running Always-on mode: menu (☰) › <b>Alerts on other phones</b> › <b>Add a phone</b>. It shows a code.
-                • On the other phone (Android): install the app, then menu › Alerts on other phones › <b>Scan its code</b>. Or tap “Send the code” on the first phone and use <b>Paste a code</b>.
+                • On the other phone (Android): install the app, then menu › Alerts on other phones › <b>Scan QR code</b>. Or tap “Send the code” on the first phone and use <b>Paste code</b>.
                 • The other phone's home screen then shows what's on, from the spare phone (“From Pixel 2 · 3 min ago”). Allow it to run in the background when asked, so alerts arrive with the screen off.
                 • The other phone also shows the spare phone's <b>Kahraba pattern</b>, history and switch log (“From Pixel 2”). The spare phone sends its whole switch log when you add a phone, its last 7 days every 6 hours, and each new switch as it happens. At the top of Your power, <b>Showing</b> lets you switch between the spare phone's data and this phone's own (if it runs Always-on mode too); the two are never mixed. Checks, rooms and the light graph stay on the phone that made them.
                 • Other phones show the spare phone by its name from Settings › About phone. To use a clearer one, like “Kitchen phone”, tap <b>Name of this phone</b> under Alerts on other phones on the spare phone.
