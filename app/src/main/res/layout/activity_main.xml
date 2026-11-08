@@ -1288,7 +1288,7 @@
             app:tint="?attr/appAccent" />
     </LinearLayout>
     <!-- HOME (1.4.0): a calm first screen with one big button. The screen above is "Your power",
-         opened by swiping up or the chart icon. Colours are set in code from the current source. -->
+         opened by swiping up (a short swipe first shows Today, built in code). Colours are set in code from the current source. -->
     <FrameLayout
         android:id="@+id/home"
         android:layout_width="match_parent"
@@ -1312,14 +1312,14 @@
                 android:paddingEnd="16dp">
 
                 <ImageButton
-                    android:id="@+id/homePower"
+                    android:id="@+id/homeSettings"
                     android:layout_width="44dp"
                     android:layout_height="44dp"
                     android:background="@drawable/home_chip"
-                    android:contentDescription="Your power"
+                    android:contentDescription="Menu"
                     android:padding="11dp"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/ic_chart"
+                    android:src="@drawable/ic_menu"
                     app:tint="#FFFFFFFF" />
 
                 <!-- The room the phone is in; tap to choose another. -->
@@ -1349,16 +1349,10 @@
                         android:textStyle="bold" />
                 </FrameLayout>
 
-                <ImageButton
-                    android:id="@+id/homeSettings"
+                <!-- Same width as the menu button, so the room stays centred. -->
+                <View
                     android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:background="@drawable/home_chip"
-                    android:contentDescription="Menu"
-                    android:padding="11dp"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/ic_menu"
-                    app:tint="#FFFFFFFF" />
+                    android:layout_height="44dp" />
             </LinearLayout>
 
             <LinearLayout

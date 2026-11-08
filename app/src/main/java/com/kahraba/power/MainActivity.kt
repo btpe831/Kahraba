@@ -230,6 +230,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             if (++ticks % 30 == 0) {
                 renderHistoryCards()
                 renderPattern()
+                if (peekOpen) renderPeek()
             }
             ui.postDelayed(this, 1000)
         }
@@ -287,7 +288,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             ),
             TourOverlay.Step(
                 "Your power",
-                "Swipe up or tap here for your room, the kahraba pattern, history and all your checks.",
+                "Swipe up or tap here for Today at a glance. Swipe up again for the kahraba pattern, history and all your checks.",
                 { findViewById(R.id.homeHandle) },
             ),
             TourOverlay.Step(
@@ -319,6 +320,14 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     private var homeBottom = 0
     private var homePulse: android.animation.ObjectAnimator? = null
     private var ringPulse: android.animation.ObjectAnimator? = null
+    /** Today at a glance: a short swipe up on home shows it; swipe again for all of Your power. */
+    private lateinit var peek: LinearLayout
+    private lateinit var peekBody: LinearLayout
+    private var peekOpen = false
+    /** Back from Today returns home. */
+    private val peekBack = object : androidx.activity.OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() { showPeek(false) }
+    }
     /** "Showing: Pixel 2 ▾" at the top of Your power, when this phone gets alerts from another. */
     private var powerShowing: TextView? = null
     /** The running check was started from the home screen, so its result shows there. */
@@ -347,6 +356,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         }
         homeButton.setOnClickListener {
             when {
+                peekOpen -> showPeek(false)
                 check != null -> stopCheck(null)
                 homeSource == Source.NO_POWER -> toast("The power is off. Nothing to check right now.")
                 else -> {
@@ -362,8 +372,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         findViewById<View>(R.id.homeChip).setOnClickListener {
             if (!MonitorState.running && RemoteAlerts.getPairing(this) != null) SettingsActivity.openRemote(this) else openAlwaysOn()
         }
-        findViewById<View>(R.id.homePower).setOnClickListener { showPower(true) }
-        findViewById<View>(R.id.homeHandle).setOnClickListener { showPower(true) }
+        findViewById<View>(R.id.homeHandle).setOnClickListener { showPeek(true) }
         findViewById<View>(R.id.homeSettings).setOnClickListener { showTools() }
         findViewById<TextView>(R.id.homeRoom).apply {
             setOnClickListener { if (check == null) pickRoom() }
@@ -374,19 +383,39 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             setCompoundDrawablesRelative(pin, null, null, null)
         }
         setUpPowerSheet()
-        // Swipe up anywhere on the home screen opens Your power.
+        setUpPeek()
+        // Swipe up on the home screen: a short swipe shows Today, a long one (or another) all of Your power.
+        // A tap outside Today closes it.
         var downY = 0f
         home.setOnTouchListener { _, e ->
             when (e.actionMasked) {
                 android.view.MotionEvent.ACTION_DOWN -> downY = e.y
-                android.view.MotionEvent.ACTION_UP -> if (downY - e.y > 80 * dp) {
-                    showPower(true)
-                    return@setOnTouchListener true
+                android.view.MotionEvent.ACTION_UP -> {
+                    val up = downY - e.y
+                    when {
+                        up > 80 * dp && (peekOpen || up > 320 * dp) -> {
+                            showPower(true)
+                            return@setOnTouchListener true
+                        }
+                        up > 80 * dp -> {
+                            showPeek(true)
+                            return@setOnTouchListener true
+                        }
+                        up < -80 * dp && peekOpen -> {
+                            showPeek(false)
+                            return@setOnTouchListener true
+                        }
+                        kotlin.math.abs(up) < 20 * dp && peekOpen -> {
+                            showPeek(false)
+                            return@setOnTouchListener true
+                        }
+                    }
                 }
             }
             false
         }
         findViewById<View>(R.id.resultDone).setOnClickListener { hideResult() }
+        onBackPressedDispatcher.addCallback(this, peekBack)
         onBackPressedDispatcher.addCallback(this, powerBack)
         onBackPressedDispatcher.addCallback(this, resultBack)
     }
@@ -397,6 +426,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     /** Slides the Your power sheet up over home, or back down. */
     private fun showPower(show: Boolean) {
+        if (show && ::peek.isInitialized) showPeek(false)
         if (!::home.isInitialized || show == powerBack.isEnabled) return
         powerBack.isEnabled = show
         val page = findViewById<android.widget.ScrollView>(R.id.scroll)
@@ -474,6 +504,175 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         hideOldMain()
     }
 
+    // ---- Today (the peek over home) ----
+
+    @android.annotation.SuppressLint("ClickableViewAccessibility")
+    private fun setUpPeek() {
+        peek = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding((20 * dp).toInt(), (10 * dp).toInt(), (20 * dp).toInt(), (20 * dp).toInt())
+            background = GradientDrawable().apply {
+                setColor(themeColor(R.attr.appSurface))
+                cornerRadii = FloatArray(8) { i -> if (i < 4) 26 * dp else 0f }
+            }
+            elevation = 16 * dp
+            isClickable = true
+            visibility = View.INVISIBLE
+        }
+        // The grab handle: swipe Today up for Your power, or down to close it.
+        peek.addView(View(this).apply {
+            background = GradientDrawable().apply {
+                cornerRadius = 3 * dp
+                setColor(themeColor(R.attr.appBorder))
+            }
+        }, LinearLayout.LayoutParams((40 * dp).toInt(), (5 * dp).toInt()).apply {
+            gravity = Gravity.CENTER_HORIZONTAL
+            bottomMargin = (10 * dp).toInt()
+        })
+        peekBody = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        peek.addView(peekBody)
+        peek.addView(com.google.android.material.button.MaterialButton(
+            this, null, com.google.android.material.R.attr.materialButtonOutlinedStyle,
+        ).apply {
+            text = "See all in Your power"
+            cornerRadius = (24 * dp).toInt()
+            setTextColor(themeColor(R.attr.appText))
+            strokeColor = android.content.res.ColorStateList.valueOf(themeColor(R.attr.appBorder))
+            setOnClickListener { showPower(true) }
+        }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+            topMargin = (14 * dp).toInt()
+        })
+        var downY = 0f
+        peek.setOnTouchListener { _, e ->
+            when (e.actionMasked) {
+                android.view.MotionEvent.ACTION_DOWN -> downY = e.rawY
+                android.view.MotionEvent.ACTION_UP -> {
+                    val up = downY - e.rawY
+                    if (up > 60 * dp) showPower(true) else if (up < -60 * dp) showPeek(false)
+                }
+            }
+            true
+        }
+        (home as android.widget.FrameLayout).addView(peek, android.widget.FrameLayout.LayoutParams(
+            android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM,
+        ))
+    }
+
+    /** Slides Today up from the bottom of home, or back down. */
+    private fun showPeek(show: Boolean) {
+        if (!::peek.isInitialized || show == peekOpen) return
+        if (show && check != null) return
+        peekOpen = show
+        peekBack.isEnabled = show
+        peek.animate().cancel()
+        val handle = findViewById<View>(R.id.homeHandle)
+        if (show) {
+            renderPeek()
+            // Start below the screen, then slide up once its height is known.
+            peek.translationY = home.height.toFloat()
+            peek.visibility = View.VISIBLE
+            peek.post {
+                peek.translationY = peek.height.toFloat()
+                peek.animate().translationY(0f).setDuration(260).start()
+            }
+            handle.animate().alpha(0f).setDuration(150).start()
+        } else {
+            peek.animate().translationY(peek.height.toFloat()).setDuration(220)
+                .withEndAction { peek.visibility = View.INVISIBLE }.start()
+            handle.animate().alpha(1f).setDuration(150).start()
+        }
+    }
+
+    /** Today: the day's bar, what happened in words, the last few switches, and the next kahraba. */
+    private fun renderPeek() {
+        val now = System.currentTimeMillis()
+        val entries = EventLog.shown(this)
+        val running = EventLog.shownLive(this)
+        val dayStart = DayData.startOfDay(now)
+        val dayEnd = java.util.Calendar.getInstance().apply {
+            timeInMillis = dayStart; add(java.util.Calendar.DAY_OF_YEAR, 1)
+        }.timeInMillis
+        val b = peekBody
+        b.removeAllViews()
+        fun line(text: String, size: Float, color: Int, bold: Boolean = false, top: Int = 0) =
+            b.addView(TextView(this).apply {
+                this.text = text
+                textSize = size
+                setTextColor(themeColor(color))
+                if (bold) setTypeface(typeface, android.graphics.Typeface.BOLD)
+            }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = (top * dp).toInt()
+            })
+
+        val head = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
+        head.addView(TextView(this).apply {
+            text = "Today"
+            textSize = 22f
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setTextColor(themeColor(R.attr.appText))
+        }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        head.addView(TextView(this).apply {
+            text = SimpleDateFormat("EEE d MMM", Locale.US).format(Date(now)) +
+                if (EventLog.showsRemote(this@MainActivity)) " · from ${otherPhoneName()}" else ""
+            textSize = 13f
+            setTextColor(themeColor(R.attr.appMuted))
+        })
+        b.addView(head)
+
+        if (entries.isEmpty()) {
+            line("Nothing recorded yet. Turn on Always-on mode on a phone left under a light, " +
+                "or get alerts from one (Menu › Alerts on other phones).", 15f, R.attr.appMuted, top = 8)
+            return
+        }
+        // The day's bar (no day label: it's today), with the hours under it.
+        val bar = patternRow("", dayStart, dayEnd, KahrabaPattern.spans(entries, now, running)) as LinearLayout
+        bar.getChildAt(0).visibility = View.GONE
+        b.addView(bar, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+            topMargin = (8 * dp).toInt()
+        })
+        val hours = LinearLayout(this)
+        listOf("12 AM", "6 AM", "12 PM", "6 PM", "").forEachIndexed { i, h ->
+            hours.addView(TextView(this).apply {
+                text = h
+                textSize = 11f
+                setTextColor(themeColor(R.attr.appMuted))
+            }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, if (i == 4) 0.01f else 1f))
+        }
+        b.addView(hours)
+        line(KahrabaPattern.today(entries, now, running, dayStart), 15f, R.attr.appText, top = 8)
+
+        // The next kahraba, or how long this one usually lasts.
+        val s = KahrabaPattern.summary(entries, now, running)
+        fun around(ms: Long) = PowerDetector.formatClock((ms + 150_000) / 300_000 * 300_000)
+        val next = when {
+            s.onSinceMs != null && s.typicalMs != null -> "Kahraba usually lasts ${DayData.hours(s.typicalMs)}, so until about ${around(s.onSinceMs + s.typicalMs)}."
+            s.nextFromMs != null && s.nextToMs != null ->
+                if (s.nextFromMs == s.nextToMs) "Next kahraba: around ${around(s.nextFromMs)}."
+                else "Next kahraba: between ${around(s.nextFromMs)} and ${around(s.nextToMs)}."
+            else -> null
+        }
+        next?.let { line(it, 15f, R.attr.appText, bold = true, top = 8) }
+
+        // The last few switches today, newest first.
+        val today = entries.filter { it.timeMs >= dayStart && it.source != Source.UNKNOWN }.sortedByDescending { it.timeMs }.take(4)
+        if (today.isNotEmpty()) {
+            line("LATEST", 12f, R.attr.appMuted, bold = true, top = 12)
+            for (e in today) {
+                // "5:00 PM  ● Kahraba", the dot in the source's colour.
+                val t = android.text.SpannableString("${PowerDetector.formatClock(e.timeMs)}   ●  ${RemoteAlerts.word(e.source)}")
+                val dot = t.indexOf('●')
+                t.setSpan(android.text.style.ForegroundColorSpan(MonitorService.colorFor(e.source)), dot, dot + 1, 0)
+                b.addView(TextView(this).apply {
+                    text = t
+                    textSize = 15f
+                    setTextColor(themeColor(R.attr.appText))
+                }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    topMargin = (2 * dp).toInt()
+                })
+            }
+        }
+    }
+
     /** Whose data Your power shows: the phone running Always-on mode that sends alerts here, or this one. */
     private fun renderShowing() {
         val v = powerShowing ?: return
@@ -518,7 +717,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         )) v.visibility = View.GONE
     }
 
-    /** MENU (top right of home): Always-on mode, the tools, rooms, all checks, then settings and help. */
+    /** MENU (top left of home): Always-on mode, the tools, rooms, all checks, then settings and help. */
     private fun showTools() {
         val sheet = BottomSheetDialog(this)
         val v = layoutInflater.inflate(R.layout.sheet_day, null)

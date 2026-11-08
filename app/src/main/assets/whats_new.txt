@@ -9,6 +9,7 @@
 - Give the spare phone a clear name, like Kitchen phone, so your other phones show “From Kitchen phone”.
 - Share recordings now asks how far back: today, since yesterday, the last 3 days or everything, so files are much smaller.
 - New in Settings › Always-on mode: keep recordings for 1, 3, 7 or 30 days.
+- A short swipe up on the home screen now shows Today at a glance: today's bar, the latest switches and the next kahraba. Swipe again for everything. The menu moved to the top left.
 
 ## 1.4.10
 - Every alert now comes as its own notification, so apps that pass alerts on to your other phones never miss one.
