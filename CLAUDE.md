@@ -78,6 +78,10 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   `nov05-pixel2-raw-day-moteur-evening-kahraba.csv` (`DayMoteurTest`; night moteur dead still 60 min 02:13-03:13; kahraba
   06:01; restarted 07:36 as moteur; daytime moteur to 17:00, calmest 45 min still 6 wobbles; ~1 min cuts at 12:35 and 12:45
   with moteur on both sides; kahraba 17:00, alert 17:05; outage 19:00 12m 16s, then busy moteur).
+  `nov08-pixel2-raw-three-days.csv` (`ThreeDaysTest`; 5 Nov 23:35 to 8 Nov 18:20, ms from 23:00 5 Nov: 7 kahraba blocks,
+  15 cuts, light off several times; 8 Nov 16:00 kahraba +13% right after the moteur flicked between sensor steps
+  1,153/1,235: the creep check rejected it, alert 16:47 by stillness; 1.5.0 only rejects a tail *above* the usual
+  level (`BEFORE_SPREAD`), alert 16:05. Night moteur still up to 35 min; daytime moteur never 20+ min).
 - Kahraba is dead still (zero wobble for 20+ min); a daytime moteur wobbles most minutes. In the
   evening a moteur also calms down and creeps brighter, but gradually (30 Oct 20:40-21:45).
 - Voltmeter: moteur 208 V (31 Oct, 8 pm) to 223 V; kahraba 231-234 V (1 Nov morning too).

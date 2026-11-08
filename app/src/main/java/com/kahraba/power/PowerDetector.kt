@@ -628,7 +628,10 @@ class PowerDetector(
         // creeps up in steps (639 -> 688 -> 735 lux on 28 Oct), the last step started from a
         // different level than the minutes before it, so the steps don't add up to a fake jump.
         val tail = median(seconds.filter { it.t in (beforeEnd - 30_000)..beforeEnd }.mapNotNull { it.level }) ?: return null
-        if (kotlin.math.abs(tail / ref - 1) > BEFORE_SPREAD) return null
+        // Only a tail *above* the usual level is creep. A tail below it is the moteur flicking between
+        // two neighbouring sensor steps (8 Nov, 16:00: 1,153 / 1,235 lux, then kahraba at 1,391): the
+        // rise is still measured from the usual (higher) level, so that's no easier to fake.
+        if (tail > ref * (1 + BEFORE_SPREAD)) return null
         val during = seconds.filter { it.t in beforeEnd..start }.mapNotNull { it.level }
         if (during.any { it < 0.5 * ref }) return null
         return ref to start
@@ -730,7 +733,7 @@ class PowerDetector(
         const val BLINK_CHANGE_PCT = 5.0
         /** How long after a blink the light is still judged against the level before it. */
         const val BLINK_DECIDE_MS = 10 * 60_000L
-        /** The light just before the switch must be this close to the typical "before" level. */
+        /** The light just before the switch may be at most this much above the typical "before" level (creep). */
         const val BEFORE_SPREAD = 0.06
         const val SAMPLE_KEEP_MS = 30_000L
         const val DISTURBANCE_PCT = 25.0

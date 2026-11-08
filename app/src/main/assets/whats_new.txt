@@ -2,6 +2,7 @@
 # Plain words about what's improved; no dates or times. Newest first.
 
 ## 1.5.0
+- Kahraba is spotted faster when the moteur's light was flickering just before it came on (it could take 45 minutes; now about 5).
 - New: Alerts on other phones. Get Always-on mode's alerts on your everyday Android phone, with the same beeps. Scan a code once; no accounts, no extra apps.
 - Your other phone's home screen shows what's on now, and tells you if the spare phone goes quiet (off, unplugged, or no internet).
 - Your other phone also shows the spare phone's kahraba pattern, history and whole switch log, kept up to date automatically. At the top of Your power, choose whose data to see.
