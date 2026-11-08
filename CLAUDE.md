@@ -136,7 +136,12 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
-- Released: 1.4.10 (each alert its own notification id 1000-1049, so MacroDroid forwards it (a replaced alert
+- Released: 1.5.0 (alerts on other phones through ntfy.sh, encrypted (`RemoteCodec`, `RemoteAlerts`, `AlertsService`);
+  the other phone shows the sender's switch log (`EventLog.shown`, "Showing" in Your power); phone name; share recordings
+  by range; keep recordings 1/3/7/30 days; backup Combine (`Combine.kt`); Today panel dragged with the finger
+  (`SheetViews.kt`), menu top left; Glance screen; source status icon; faster kahraba after a flickering moteur
+  (`BEFORE_SPREAD` only rejects creep), `ThreeDaysTest`). Test builds tested by the owner as Kahraba Test 98-110.
+- Earlier: 1.4.10 (each alert its own notification id 1000-1049, so MacroDroid forwards it (a replaced alert
   wasn't seen as new: no ntfy for 4 Nov 22:09 kahraba); `SETTLE_OVERSHOOT` 15%: the level trace accepts a brighter
   step just after the switch (4 Nov 22:00: alert 22:06 not 22:09, `SettlingKahrabaTest`); graph shading relabelled from
   the switch log, `LightHistory.relabel`; Room › "What it learned…" removes one Always-on teaching (owner's
