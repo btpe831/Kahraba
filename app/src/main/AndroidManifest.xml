@@ -66,6 +66,11 @@
             android:name=".SettingsActivity"
             android:label="Settings" />
 
+        <activity
+            android:name=".GlanceActivity"
+            android:label="Glance screen"
+            android:theme="@style/AppTheme.Main" />
+
         <service
             android:name=".MonitorService"
             android:exported="false"

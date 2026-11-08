@@ -203,7 +203,7 @@ class AlertsService : Service() {
             else -> "${RemoteAlerts.word(h.source)} since ${PowerDetector.formatClock(h.sinceMs)}"
         }
         return NotificationCompat.Builder(this, MonitorService.CHANNEL_STATUS)
-            .setSmallIcon(R.drawable.ic_bolt)
+            .setSmallIcon(MonitorService.iconFor(h?.source ?: Source.UNKNOWN))
             .setContentTitle(title)
             .setContentText(RemoteAlerts.statusLine(this))
             .setOngoing(true)

@@ -83,6 +83,15 @@
             android:layout_marginTop="6dp"
             android:text="Allow running in the background" />
 
+        <!-- 1.5.0: a dim black screen with one big word, for a phone you glance at across the room. -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/glance"
+            style="@style/OutlinePill"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Glance screen" />
+
         <com.kahraba.power.NotchCard
             android:id="@+id/teachCard"
             android:layout_width="match_parent"

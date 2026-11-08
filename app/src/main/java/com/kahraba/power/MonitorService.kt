@@ -395,7 +395,7 @@ class MonitorService : Service(), SensorEventListener {
             MonitorState.flickerPct?.let { append(" · wobble ${"%.1f".format(it)}%") }
         }
         return NotificationCompat.Builder(this, CHANNEL_STATUS)
-            .setSmallIcon(R.drawable.ic_bolt)
+            .setSmallIcon(iconFor(s))
             .setContentTitle(if (s == Source.UNKNOWN) "Not sure yet" else "Now: ${EventLog.label(s)}")
             .setContentText(text)
             .setOngoing(true)
@@ -443,6 +443,13 @@ class MonitorService : Service(), SensorEventListener {
         private const val ALERT_ID_COUNT = 50
         private const val TICK_MS = 200L
         const val CALIBRATION_MS = 120_000L
+
+        /** The status icon, also on the phone's Always-on display: a bolt for kahraba, the pump for moteur. */
+        fun iconFor(s: Source): Int = when (s) {
+            Source.MOTEUR -> R.drawable.ic_moteur
+            Source.NO_POWER -> R.drawable.ic_power_off
+            else -> R.drawable.ic_bolt
+        }
 
         fun colorFor(s: Source): Int = when (s) {
             // Same as R.color.kahraba / moteur / no_power / idle.

@@ -1,0 +1,15 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- The bolt with a line through it: no power. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M7,2v11h3v9l7,-12h-4l4,-8z" />
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M3,3L21,21" />
+</vector>

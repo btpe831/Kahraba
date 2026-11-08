@@ -86,6 +86,7 @@ class MonitorActivity : ThemedActivity() {
             if (MonitorState.running) MonitorService.send(this, MonitorService.ACTION_SILENCE)
         }
         findViewById<Button>(R.id.shareData).setOnClickListener { shareRecordings() }
+        findViewById<Button>(R.id.glance).setOnClickListener { startActivity(Intent(this, GlanceActivity::class.java)) }
         findViewById<Button>(R.id.monitorLearned).setOnClickListener { showTeachings() }
         findViewById<Button>(R.id.monitorRoomButton).setOnClickListener {
             RoomPicker.pick(this, Prefs.monitorRoom(this)) { room ->

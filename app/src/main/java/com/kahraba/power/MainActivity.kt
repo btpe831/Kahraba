@@ -769,6 +769,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             content.addView(row)
         }
         item(R.drawable.ic_bolt, "Always-on mode", if (MonitorState.running) "Active" else "Inactive") { openAlwaysOn() }
+        item(R.drawable.ic_chart, "Glance screen", "A dim screen with one big word, to read across the room") {
+            startActivity(Intent(this, GlanceActivity::class.java))
+        }
         item(R.drawable.ic_bolt, "Alerts on other phones",
             if (RemoteAlerts.getPairing(this) != null) "Getting alerts from your other phone" else "Get the alerts on another phone") {
             SettingsActivity.openRemote(this)
