@@ -528,15 +528,31 @@ class MonitorActivity : ThemedActivity() {
         }
     }
 
+    /** Share: first choose how far back (each day is about 5 MB), then the app to send with. */
     private fun shareRecordings() {
-        val files = mutableListOf<File>()
-        EventLog.file(this).takeIf { it.exists() }?.let { files += it }
-        File(filesDir, "data").listFiles()?.sortedBy { it.name }?.let { files += it }
-        if (files.isEmpty()) {
+        val recorded = File(filesDir, "data").listFiles()?.sortedBy { it.name } ?: emptyList()
+        if (recorded.isEmpty() && !EventLog.file(this).exists()) {
             com.google.android.material.dialog.MaterialAlertDialogBuilder(this).setMessage("No recordings yet. Start Always-on mode to begin recording.")
                 .setPositiveButton("OK", null).show()
             return
         }
+        val choices = listOf("Today" to 1, "Since yesterday" to 2, "Last 3 days" to 3, "Everything saved" to 0)
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle("Share recordings from")
+            .setItems(choices.map { it.first }.toTypedArray()) { _, i -> shareRecordings(choices[i].second) }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    /** The switch log, plus the recordings of the last [days] days (0: all of them). */
+    private fun shareRecordings(days: Int) {
+        val fmt = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+        val wanted = (0 until days).map { fmt.format(java.util.Date(System.currentTimeMillis() - it * 86_400_000L)) }.toSet()
+        val files = mutableListOf<File>()
+        EventLog.file(this).takeIf { it.exists() }?.let { files += it }
+        File(filesDir, "data").listFiles()?.sortedBy { it.name }
+            ?.filter { f -> days == 0 || wanted.any { f.name.endsWith("-$it.csv") } }
+            ?.let { files += it }
         val uris = ArrayList(files.map { FileProvider.getUriForFile(this, "$packageName.files", it) })
         val send = Intent(Intent.ACTION_SEND_MULTIPLE)
             .setType("text/csv")

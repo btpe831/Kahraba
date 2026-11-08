@@ -262,6 +262,16 @@ class SettingsActivity : ThemedActivity() {
             addView(timeRow("Quiet until", Prefs.QUIET_END, "07:00"))
         })
         body.addView(card {
+            addView(text("Keep recordings for", 18f, R.attr.appText, bold = true))
+            addView(segmented(listOf("1 day" to "1", "3 days" to "3", "7 days" to "7", "30 days" to "30"),
+                Prefs.keepDays(this@SettingsActivity).toString()) {
+                Prefs.sp(this@SettingsActivity).edit().putString(Prefs.KEEP_DAYS, it).apply()
+                DataLogger.prune(this@SettingsActivity)
+            }, lp(top = 12))
+            addView(text("Always-on mode saves its light readings, about 5 MB a day, for the graph and for sharing. " +
+                "Older ones are deleted. The switch log and kahraba pattern are kept either way.", 14f, R.attr.appMuted), lp(top = 10))
+        }, lp(top = 12))
+        body.addView(card {
             addView(link("Advanced", "Flicker sensitivity, waiting time and minimum brightness. The defaults work for most homes.") {
                 startActivity(Intent(this@SettingsActivity, SettingsActivity::class.java).putExtra(PAGE, PAGE_ADVANCED))
             })

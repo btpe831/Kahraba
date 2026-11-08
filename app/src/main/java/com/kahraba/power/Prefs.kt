@@ -82,6 +82,10 @@ object Prefs {
 
     /** Settings > Appearance: "auto" (follow the phone's dark mode), "light" or "dark". */
     /** Text size in this app: "small", "default" or "large" (on top of the phone's own setting). */
+    /** How many days of Always-on recordings (light-… and raw-….csv) to keep: 1, 3, 7 (default) or 30. */
+    const val KEEP_DAYS = "keep_days"
+    fun keepDays(ctx: Context): Int = sp(ctx).getString(KEEP_DAYS, "7")?.toIntOrNull()?.takeIf { it in 1..30 } ?: 7
+
     const val TEXT_SIZE = "text_size"
     fun textSize(ctx: Context): String = sp(ctx).getString(TEXT_SIZE, "default") ?: "default"
     fun setTextSize(ctx: Context, size: String) = sp(ctx).edit().putString(TEXT_SIZE, size).apply()

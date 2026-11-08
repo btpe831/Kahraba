@@ -10,9 +10,11 @@ import java.util.Locale
 /**
  * Writes one line per second (time, light, wobble, charger, source) to a file per day, and every
  * new raw light reading to a second file per day (raw-…csv), so a recording can be replayed
- * exactly. Shared from the app so the detection limits can be tuned on real data. Keeps 7 days.
+ * exactly. Shared from the app so the detection limits can be tuned on real data. Keeps
+ * [Prefs.keepDays] days (7 by default).
  */
 class DataLogger(ctx: Context) {
+    private val app = ctx.applicationContext
     val dir = File(ctx.filesDir, "data").apply { mkdirs() }
     private val dayFmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
     private val timeFmt = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
@@ -48,7 +50,7 @@ class DataLogger(ctx: Context) {
             val isNew = !f.exists()
             writer = java.io.FileWriter(f, true).buffered()
             if (isNew) writer?.write("time,lux,wobble_pct,charger,source,light_status\n")
-            deleteOld(now)
+            prune(app, now)
         }
         val w = writer ?: return
         w.write(
@@ -73,8 +75,11 @@ class DataLogger(ctx: Context) {
         rawDay = ""
     }
 
-    private fun deleteOld(now: Long) {
-        val cutoff = now - 7L * 24 * 3600 * 1000
-        dir.listFiles()?.filter { it.lastModified() < cutoff }?.forEach { it.delete() }
+    companion object {
+        /** Deletes recordings older than Settings › Keep recordings for. */
+        fun prune(ctx: Context, now: Long = System.currentTimeMillis()) {
+            val cutoff = now - Prefs.keepDays(ctx) * 24L * 3600 * 1000
+            File(ctx.filesDir, "data").listFiles()?.filter { it.lastModified() < cutoff }?.forEach { it.delete() }
+        }
     }
 }
