@@ -2,6 +2,7 @@ package com.kahraba.power
 
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -20,9 +21,12 @@ import kotlin.random.Random
 
 /**
  * Glance screen (1.5.0): for a phone left on all day, readable across the room without wearing out
- * the screen. Black, dim, one big coloured word ("KAHRABA") and "since 5:00 PM", drifting a little
- * every minute so no pixel stays lit in the same place (OLED screens can keep a ghost image).
- * Shows Always-on mode on this phone, or the other phone's news if this one gets alerts. Tap to close.
+ * the screen. Black, with "KAHRABA" and "since 5:00 PM" either on a coloured card (white words, the
+ * default since 1.5.02) or as coloured words. It drifts to a new spot every minute so no pixel stays
+ * lit in the same place (OLED screens can keep a ghost image), and stays below the top edge, where the
+ * light sensor is. Shows Always-on mode on this phone, or the other phone's news if this one gets
+ * alerts. Style and brightness: Settings › Always-on mode, or the two buttons shown for a few seconds.
+ * Tap anywhere else to close.
  */
 class GlanceActivity : AppCompatActivity() {
 
@@ -31,7 +35,11 @@ class GlanceActivity : AppCompatActivity() {
     private lateinit var word: TextView
     private lateinit var since: TextView
     private lateinit var note: TextView
+    private lateinit var controls: LinearLayout
+    private lateinit var styleButton: TextView
+    private lateinit var brightButton: TextView
     private var lastMoveMs = 0L
+    private val dp get() = resources.displayMetrics.density
 
     private val tick = object : Runnable {
         override fun run() {
@@ -44,12 +52,13 @@ class GlanceActivity : AppCompatActivity() {
             ui.postDelayed(this, 1000)
         }
     }
+    private val hideControls = Runnable { controls.visibility = View.GONE }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        window.attributes = window.attributes.apply { screenBrightness = BRIGHTNESS }
+        applyBrightness()
         if (Build.VERSION.SDK_INT >= 27) setShowWhenLocked(true)
         window.statusBarColor = Color.BLACK
         window.navigationBarColor = Color.BLACK
@@ -62,42 +71,51 @@ class GlanceActivity : AppCompatActivity() {
             setBackgroundColor(Color.BLACK)
             setOnClickListener { finish() }
         }
-        val dp = resources.displayMetrics.density
         box = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
         }
         word = TextView(this).apply {
-            textSize = 60f
+            textSize = 56f
             setTypeface(typeface, Typeface.BOLD)
             letterSpacing = 0.04f
             gravity = Gravity.CENTER
         }
         since = TextView(this).apply {
-            textSize = 24f
-            setTextColor(GREY)
+            textSize = 22f
             gravity = Gravity.CENTER
         }
         note = TextView(this).apply {
             textSize = 15f
-            setTextColor(DARK_GREY)
             gravity = Gravity.CENTER
         }
         box.addView(word)
-        box.addView(since, LinearLayout.LayoutParams(-2, -2).apply { topMargin = (6 * dp).toInt() })
-        box.addView(note, LinearLayout.LayoutParams(-2, -2).apply { topMargin = (14 * dp).toInt() })
+        box.addView(since, LinearLayout.LayoutParams(-2, -2).apply { topMargin = (4 * dp).toInt() })
+        box.addView(note, LinearLayout.LayoutParams(-2, -2).apply { topMargin = (10 * dp).toInt() })
         root.addView(box, FrameLayout.LayoutParams(-2, -2, Gravity.CENTER))
-        // How to leave, for the first few seconds only.
-        val hint = TextView(this).apply {
-            text = "Tap anywhere to close"
+
+        // For the first few seconds: style and brightness, and how to leave.
+        controls = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+        }
+        val row = LinearLayout(this).apply { gravity = Gravity.CENTER }
+        styleButton = pill { cycleStyle() }
+        brightButton = pill { cycleBrightness() }
+        row.addView(styleButton)
+        row.addView(brightButton, LinearLayout.LayoutParams(-2, -2).apply { marginStart = (10 * dp).toInt() })
+        controls.addView(row)
+        controls.addView(TextView(this).apply {
+            text = "Tap anywhere else to close"
             textSize = 13f
             setTextColor(DARK_GREY)
-        }
-        root.addView(hint, FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+        }, LinearLayout.LayoutParams(-2, -2).apply { topMargin = (10 * dp).toInt() })
+        root.addView(controls, FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
             bottomMargin = (28 * dp).toInt()
         })
-        ui.postDelayed({ hint.visibility = View.GONE }, 6000)
+        labelButtons()
         setContentView(root)
+        showControls()
     }
 
     override fun onResume() {
@@ -109,6 +127,50 @@ class GlanceActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         ui.removeCallbacks(tick)
+    }
+
+    private fun pill(onTap: () -> Unit) = TextView(this).apply {
+        textSize = 14f
+        setTypeface(typeface, Typeface.BOLD)
+        setTextColor(GREY)
+        setPadding((16 * dp).toInt(), (9 * dp).toInt(), (16 * dp).toInt(), (9 * dp).toInt())
+        background = GradientDrawable().apply {
+            cornerRadius = 999f
+            setStroke((1 * dp).toInt(), DARK_GREY)
+        }
+        setOnClickListener {
+            onTap()
+            showControls()
+        }
+    }
+
+    private fun showControls() {
+        controls.visibility = View.VISIBLE
+        ui.removeCallbacks(hideControls)
+        ui.postDelayed(hideControls, 6000)
+    }
+
+    private fun labelButtons() {
+        styleButton.text = if (Prefs.glanceStyle(this) == "word") "Style: Word" else "Style: Card"
+        brightButton.text = "☀ " + when (Prefs.glanceBright(this)) { "low" -> "Low"; "full" -> "Full"; else -> "Medium" }
+    }
+
+    private fun cycleStyle() {
+        val next = if (Prefs.glanceStyle(this) == "word") "card" else "word"
+        Prefs.sp(this).edit().putString(Prefs.GLANCE_STYLE, next).apply()
+        labelButtons()
+        render()
+    }
+
+    private fun cycleBrightness() {
+        val next = when (Prefs.glanceBright(this)) { "low" -> "medium"; "medium" -> "full"; else -> "low" }
+        Prefs.sp(this).edit().putString(Prefs.GLANCE_BRIGHT, next).apply()
+        labelButtons()
+        applyBrightness()
+    }
+
+    private fun applyBrightness() {
+        window.attributes = window.attributes.apply { screenBrightness = brightness(Prefs.glanceBright(this@GlanceActivity)) }
     }
 
     private fun render() {
@@ -125,7 +187,6 @@ class GlanceActivity : AppCompatActivity() {
             Source.POWER_ON -> "POWER ON"
             Source.UNKNOWN -> if (MonitorState.running || remote != null) "NOT SURE" else "OFF"
         }
-        word.setTextColor(colorFor(source))
         since.text = when {
             source == Source.UNKNOWN && !MonitorState.running && remote == null -> "Always-on mode isn't running"
             source == Source.UNKNOWN -> "Waiting for a wobble or a power cut"
@@ -133,28 +194,54 @@ class GlanceActivity : AppCompatActivity() {
         }
         note.text = from
         note.visibility = if (from.isEmpty()) View.GONE else View.VISIBLE
+
+        if (Prefs.glanceStyle(this) == "word") {
+            box.background = null
+            box.setPadding(0, 0, 0, 0)
+            word.setTextColor(colorFor(source))
+            since.setTextColor(GREY)
+            note.setTextColor(DARK_GREY)
+        } else {
+            // The app's own colours (green, orange, grey) behind white words.
+            box.background = GradientDrawable().apply {
+                cornerRadius = 28 * dp
+                setColor(MonitorService.colorFor(source))
+            }
+            box.setPadding((28 * dp).toInt(), (26 * dp).toInt(), (28 * dp).toInt(), (26 * dp).toInt())
+            word.setTextColor(Color.WHITE)
+            since.setTextColor(0xE6FFFFFF.toInt())
+            note.setTextColor(0xCCFFFFFF.toInt())
+        }
     }
 
-    /** Moves the words to a new spot near the middle, so the same pixels don't stay lit. */
+    /**
+     * Moves the words to a new spot, so the same pixels don't stay lit. Sideways anywhere, but only
+     * a little above the middle: the light sensor is at the top edge.
+     */
     private fun drift() {
         val root = box.parent as View
         val maxX = ((root.width - box.width) / 2f * 0.8f).coerceAtLeast(0f)
         val maxY = ((root.height - box.height) / 2f * 0.6f).coerceAtLeast(0f)
         box.animate()
             .translationX(Random.nextFloat() * 2 * maxX - maxX)
-            .translationY(Random.nextFloat() * 2 * maxY - maxY)
+            .translationY(Random.nextFloat() * maxY * 1.2f - maxY * 0.2f)
             .setDuration(1500)
             .start()
     }
 
     companion object {
-        /** Dim: plenty to read in a room, easy on the screen and on the light sensor next to it. */
-        private const val BRIGHTNESS = 0.08f
         private const val MOVE_MS = 60_000L
         private const val GREY = 0xFF9CA3AF.toInt()
         private const val DARK_GREY = 0xFF6B7280.toInt()
 
-        /** Lighter than the app's usual colours, so they read well on black. */
+        /** Low is dim (the 1.5.0 level), Medium about a third, Full the phone's maximum. */
+        fun brightness(level: String): Float = when (level) {
+            "low" -> 0.08f
+            "full" -> 1f
+            else -> 0.35f
+        }
+
+        /** Lighter than the app's usual colours, so coloured words read well on black. */
         fun colorFor(s: Source): Int = when (s) {
             Source.KAHRABA -> 0xFF34D399.toInt()
             Source.MOTEUR -> 0xFFFBBF24.toInt()

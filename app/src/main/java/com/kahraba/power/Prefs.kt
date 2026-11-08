@@ -86,6 +86,14 @@ object Prefs {
     const val KEEP_DAYS = "keep_days"
     fun keepDays(ctx: Context): Int = sp(ctx).getString(KEEP_DAYS, "7")?.toIntOrNull()?.takeIf { it in 1..30 } ?: 7
 
+    /** Glance screen (1.5.02): "card" (a coloured block with white words, the default) or "word" (coloured words on black). */
+    const val GLANCE_STYLE = "glance_style"
+    fun glanceStyle(ctx: Context): String = sp(ctx).getString(GLANCE_STYLE, "card") ?: "card"
+
+    /** Glance screen brightness: "low", "medium" (the default) or "full". */
+    const val GLANCE_BRIGHT = "glance_bright"
+    fun glanceBright(ctx: Context): String = sp(ctx).getString(GLANCE_BRIGHT, "medium") ?: "medium"
+
     const val TEXT_SIZE = "text_size"
     fun textSize(ctx: Context): String = sp(ctx).getString(TEXT_SIZE, "default") ?: "default"
     fun setTextSize(ctx: Context, size: String) = sp(ctx).edit().putString(TEXT_SIZE, size).apply()

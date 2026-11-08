@@ -283,6 +283,17 @@ class SettingsActivity : ThemedActivity() {
             addView(timeRow("Quiet until", Prefs.QUIET_END, "07:00"))
         })
         body.addView(card {
+            addView(text("Glance screen", 18f, R.attr.appText, bold = true))
+            addView(segmented(listOf("Coloured card" to "card", "Word" to "word"), Prefs.glanceStyle(this@SettingsActivity)) {
+                Prefs.sp(this@SettingsActivity).edit().putString(Prefs.GLANCE_STYLE, it).apply()
+            }, lp(top = 12))
+            addView(segmented(listOf("Low" to "low", "Medium" to "medium", "Full" to "full"), Prefs.glanceBright(this@SettingsActivity)) {
+                Prefs.sp(this@SettingsActivity).edit().putString(Prefs.GLANCE_BRIGHT, it).apply()
+            }, lp(top = 8))
+            addView(text("Brightness while the Glance screen is open. Full is easiest to read in a bright room, but wears the " +
+                "screen faster over months; the words move a little every minute to help.", 14f, R.attr.appMuted), lp(top = 10))
+        }, lp(top = 12))
+        body.addView(card {
             addView(text("Keep recordings for", 18f, R.attr.appText, bold = true))
             addView(segmented(listOf("1 day" to "1", "3 days" to "3", "7 days" to "7", "30 days" to "30"),
                 Prefs.keepDays(this@SettingsActivity).toString()) {
