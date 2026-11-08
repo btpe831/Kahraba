@@ -751,7 +751,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         // Each with how long it lasted (until the next change), or "so far" for the one on now.
         val sorted = entries.sortedBy { it.timeMs }
         val today = sorted.withIndex().filter { it.value.timeMs >= dayStart && it.value.source != Source.UNKNOWN }
-            .sortedByDescending { it.value.timeMs }.take(4)
+            .sortedByDescending { it.value.timeMs }.take(4).reversed() // the last 4, in time order
         if (today.isNotEmpty()) {
             line("LATEST", 12f, R.attr.appMuted, bold = true, top = 12)
             for ((i, e) in today) {
@@ -1766,12 +1766,13 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             android.text.Html.FROM_HTML_MODE_LEGACY,
         )
 
-        // One bar per day, today first: kahraba, moteur and power off over 24 hours.
+        // One bar per day, oldest first: kahraba, moteur and power off over 24 hours.
         val spans = KahrabaPattern.spans(entries, now, running)
         val days = findViewById<LinearLayout>(R.id.patternDays)
         days.removeAllViews()
         val dayName = SimpleDateFormat("EEE", Locale.US)
-        for (i in dayStarts.indices) {
+        // Oldest at the top, today at the bottom (Mon, Tue … Today).
+        for (i in dayStarts.indices.reversed()) {
             val dayStart = dayStarts[i]
             val dayEnd = if (i == 0) java.util.Calendar.getInstance().apply {
                 timeInMillis = dayStart; add(java.util.Calendar.DAY_OF_YEAR, 1)
@@ -2217,7 +2218,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         val today = DayData.startOfDay(now)
         val dayName = SimpleDateFormat("EEE", Locale.US)
         var usedMonitor = false
-        for (d in 0..6) {
+        // Oldest at the top, today at the bottom.
+        for (d in 6 downTo 0) {
             val from = today - d * 86_400_000L
             val dayStart = DayData.startOfDay(from + 3_600_000L) // safe across clock changes
             val to = if (d == 0) now else dayStart + 86_400_000L
