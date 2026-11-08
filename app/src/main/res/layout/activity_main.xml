@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="?attr/appBg">
 
-    <ScrollView
+    <com.kahraba.power.PullScrollView
         android:id="@+id/scroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -1204,7 +1204,7 @@
                 android:textColor="?attr/appMuted"
                 android:textSize="12sp" />
         </LinearLayout>
-    </ScrollView>
+    </com.kahraba.power.PullScrollView>
 
     <!-- Sticky bottom bar -->
     <LinearLayout
@@ -1289,7 +1289,7 @@
     </LinearLayout>
     <!-- HOME (1.4.0): a calm first screen with one big button. The screen above is "Your power",
          opened by swiping up (a short swipe first shows Today, built in code). Colours are set in code from the current source. -->
-    <FrameLayout
+    <com.kahraba.power.DragFrame
         android:id="@+id/home"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -1753,5 +1753,5 @@
                 android:textStyle="bold" />
         </LinearLayout>
         </ScrollView>
-    </FrameLayout>
+    </com.kahraba.power.DragFrame>
 </FrameLayout>

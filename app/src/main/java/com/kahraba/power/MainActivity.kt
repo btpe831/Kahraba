@@ -384,36 +384,11 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         }
         setUpPowerSheet()
         setUpPeek()
-        // Swipe up on the home screen: a short swipe shows Today, a long one (or another) all of Your power.
-        // A tap outside Today closes it.
-        var downY = 0f
-        home.setOnTouchListener { _, e ->
-            when (e.actionMasked) {
-                android.view.MotionEvent.ACTION_DOWN -> downY = e.y
-                android.view.MotionEvent.ACTION_UP -> {
-                    val up = downY - e.y
-                    when {
-                        up > 80 * dp && (peekOpen || up > 320 * dp) -> {
-                            showPower(true)
-                            return@setOnTouchListener true
-                        }
-                        up > 80 * dp -> {
-                            showPeek(true)
-                            return@setOnTouchListener true
-                        }
-                        up < -80 * dp && peekOpen -> {
-                            showPeek(false)
-                            return@setOnTouchListener true
-                        }
-                        kotlin.math.abs(up) < 20 * dp && peekOpen -> {
-                            showPeek(false)
-                            return@setOnTouchListener true
-                        }
-                    }
-                }
-            }
-            false
-        }
+        // Drag up anywhere on home and Today follows the finger; keep going for Your power. Drag Your power
+        // down (from the top of its list) to close it. A tap outside Today closes it.
+        (home as DragFrame).sheet = sheetDrag
+        findViewById<PullScrollView>(R.id.scroll).sheet = sheetDrag
+        home.setOnClickListener { if (peekOpen) showPeek(false) }
         findViewById<View>(R.id.resultDone).setOnClickListener { hideResult() }
         onBackPressedDispatcher.addCallback(this, peekBack)
         onBackPressedDispatcher.addCallback(this, powerBack)
@@ -424,25 +399,113 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     private fun openAlwaysOn() = startActivity(Intent(this, MonitorActivity::class.java))
 
-    /** Slides the Your power sheet up over home, or back down. */
+    /** Slides the Your power sheet up over home, or back down to home. */
     private fun showPower(show: Boolean) {
-        if (show && ::peek.isInitialized) showPeek(false)
-        if (!::home.isInitialized || show == powerBack.isEnabled) return
-        powerBack.isEnabled = show
-        val page = findViewById<android.widget.ScrollView>(R.id.scroll)
-        page.animate().cancel()
-        val h = home.height.toFloat().coerceAtLeast(1f)
+        if (!::home.isInitialized || !::peek.isInitialized) return
         if (show) {
-            refreshAll()
-            page.scrollTo(0, 0)
-            page.translationY = h
-            page.visibility = View.VISIBLE
-            page.animate().translationY(0f).setDuration(300).start()
+            if (peekH <= 0f) measurePeek()
+            pageReady = false
+            settleTo(fullP(), 300)
         } else {
-            page.animate().translationY(h).setDuration(260)
-                .withEndAction { page.visibility = View.GONE }.start()
+            settleTo(0f, 260)
         }
+    }
+
+    // ---- Panels that follow the finger (1.5.0) ----
+    // How far up the panels are, in pixels: 0 = home, peekH = Today open, peekH + home's height = Your power.
+
+    private var sheetP = 0f
+    private var dragFrom = 0f
+    private var peekH = 0f
+    /** Your power was refreshed for this trip up. */
+    private var pageReady = false
+    private var settle: android.animation.ValueAnimator? = null
+
+    private fun fullP() = peekH + home.height.toFloat().coerceAtLeast(1f)
+
+    /** Today's height with its latest content. */
+    private fun measurePeek() {
+        renderPeek()
+        peek.measure(
+            View.MeasureSpec.makeMeasureSpec(home.width.coerceAtLeast(1), View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+        )
+        peekH = peek.measuredHeight.toFloat()
+    }
+
+    /** Puts Today and Your power where [p] says. */
+    private fun place(p: Float) {
+        val full = fullP()
+        sheetP = p.coerceIn(0f, full)
+        peek.visibility = if (sheetP > 0f && sheetP < full) View.VISIBLE else View.INVISIBLE
+        peek.translationY = peekH - minOf(sheetP, peekH)
+        val page = findViewById<android.widget.ScrollView>(R.id.scroll)
+        if (sheetP > peekH) {
+            if (!pageReady) {
+                pageReady = true
+                refreshAll()
+                page.scrollTo(0, 0)
+            }
+            page.visibility = View.VISIBLE
+            page.translationY = full - sheetP
+        } else {
+            page.visibility = View.GONE
+            page.translationY = home.height.toFloat()
+        }
+        findViewById<View>(R.id.homeHandle).alpha = 1f - (sheetP / peekH.coerceAtLeast(1f)).coerceIn(0f, 1f)
+    }
+
+    private fun settleTo(target: Float, ms: Long = 240) {
+        settle?.cancel()
+        settle = android.animation.ValueAnimator.ofFloat(sheetP, target).apply {
+            duration = ms
+            interpolator = android.view.animation.DecelerateInterpolator()
+            addUpdateListener { place(it.animatedValue as Float) }
+            addListener(object : android.animation.AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: android.animation.Animator) = settled()
+            })
+            start()
+        }
+    }
+
+    /** Back, and the bar colours, follow where the panels came to rest. */
+    private fun settled() {
+        val atFull = sheetP >= fullP() - 1f
+        val atPeek = !atFull && sheetP > 0f && sheetP >= peekH - 1f
+        powerBack.isEnabled = atFull
+        peekOpen = atPeek
+        peekBack.isEnabled = atPeek
+        if (!atFull) pageReady = false
         colorSystemBars()
+    }
+
+    private val sheetDrag = object : SheetDrag {
+        override fun dragStart(): Boolean {
+            if (check != null || tour != null || findViewById<View>(R.id.homeResult).visibility == View.VISIBLE) return false
+            settle?.cancel()
+            // Fresh content (and height) for Today when it's closed or open, not mid-way.
+            if (sheetP <= 0f || peekOpen) {
+                measurePeek()
+                if (peekOpen) sheetP = peekH
+            }
+            dragFrom = sheetP
+            return true
+        }
+
+        override fun dragBy(dy: Float) = place(dragFrom - dy)
+
+        override fun dragEnd(velocityY: Float) {
+            val full = fullP()
+            val stops = listOf(0f, peekH, full)
+            val fling = 500 * dp
+            val target = when {
+                velocityY < -fling -> stops.firstOrNull { it > sheetP + 1f } ?: full
+                // Flung down from Your power: straight home, like closing it.
+                velocityY > fling -> if (dragFrom >= full - 1f) 0f else stops.lastOrNull { it < sheetP - 1f } ?: 0f
+                else -> stops.minByOrNull { kotlin.math.abs(it - sheetP) } ?: 0f
+            }
+            settleTo(target)
+        }
     }
 
     /**
@@ -542,17 +605,6 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
             topMargin = (14 * dp).toInt()
         })
-        var downY = 0f
-        peek.setOnTouchListener { _, e ->
-            when (e.actionMasked) {
-                android.view.MotionEvent.ACTION_DOWN -> downY = e.rawY
-                android.view.MotionEvent.ACTION_UP -> {
-                    val up = downY - e.rawY
-                    if (up > 60 * dp) showPower(true) else if (up < -60 * dp) showPeek(false)
-                }
-            }
-            true
-        }
         (home as android.widget.FrameLayout).addView(peek, android.widget.FrameLayout.LayoutParams(
             android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM,
         ))
@@ -560,26 +612,13 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     /** Slides Today up from the bottom of home, or back down. */
     private fun showPeek(show: Boolean) {
-        if (!::peek.isInitialized || show == peekOpen) return
-        if (show && check != null) return
-        peekOpen = show
-        peekBack.isEnabled = show
-        peek.animate().cancel()
-        val handle = findViewById<View>(R.id.homeHandle)
+        if (!::peek.isInitialized) return
         if (show) {
-            renderPeek()
-            // Start below the screen, then slide up once its height is known.
-            peek.translationY = home.height.toFloat()
-            peek.visibility = View.VISIBLE
-            peek.post {
-                peek.translationY = peek.height.toFloat()
-                peek.animate().translationY(0f).setDuration(260).start()
-            }
-            handle.animate().alpha(0f).setDuration(150).start()
+            if (check != null) return
+            measurePeek()
+            settleTo(peekH, 260)
         } else {
-            peek.animate().translationY(peek.height.toFloat()).setDuration(220)
-                .withEndAction { peek.visibility = View.INVISIBLE }.start()
-            handle.animate().alpha(1f).setDuration(150).start()
+            settleTo(0f, 220)
         }
     }
 
