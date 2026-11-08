@@ -16,21 +16,25 @@
 
         <include layout="@layout/screen_header" />
 
+        <!-- 1.5.01: everything to run Always-on mode is in the coloured status card, so the graph
+             below fits on the first screen. Buttons are styled for the card in MonitorActivity. -->
         <LinearLayout
             android:id="@+id/stateBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
+            android:layout_marginTop="8dp"
             android:orientation="vertical"
-            android:paddingTop="28dp"
-            android:paddingBottom="24dp">
+            android:paddingStart="18dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="16dp">
 
             <TextView
                 android:id="@+id/stateLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:alpha="0.85"
-                android:letterSpacing="0.1"
+                android:letterSpacing="0.12"
                 android:textAllCaps="true"
                 android:textColor="#FFFFFF"
                 android:textSize="12sp"
@@ -41,19 +45,110 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="#FFFFFF"
-                android:textSize="40sp"
+                android:textSize="36sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/sinceText"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:alpha="0.9"
-                android:gravity="center"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:alpha="0.92"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/stateRoom"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:alpha="0.85"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/startStop"
+                    style="@style/OutlinePill"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:minHeight="0dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:textSize="14sp"
+                    android:text="Start" />
+
+                <Space
+                    android:id="@+id/glanceGap"
+                    android:layout_width="8dp"
+                    android:layout_height="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/glance"
+                    style="@style/OutlinePill"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:minHeight="0dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:textSize="14sp"
+                    android:text="Glance" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/teachRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/setKahraba"
+                    style="@style/OutlinePill"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:minHeight="0dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:textSize="14sp"
+                    android:text="It's kahraba" />
+
+                <Space
+                    android:layout_width="8dp"
+                    android:layout_height="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/setMoteur"
+                    style="@style/OutlinePill"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:minHeight="0dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:textSize="14sp"
+                    android:text="It's moteur" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/battery"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="?attr/selectableItemBackground"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:text="⚠  Allow running in the background (tap here)"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <TextView
@@ -67,82 +162,10 @@
             android:textSize="14sp"
             android:visibility="gone" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/startStop"
-            style="@style/PrimaryButton"
+        <com.kahraba.power.NotchCard
             android:layout_width="match_parent"
-            android:layout_height="62dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Start Always-on mode" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/battery"
-            style="@style/OutlinePill"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Allow running in the background" />
-
-        <!-- 1.5.0: a dim black screen with one big word, for a phone you glance at across the room. -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/glance"
-            style="@style/OutlinePill"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Glance screen" />
-
-        <com.kahraba.power.NotchCard
-            android:id="@+id/teachCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            app:notchTitle="Teach it">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:lineSpacingExtra="2dp"
-                    android:text="Only when you know for sure which one is on. Then leave the phone still under the halogen light for 2 minutes."
-                    android:textColor="?attr/appText"
-                    android:textSize="14sp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/setKahraba"
-                        style="@style/OutlinePill"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="6dp"
-                        android:layout_weight="1"
-                        android:text="It's kahraba" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/setMoteur"
-                        style="@style/OutlinePill"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:layout_weight="1"
-                        android:text="It's moteur" />
-                </LinearLayout>
-            </LinearLayout>
-        </com.kahraba.power.NotchCard>
-
-        <com.kahraba.power.NotchCard
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
             app:notchTitle="Live readings">
 
             <LinearLayout
@@ -150,6 +173,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
+                <!-- 1.5.01: the four readings in one row (value over its label). -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -161,45 +185,35 @@
                         android:layout_weight="1"
                         android:orientation="vertical">
 
+                        <TextView android:id="@+id/monValue1" style="@style/StatValue" android:textSize="19sp" />
                         <TextView android:id="@+id/monLabel1" style="@style/StatLabel" />
-                        <TextView android:id="@+id/monValue1" style="@style/StatValue" android:textSize="24sp" />
                     </LinearLayout>
-
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
+                        <TextView android:id="@+id/monValue2" style="@style/StatValue" android:textSize="19sp" />
                         <TextView android:id="@+id/monLabel2" style="@style/StatLabel" />
-                        <TextView android:id="@+id/monValue2" style="@style/StatValue" android:textSize="24sp" />
                     </LinearLayout>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:orientation="horizontal">
-
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
+                        <TextView android:id="@+id/monValue3" style="@style/StatValue" android:textSize="19sp" />
                         <TextView android:id="@+id/monLabel3" style="@style/StatLabel" />
-                        <TextView android:id="@+id/monValue3" style="@style/StatValue" android:textSize="24sp" />
                     </LinearLayout>
-
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
+                        <TextView android:id="@+id/monValue4" style="@style/StatValue" android:textSize="19sp" />
                         <TextView android:id="@+id/monLabel4" style="@style/StatLabel" />
-                        <TextView android:id="@+id/monValue4" style="@style/StatValue" android:textSize="24sp" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -208,7 +222,7 @@
                     android:id="@+id/graphBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
+                    android:layout_marginTop="12dp"
                     android:orientation="vertical">
 
                     <LinearLayout
@@ -221,7 +235,7 @@
                         android:id="@+id/graphChart"
                         android:layout_width="match_parent"
                         android:layout_height="130dp"
-                        android:layout_marginTop="12dp" />
+                        android:layout_marginTop="10dp" />
 
                     <TextView
                         android:id="@+id/graphLegend"

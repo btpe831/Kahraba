@@ -293,7 +293,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             ),
             TourOverlay.Step(
                 "Menu",
-                "Always-on mode, the Light meter, the Amps calculator, all your checks, settings and help.",
+                "Always-on mode, Alerts on other phones, Tools (the Light meter and Amps calculator), all your checks, settings and help.",
                 { findViewById(R.id.homeSettings) },
             ),
         )
@@ -848,17 +848,22 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     }
 
     /** MENU (top left of home): Always-on mode, the tools, rooms, all checks, then settings and help. */
-    private fun showTools() {
+    /** The menu, or its Tools page ([toolsPage]: Light meter and Amps calculator, with Back to menu). */
+    private fun showTools(toolsPage: Boolean = false) {
         val sheet = BottomSheetDialog(this)
         val v = layoutInflater.inflate(R.layout.sheet_day, null)
-        // The app's name, smaller, with the version under it.
+        // The app's name, smaller, with the version under it; or Tools with a way back.
         v.findViewById<TextView>(R.id.sheetTitle).apply {
-            text = "Kahraba or Not?"
+            text = if (toolsPage) "Tools" else "Kahraba or Not?"
             textSize = 20f
         }
         v.findViewById<TextView>(R.id.sheetDate).apply {
-            text = "Version ${Updates.version(this@MainActivity)}"
+            text = if (toolsPage) "‹ Back to menu" else "Version ${Updates.version(this@MainActivity)}"
             textSize = 13f
+            if (toolsPage) setOnClickListener {
+                sheet.dismiss()
+                showTools()
+            }
         }
         v.findViewById<View>(R.id.sheetNote).visibility = View.GONE
         val content = v.findViewById<LinearLayout>(R.id.sheetContent)
@@ -898,6 +903,18 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             row.addView(texts, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
             content.addView(row)
         }
+        if (toolsPage) {
+            item(R.drawable.ic_chart, "Light meter", "Live light and wobble, recordings") {
+                startActivity(Intent(this, LightMeterActivity::class.java))
+            }
+            item(R.drawable.ic_moteur, "Amps calculator", "What you can run on your moteur amps") {
+                startActivity(Intent(this, AmpsActivity::class.java))
+            }
+            v.findViewById<View>(R.id.sheetDone).setOnClickListener { sheet.dismiss() }
+            sheet.setContentView(v)
+            sheet.show()
+            return
+        }
         item(R.drawable.ic_bolt, "Always-on mode", if (MonitorState.running) "Active" else "Inactive") { openAlwaysOn() }
         item(R.drawable.ic_chart, "Glance screen", "A dim screen with one big word, to read across the room") {
             startActivity(Intent(this, GlanceActivity::class.java))
@@ -906,12 +923,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             if (RemoteAlerts.getPairing(this) != null) "Getting alerts from your other phone" else "Get the alerts on another phone") {
             SettingsActivity.openRemote(this)
         }
-        item(R.drawable.ic_chart, "Light meter", "Live light and wobble, recordings") {
-            startActivity(Intent(this, LightMeterActivity::class.java))
-        }
-        item(R.drawable.ic_moteur, "Amps calculator", "What you can run on your moteur amps") {
-            startActivity(Intent(this, AmpsActivity::class.java))
-        }
+        item(R.drawable.ic_tools, "Tools", "Light meter and Amps calculator") { showTools(toolsPage = true) }
         item(R.drawable.ic_pin, "Rooms", Prefs.currentSpot(this).ifEmpty { "Choose the room you're in" }) { pickRoom() }
         item(R.drawable.ic_list, "All checks", "Correct or delete a check") { showAllChecks() }
         // Settings and help after a thin line, set apart from the tools.

@@ -1,6 +1,11 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.5.01
+- A simpler Always-on screen: Start or Stop, Glance and It's kahraba / It's moteur are all in the coloured card, and the light graph fits on the first screen.
+- The menu has a Tools section with the Light meter and Amps calculator.
+- Clearer wording for adding a phone: Scan QR code, or Paste code.
+
 ## 1.5.0
 - New: Alerts on other phones. Get Always-on mode's alerts on your everyday Android phone, with the same beeps. Scan a code once; no accounts, no extra apps.
 - Your other phone's home screen shows what's on now, and tells you if the spare phone goes quiet (off, unplugged, or no internet).

@@ -38,7 +38,7 @@ class MonitorActivity : ThemedActivity() {
     private lateinit var detailText: TextView
     private lateinit var messageText: TextView
     private lateinit var startStop: Button
-    private lateinit var battery: Button
+    private lateinit var battery: TextView
     private val testBeeper by lazy { Beeper(applicationContext) }
 
     private val refresh = object : Runnable {
@@ -187,38 +187,56 @@ class MonitorActivity : ThemedActivity() {
             val now = System.currentTimeMillis()
             if (graphRangeMs <= 10 * 60_000L || now - graphDrawnMs >= 10_000) drawGraph()
         }
-        findViewById<View>(R.id.teachCard).visibility = if (cutsOnly) View.GONE else View.VISIBLE
         val running = MonitorState.running
         val s = MonitorState.source
         val label = findViewById<TextView>(R.id.stateLabel)
         when {
             // Off: show no source at all; an old one could be hours out of date.
             !running -> {
-                label.text = "Always-on"
+                label.text = "Always-on mode"
                 stateText.text = "Off"
-                sinceText.text = if (cutsOnly) "Tap Start to log power cuts" else "Tap Start to track kahraba and moteur"
+                sinceText.text = if (cutsOnly) "Leave this phone plugged in, then tap Start to log power cuts"
+                else "Leave this phone plugged in under a halogen light, then tap Start"
                 paintState(ContextCompat.getColor(this, R.color.no_power))
             }
             s == Source.UNKNOWN -> {
                 label.text = "Now"
                 stateText.text = "Not sure yet"
-                sinceText.text = "Give it a few minutes under a halogen light,\nor tap \"It's kahraba\" / \"It's moteur\" below"
+                sinceText.text = "Give it a few minutes, or tap It's kahraba / It's moteur below"
                 paintState(MonitorService.colorFor(s))
             }
             else -> {
                 label.text = "Now"
-                stateText.text = EventLog.label(s)
+                stateText.text = RemoteAlerts.word(s)
                 val since = MonitorState.sinceMs
-                sinceText.text = "since ${PowerDetector.formatClock(since)} " +
-                    "(${PowerDetector.formatDuration(System.currentTimeMillis() - since)})"
+                val now = System.currentTimeMillis()
+                // "since 5:00 PM (42m) · usually until about 7:00 PM", once the pattern knows.
+                val until = if (s == Source.KAHRABA) KahrabaPattern.summary(EventLog.read(this), now, true).typicalMs?.let {
+                    " · usually until about ${PowerDetector.formatClock((since + it + 150_000) / 300_000 * 300_000)}"
+                } ?: "" else ""
+                sinceText.text = "since ${PowerDetector.formatClock(since)} (${PowerDetector.formatDuration(now - since)})$until"
                 paintState(MonitorService.colorFor(s))
             }
         }
-        startStop.text = if (running) "Stop Always-on mode" else "Start Always-on mode"
+        val room = Prefs.monitorRoom(this)
+        findViewById<TextView>(R.id.stateRoom).apply {
+            text = if (cutsOnly) "Power cuts only" else if (room.isNotEmpty()) "📍 $room" else ""
+            visibility = if (text.isNullOrEmpty()) View.GONE else View.VISIBLE
+        }
+        // The card's buttons: Start alone while off; Stop and Glance, then It's kahraba / It's moteur while on.
+        startStop.text = if (running) "■  Stop" else "▶  Start"
+        findViewById<View>(R.id.glance).visibility = if (running) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.glanceGap).visibility = if (running) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.teachRow).visibility = if (running && !cutsOnly) View.VISIBLE else View.GONE
+        val c = if (running) MonitorService.colorFor(s) else ContextCompat.getColor(this, R.color.no_power)
+        cardButton(R.id.startStop, solid = !running, c)
+        cardButton(R.id.glance, solid = false, c)
+        cardButton(R.id.setKahraba, solid = s == Source.KAHRABA, c)
+        cardButton(R.id.setMoteur, solid = s == Source.MOTEUR, c)
 
         val thr = Prefs.config(this).flickerThresholdPct
         val stats = listOf(
-            "Light" to (if (running) MonitorState.lux?.let { "${it.toInt()} lx" } ?: "–" else "–"),
+            "Lux" to (if (running) MonitorState.lux?.let { "%,d".format(it.toInt()) } ?: "–" else "–"),
             "Wobble" to (if (running) MonitorState.flickerPct?.let { "%.1f%%".format(it) } ?: "–" else "–"),
             "Charger" to (if (running) when (MonitorState.plugged) { true -> "On"; false -> "Off"; null -> "–" } else "–"),
             "Readings" to (if (running) "${MonitorState.sensorUpdatesPerMin}/min" else "–"),
@@ -253,14 +271,14 @@ class MonitorActivity : ThemedActivity() {
     // ---- Light graph: what Always-on mode saved, plus the last few minutes live ----
 
     private val graphRanges = listOf(
-        "30 sec" to 30_000L,
-        "1 min" to 60_000L,
-        "3 min" to 3 * 60_000L,
-        "5 min" to 5 * 60_000L,
-        "10 min" to 10 * 60_000L,
-        "1 hour" to 3_600_000L,
-        "6 hours" to 6 * 3_600_000L,
-        "24 hours" to 24 * 3_600_000L,
+        "30s" to 30_000L,
+        "1m" to 60_000L,
+        "3m" to 3 * 60_000L,
+        "5m" to 5 * 60_000L,
+        "10m" to 10 * 60_000L,
+        "1h" to 3_600_000L,
+        "6h" to 6 * 3_600_000L,
+        "24h" to 24 * 3_600_000L,
     )
     private var graphRangeMs = 3_600_000L
     private var savedReadings: List<LightHistory.Reading> = emptyList()
@@ -276,13 +294,13 @@ class MonitorActivity : ThemedActivity() {
     private fun setUpGraph() {
         graphRangeMs = Prefs.sp(this).getLong(GRAPH_RANGE, 3_600_000L)
             .takeIf { r -> graphRanges.any { it.second == r } } ?: 3_600_000L
-        // Two rows of four: the short live views, then the longer ones.
+        // One row of eight (1.5.01), so the graph fits on the first screen.
         val box = findViewById<LinearLayout>(R.id.graphRanges)
         box.orientation = LinearLayout.VERTICAL
         val dp = resources.displayMetrics.density
         var row = LinearLayout(this)
         for ((i, range) in graphRanges.withIndex()) {
-            if (i % 4 == 0) {
+            if (i == 0) {
                 row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
                 box.addView(row, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
                     if (i > 0) topMargin = (6 * dp).toInt()
@@ -293,7 +311,7 @@ class MonitorActivity : ThemedActivity() {
                 textSize = 12f
                 gravity = android.view.Gravity.CENTER
                 maxLines = 1
-                setPadding((4 * dp).toInt(), (6 * dp).toInt(), (4 * dp).toInt(), (6 * dp).toInt())
+                setPadding(0, (6 * dp).toInt(), 0, (6 * dp).toInt())
                 isClickable = true
                 isFocusable = true
                 setOnClickListener {
@@ -306,7 +324,7 @@ class MonitorActivity : ThemedActivity() {
             }
             rangeTabs += tab
             row.addView(tab, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
-                if (i % 4 > 0) marginStart = (6 * dp).toInt()
+                if (i > 0) marginStart = (4 * dp).toInt()
             })
         }
         paintRanges()
@@ -429,6 +447,14 @@ class MonitorActivity : ThemedActivity() {
     }
 
     /** The status card: a soft gradient in the status colour, like NOW on the main screen. */
+    /** A button inside the coloured card: white with the card's colour (the current choice), or see-through. */
+    private fun cardButton(id: Int, solid: Boolean, c: Int) {
+        val b = findViewById<com.google.android.material.button.MaterialButton>(id)
+        b.backgroundTintList = android.content.res.ColorStateList.valueOf(if (solid) 0xFFFFFFFF.toInt() else 0x33FFFFFF)
+        b.setTextColor(if (solid) c else 0xFFFFFFFF.toInt())
+        b.strokeWidth = 0
+    }
+
     private fun paintState(c: Int) {
         val dp = resources.displayMetrics.density
         fun mix(a: Int, b: Int, f: Float): Int {

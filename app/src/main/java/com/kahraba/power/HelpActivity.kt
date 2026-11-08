@@ -105,7 +105,7 @@ class HelpActivity : ThemedActivity() {
             """,
 
             "Your results" to """
-                The <b>home screen</b> shows what's on now (from Always-on mode, or your last check in the past 30 minutes) and, once the app has learned it, when kahraba may come next. <b>Drag up</b> (or tap “Your power” at the bottom) for <b>Today</b>: today's bar, what happened, the latest switches and the next kahraba. It follows your finger. Keep dragging, or tap See all, for <b>Your power</b>: the kahraba pattern, recent checks and accuracy. Drag down (from the top), Back, or × returns home. Tap the <b>room</b> at the top to choose the room you're in. The <b>menu</b> (☰, top left) has Always-on mode, the Light meter, the Amps calculator, rooms, all checks, settings and help.
+                The <b>home screen</b> shows what's on now (from Always-on mode, or your last check in the past 30 minutes) and, once the app has learned it, when kahraba may come next. <b>Drag up</b> (or tap “Your power” at the bottom) for <b>Today</b>: today's bar, what happened, the latest switches and the next kahraba. It follows your finger. Keep dragging, or tap See all, for <b>Your power</b>: the kahraba pattern, recent checks and accuracy. Drag down (from the top), Back, or × returns home. Tap the <b>room</b> at the top to choose the room you're in. The <b>menu</b> (☰, top left) has Always-on mode, the Glance screen, Alerts on other phones, <b>Tools</b> (the Light meter and Amps calculator), rooms, all checks, settings and help.
                 <b>Recent checks</b> shows your last checks; the list button in the bottom bar shows all of them. <b>Tap one to correct it</b>, or to delete it. Checks you confirmed or corrected are marked ✓.
                 <b>Accuracy</b> shows how often each result was correct, among the checks you confirmed.
                 <b>Move cards:</b> in Your power, press and hold a card, then drag it up or down. Show more cards in Settings › Cards: History (today, 7 days and the calendar with notes), What to run, Light wobble, Did you know? and more.
@@ -114,7 +114,7 @@ class HelpActivity : ThemedActivity() {
             """,
 
             "Always-on mode (optional)" to """
-                For a spare phone that stays in one place. Open it from the <b>Always-on</b> chip on the home screen (or press and hold the big button), or the menu (☰).
+                For a spare phone that stays in one place. Everything to run it is in the coloured card at the top: Start or Stop, Glance, and It's kahraba / It's moteur; the live light graph is right under it. Open it from the <b>Always-on</b> chip on the home screen (or press and hold the big button), or the menu (☰).
                 • It uses only the light sensor and the charger. No camera or microphone. Nothing leaves the phone, except alerts to your other phones if you add one (see “Alerts on other phones”).
                 • Plug the phone into a <b>wall socket</b> (not a UPS) and leave it face-up under a halogen light. The screen can be off.
                 • A power cut is seen through the charger. A cut of a minute or more means the moteur took over (it takes about a minute to start). A blink of a few seconds is a changeover: once the light settles, brighter means kahraba is back, dimmer means moteur.
