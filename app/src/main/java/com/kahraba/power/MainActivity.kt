@@ -706,19 +706,46 @@ class MainActivity : ThemedActivity(), SensorEventListener {
                     running -> "  (${KahrabaPattern.hours(now - e.timeMs)} so far)"
                     else -> ""
                 }
-                // "5:00 PM  ● Kahraba  (42m so far)", the dot in the source's colour.
-                val t = android.text.SpannableString("${PowerDetector.formatClock(e.timeMs)}   ●  ${RemoteAlerts.word(e.source)}$lasted")
+                // "5:00 PM  ● Kahraba  (42m so far)", the dot in the source's colour, and a small grey
+                // crossed bolt when it began with a power cut (explained under the list).
+                val cut = isAfterCut(e)
+                val t = android.text.SpannableString(
+                    "${PowerDetector.formatClock(e.timeMs)}   ●  ${RemoteAlerts.word(e.source)}$lasted" + if (cut) "  \uFFFC" else "",
+                )
                 val dot = t.indexOf('●')
                 t.setSpan(android.text.style.ForegroundColorSpan(MonitorService.colorFor(e.source)), dot, dot + 1, 0)
                 b.addView(TextView(this).apply {
-                    text = t
                     textSize = 15f
+                    if (cut) t.setSpan(android.text.style.ImageSpan(cutMark(textSize.toInt()), android.text.style.ImageSpan.ALIGN_BASELINE),
+                        t.length - 1, t.length, 0)
+                    text = t
                     setTextColor(themeColor(R.attr.appText))
                 }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
                     topMargin = (2 * dp).toInt()
                 })
             }
+            if (today.any { isAfterCut(it.value) }) {
+                val key = android.text.SpannableString("\uFFFC  after a power cut")
+                b.addView(TextView(this).apply {
+                    textSize = 12f
+                    key.setSpan(android.text.style.ImageSpan(cutMark(textSize.toInt()), android.text.style.ImageSpan.ALIGN_BASELINE), 0, 1, 0)
+                    text = key
+                    setTextColor(themeColor(R.attr.appMuted))
+                }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    topMargin = (6 * dp).toInt()
+                })
+            }
         }
+    }
+
+    /** The switch began with the power going off: a cut the moteur took over, power back after an outage, or a blink. */
+    private fun isAfterCut(e: EventLog.Entry) =
+        e.reason.startsWith("Power cut") || e.reason.startsWith("Power back") || e.reason.startsWith("Power blinked")
+
+    /** The small grey crossed bolt that marks a power cut, [size] pixels square. */
+    private fun cutMark(size: Int) = ContextCompat.getDrawable(this, R.drawable.ic_power_off)!!.mutate().apply {
+        setTint(themeColor(R.attr.appMuted))
+        setBounds(0, 0, size, size)
     }
 
     /** Whose data Your power shows: the phone running Always-on mode that sends alerts here, or this one. */
