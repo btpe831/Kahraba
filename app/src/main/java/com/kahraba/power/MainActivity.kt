@@ -693,12 +693,21 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         next?.let { line(it, 15f, R.attr.appText, bold = true, top = 8) }
 
         // The last few switches today, newest first.
-        val today = entries.filter { it.timeMs >= dayStart && it.source != Source.UNKNOWN }.sortedByDescending { it.timeMs }.take(4)
+        // Each with how long it lasted (until the next change), or "so far" for the one on now.
+        val sorted = entries.sortedBy { it.timeMs }
+        val today = sorted.withIndex().filter { it.value.timeMs >= dayStart && it.value.source != Source.UNKNOWN }
+            .sortedByDescending { it.value.timeMs }.take(4)
         if (today.isNotEmpty()) {
             line("LATEST", 12f, R.attr.appMuted, bold = true, top = 12)
-            for (e in today) {
-                // "5:00 PM  ● Kahraba", the dot in the source's colour.
-                val t = android.text.SpannableString("${PowerDetector.formatClock(e.timeMs)}   ●  ${RemoteAlerts.word(e.source)}")
+            for ((i, e) in today) {
+                val next = sorted.getOrNull(i + 1)
+                val lasted = when {
+                    next != null -> "  (${KahrabaPattern.hours(next.timeMs - e.timeMs)})"
+                    running -> "  (${KahrabaPattern.hours(now - e.timeMs)} so far)"
+                    else -> ""
+                }
+                // "5:00 PM  ● Kahraba  (42m so far)", the dot in the source's colour.
+                val t = android.text.SpannableString("${PowerDetector.formatClock(e.timeMs)}   ●  ${RemoteAlerts.word(e.source)}$lasted")
                 val dot = t.indexOf('●')
                 t.setSpan(android.text.style.ForegroundColorSpan(MonitorService.colorFor(e.source)), dot, dot + 1, 0)
                 b.addView(TextView(this).apply {
