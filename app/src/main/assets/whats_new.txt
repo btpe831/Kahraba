@@ -1,6 +1,9 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.5.03
+- Glance screen: the card always shows the whole word (MOTEUR, KAHRABA), with the time centred underneath.
+
 ## 1.5.02
 - The Glance screen can show a coloured card (green or orange, with white words), easier to read from across the room. It's the new default.
 - Choose the Glance screen's brightness: Low, Medium or Full. Change both on the Glance screen itself, or in Settings › Always-on mode.

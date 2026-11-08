@@ -76,10 +76,11 @@ class GlanceActivity : AppCompatActivity() {
             gravity = Gravity.CENTER_HORIZONTAL
         }
         word = TextView(this).apply {
-            textSize = 56f
+            textSize = WORD_SP
             setTypeface(typeface, Typeface.BOLD)
             letterSpacing = 0.04f
             gravity = Gravity.CENTER
+            maxLines = 1
         }
         since = TextView(this).apply {
             textSize = 22f
@@ -89,8 +90,9 @@ class GlanceActivity : AppCompatActivity() {
             textSize = 15f
             gravity = Gravity.CENTER
         }
-        box.addView(word)
-        box.addView(since, LinearLayout.LayoutParams(-2, -2).apply { topMargin = (4 * dp).toInt() })
+        // The word (on its card), with "since 9:18 PM" centred under it, outside the card (1.5.03).
+        box.addView(word, LinearLayout.LayoutParams(-2, -2))
+        box.addView(since, LinearLayout.LayoutParams(-2, -2).apply { topMargin = (12 * dp).toInt() })
         box.addView(note, LinearLayout.LayoutParams(-2, -2).apply { topMargin = (10 * dp).toInt() })
         root.addView(box, FrameLayout.LayoutParams(-2, -2, Gravity.CENTER))
 
@@ -195,23 +197,33 @@ class GlanceActivity : AppCompatActivity() {
         note.text = from
         note.visibility = if (from.isEmpty()) View.GONE else View.VISIBLE
 
+        since.setTextColor(GREY)
+        note.setTextColor(DARK_GREY)
         if (Prefs.glanceStyle(this) == "word") {
-            box.background = null
-            box.setPadding(0, 0, 0, 0)
+            word.background = null
+            word.setPadding(0, 0, 0, 0)
             word.setTextColor(colorFor(source))
-            since.setTextColor(GREY)
-            note.setTextColor(DARK_GREY)
         } else {
-            // The app's own colours (green, orange, grey) behind white words.
-            box.background = GradientDrawable().apply {
+            // Only the word on the card: the app's own colours (green, orange, grey), white letters.
+            word.background = GradientDrawable().apply {
                 cornerRadius = 28 * dp
                 setColor(MonitorService.colorFor(source))
             }
-            box.setPadding((28 * dp).toInt(), (26 * dp).toInt(), (28 * dp).toInt(), (26 * dp).toInt())
+            word.setPadding((30 * dp).toInt(), (22 * dp).toInt(), (30 * dp).toInt(), (22 * dp).toInt())
             word.setTextColor(Color.WHITE)
-            since.setTextColor(0xE6FFFFFF.toInt())
-            note.setTextColor(0xCCFFFFFF.toInt())
         }
+        fitWord()
+    }
+
+    /** The whole word always fits across the screen: smaller letters for long words (POWER OFF). */
+    private fun fitWord() {
+        val avail = ((box.parent as? View)?.width ?: 0) - 32 * dp
+        // Measured at full size with a copy of the paint, so the size is only set once (no flicker).
+        val full = android.graphics.Paint(word.paint).apply {
+            textSize = android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_SP, WORD_SP, resources.displayMetrics)
+        }
+        val needed = full.measureText(word.text.toString()) + word.paddingLeft + word.paddingRight
+        word.textSize = if (avail > 0 && needed > avail) WORD_SP * avail / needed else WORD_SP
     }
 
     /**
@@ -231,6 +243,7 @@ class GlanceActivity : AppCompatActivity() {
 
     companion object {
         private const val MOVE_MS = 60_000L
+        private const val WORD_SP = 56f
         private const val GREY = 0xFF9CA3AF.toInt()
         private const val DARK_GREY = 0xFF6B7280.toInt()
 
