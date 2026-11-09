@@ -40,6 +40,50 @@ object Facts {
         "Inverter appliances speed their motors up gently instead of switching hard on, so they avoid big start-up kicks.",
         "On a clear day at noon, sunlight delivers about 1,000 W on every square metre: one reason rooftop solar works so well here.",
         "Kahraba often runs at a higher voltage than the moteur, so the same halogen bulb glows brighter on kahraba: usually 10–25%, depending on the day.",
+        // Words and names (1.5.06)
+        "“Mazout”, the Lebanese word for diesel, came through French from the Russian “mazut”, a heavy fuel oil.",
+        "“Adaad” (counter) is the meter some moteur owners now install, so you pay for what you use instead of a fixed amp plan.",
+        "The volt is named after Alessandro Volta, who built the first battery in 1800 from stacked discs of zinc, copper and salty cloth.",
+        "The amp is named after André-Marie Ampère, who showed that two wires carrying current push or pull on each other.",
+        "The watt is named after James Watt, whose improved steam engine helped start the Industrial Revolution.",
+        "The hertz is named after Heinrich Hertz, the first to prove that radio waves exist.",
+        "One lux is the light of one lumen spread over one square metre: the unit this app's light readings use.",
+        // History
+        "The world's first public power station, Edison's Pearl Street Station, opened in New York in 1882 and lit about 400 lamps.",
+        "Alternating current (AC) won over direct current because transformers can step its voltage up for long cables and back down for homes.",
+        "The Qaraoun dam on the Litani river, finished in 1959, created Lebanon's largest lake and feeds hydroelectric plants downstream.",
+        "From 2013 to 2021, two floating power plants on ships, moored off Zouk and Jiyeh, supplied part of Lebanon's electricity.",
+        "In October 2021 Lebanon's whole national grid shut down for about a day when its two biggest power plants ran out of fuel.",
+        "Most of Europe and the Middle East use 220–240 V at 50 Hz; the Americas mostly use 110–120 V at 60 Hz.",
+        // How it works
+        "Tungsten has the highest melting point of any metal, 3,422 °C. That's why it's used for the glowing filament in a bulb.",
+        "In a halogen bulb, a little halogen gas carries evaporated tungsten back onto the filament, so the bulb lasts longer and stays clear.",
+        "Touching a halogen bulb's glass with bare fingers leaves oil that can make a hot spot and shorten its life.",
+        "Only about 5% of the power going into a halogen bulb becomes light. The rest is heat, which is why it gets so hot.",
+        "A halogen bulb's light rises steeply with voltage: about 5% more volts gives about 18% more light. That's how this app tells kahraba from moteur.",
+        "Your eyes can't see a light flickering 100 times a second, but a phone camera sometimes can: the dark bands on photos of some screens and lamps.",
+        "The grid keeps its frequency very close to 50 Hz. A moteur drifts a little as its engine speeds up and slows down with the load.",
+        "A changeover switch can't connect kahraba and the moteur at the same time, so the light dips for a split second when it swaps between them.",
+        "The earth wire in a socket is a safety path: if a fault makes a metal case live, the current goes to earth and trips the breaker instead of going through you.",
+        "A breaker trips on too much current; a residual-current device (RCD) trips when current leaks away, even a tiny amount that could hurt someone.",
+        "A UPS keeps a battery charged and turns its 12 V DC back into 220 V AC when the power goes off.",
+        // Light and the phone
+        "A phone's light sensor sits near the top of the screen. It's what dims the screen automatically in a dark room.",
+        "A full moon gives about 0.1–0.3 lux. A lit room is a few hundred lux. Direct sunlight can reach 100,000 lux.",
+        "A halogen bulb a short distance from the phone can easily give 1,000–5,000 lux: plenty for this app to see small changes.",
+        // Numbers
+        "A litre of diesel holds about 10 kWh of energy, but a generator turns only about a third of that into electricity.",
+        "On a sunny Lebanese day, 1 kW of solar panels makes roughly 4–5 kWh: enough for a fridge for a few days.",
+        "A fridge uses about 1–2 kWh a day. It runs in bursts, which is why its hum comes and goes.",
+        "Once a room is cool, an inverter air conditioner can run at less than half its full power. An older one switches fully on and off instead.",
+        "A static shock from a doorknob can be several thousand volts, but it carries so little current that it only stings.",
+        "A lightning bolt can heat the air to about 30,000 °C, several times hotter than the surface of the sun.",
+        "Some electric eels can produce more than 800 volts, enough to stun a horse.",
+        // What this app has seen
+        "When kahraba cuts out, the moteur takes about a minute to start: in this app's recordings, usually 60 to 80 seconds.",
+        "At night a calm moteur can keep a halogen light perfectly steady for up to an hour. In the daytime it almost always wobbles.",
+        "Measured with a voltmeter, kahraba usually ran at about 231–238 V and the moteur at about 208–227 V.",
+        "When the grid is unstable, kahraba can arrive for only a few seconds before the power cuts out and the moteur takes over again.",
     )
 
     private val order: List<Int> by lazy { all.indices.shuffled(Random(1964)) }
