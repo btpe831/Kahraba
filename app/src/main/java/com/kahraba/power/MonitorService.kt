@@ -136,8 +136,7 @@ class MonitorService : Service(), SensorEventListener {
                 val old = intent.getLongExtra(EXTRA_OLD_SINCE, -1L)
                 val new = intent.getLongExtra(EXTRA_NEW_SINCE, -1L)
                 handler.post {
-                    if (new > 0 && detector.sinceMs == old) {
-                        detector.sinceMs = new
+                    if (detector.correctSince(old, new, System.currentTimeMillis())) {
                         MonitorState.sinceMs = new
                         Prefs.saveSource(this, detector.source, new)
                         updateStatusNotification()

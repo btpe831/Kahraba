@@ -79,6 +79,16 @@ class PowerDetector(
     var sinceMs: Long = initialSinceMs
         private set
 
+    /**
+     * "Change the time" on the switch that's on now (1.5.07): it really started at [newMs], not
+     * [oldMs]. Only if [oldMs] is still the current start and the new time is earlier than now.
+     */
+    fun correctSince(oldMs: Long, newMs: Long, nowMs: Long): Boolean {
+        if (sinceMs != oldMs || newMs <= 0 || newMs >= nowMs) return false
+        sinceMs = newMs
+        return true
+    }
+
     /** Light wobble over the last few seconds, in %, or null when the light can't be judged. */
     var flickerPct: Double? = null
         private set
