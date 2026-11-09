@@ -82,6 +82,10 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   15 cuts, light off several times; 8 Nov 16:00 kahraba +13% right after the moteur flicked between sensor steps
   1,153/1,235: the creep check rejected it, alert 16:47 by stillness; 1.5.0 only rejects a tail *above* the usual
   level (`BEFORE_SPREAD`), alert 16:05. Night moteur still up to 35 min; daytime moteur never 20+ min).
+  `nov09-pixel2-raw-two-step-kahraba.csv` (`TwoStepKahrabaTest`; 8 Nov 21:18 to 9 Nov 21:24, ms from 21:00 8 Nov: kahraba
+  10:29:46 in two steps 74 s apart, 1,290 -> 1,566 -> 1,683 lux; the creep check rejected the tail at 1,566, alert 12:11
+  dated 11:23 by stillness; 1.5.06 `twoSteps`: a first step >= 12% within `TWO_STEPS_MS` (2 min) is part of the switch,
+  alert 10:36. The 45-minute cases so far were missed clear jumps; only 3 Nov 10:35 was a truly quiet kahraba).
 - Kahraba is dead still (zero wobble for 20+ min); a daytime moteur wobbles most minutes. In the
   evening a moteur also calms down and creeps brighter, but gradually (30 Oct 20:40-21:45).
 - Voltmeter: moteur 208 V (31 Oct, 8 pm) to 223 V; kahraba 231-234 V (1 Nov morning too).
@@ -136,7 +140,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
-- Released: 1.5.05 (day details: whole periods across midnight on both days, `kahrabaPeriodsTouching`; timeline starts with what was on at midnight; totals per day only). 1.5.04 (Amps calculator: appliances by amps (`Item.amps`, counts as its amps at any voltage), Quick
+- Released: 1.5.06 (kahraba arriving in two steps, `twoSteps`, `TwoStepKahrabaTest`; 38 more Did you know? facts, 65 in all). 1.5.05 (day details: whole periods across midnight on both days, `kahrabaPeriodsTouching`; timeline starts with what was on at midnight; totals per day only). 1.5.04 (Amps calculator: appliances by amps (`Item.amps`, counts as its amps at any voltage), Quick
   convert both ways; tap a Kahraba pattern day (or Today's bar) for its kahraba periods and timeline
   (`showPatternDay`, `timelineRows`, `KahrabaPattern.kahrabaPeriods`, `DayPeriodsTest`)). 1.5.03 (Glance card holds only the word, at its own width and shrunk to fit; "since …" centred under it). 1.5.02 (Glance screen style Coloured card (default) / Word, brightness Low 8% / Medium 35% (default) / Full,
   `Prefs.glanceStyle/glanceBright`, buttons on the Glance screen for 6 s and in Settings › Always-on mode; no full-screen

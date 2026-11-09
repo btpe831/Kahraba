@@ -631,10 +631,37 @@ class PowerDetector(
         // Only a tail *above* the usual level is creep. A tail below it is the moteur flicking between
         // two neighbouring sensor steps (8 Nov, 16:00: 1,153 / 1,235 lux, then kahraba at 1,391): the
         // rise is still measured from the usual (higher) level, so that's no easier to fake.
-        if (tail > ref * (1 + BEFORE_SPREAD)) return null
+        if (tail > ref * (1 + BEFORE_SPREAD)) return twoSteps(tail, beforeEnd, start)
         val during = seconds.filter { it.t in beforeEnd..start }.mapNotNull { it.level }
         if (during.any { it < 0.5 * ref }) return null
         return ref to start
+    }
+
+    /**
+     * Kahraba can arrive in two steps a minute apart (9 Nov, 10:29: 1,290 -> 1,566 lux, then 1,683 at
+     * 10:31). Just before the current level the light was then already up, which looks like a creeping
+     * moteur. It isn't if that earlier step was itself a clear jump (a creeping moteur goes up ~7% at a
+     * time, 28 Oct): then the change began there, and the rise is measured from before it.
+     */
+    private fun twoSteps(earlier: Double, beforeEnd: Long, start: Long): Pair<Double, Long>? {
+        var earlierStart: Long? = null
+        for (sec in seconds.reversed()) {
+            if (sec.t > beforeEnd) continue
+            val l = sec.level ?: return null
+            if (l < earlier * (1 - SAME_LEVEL) || l > earlier * (1 + SAME_LEVEL)) break
+            earlierStart = sec.t
+        }
+        val from = earlierStart ?: return null
+        if (start - from > TWO_STEPS_MS) return null
+        val end = from - SWITCH_MS
+        val before = seconds.filter { it.t in (end - minutesMs(REFERENCE_MINUTES))..end }.mapNotNull { it.level }
+        if (before.size < 0.7 * REFERENCE_MINUTES * 60) return null
+        val ref = median(before) ?: return null
+        val tail = median(seconds.filter { it.t in (end - 30_000)..end }.mapNotNull { it.level }) ?: return null
+        if (tail > ref * (1 + BEFORE_SPREAD)) return null
+        if ((earlier / ref - 1) * 100 < config.levelRisePct) return null
+        if (seconds.filter { it.t in end..start }.mapNotNull { it.level }.any { it < 0.5 * ref }) return null
+        return ref to from
     }
 
     /** Median light level over a time span, or null if too few readable seconds in it. */
@@ -735,6 +762,8 @@ class PowerDetector(
         const val BLINK_DECIDE_MS = 10 * 60_000L
         /** The light just before the switch may be at most this much above the typical "before" level (creep). */
         const val BEFORE_SPREAD = 0.06
+        /** Kahraba arriving in two steps: at most this long between them (9 Nov: 74 s). */
+        const val TWO_STEPS_MS = 2 * 60_000L
         const val SAMPLE_KEEP_MS = 30_000L
         const val DISTURBANCE_PCT = 25.0
         // The moteur took 75 s to come on during the 26 Oct cut.
