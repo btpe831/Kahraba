@@ -52,6 +52,24 @@ object EventLog {
         f.writeText(kept.joinToString("") { it.first + "\n" })
     }
 
+    /** The other phone's log for a span (a history batch) replaces this phone's copy of that span (1.5.07). */
+    @Synchronized
+    fun replaceRemote(ctx: Context, lines: List<String>) {
+        val f = remoteFile(ctx)
+        val cutoff = System.currentTimeMillis() - 365 * 86_400_000L
+        val kept = Combine.replaceRange(if (f.exists()) f.readLines() else emptyList(), lines)
+            .filter { (it.substringBefore(";").toLongOrNull() ?: 0L) >= cutoff }
+        f.writeText(kept.joinToString("") { it + "\n" })
+    }
+
+    /** "Change the time": moves the switch at [oldMs] to [newMs] in this phone's log (1.5.07). */
+    @Synchronized
+    fun changeTime(ctx: Context, oldMs: Long, newMs: Long) {
+        val f = file(ctx)
+        if (!f.exists()) return
+        f.writeText(Combine.retime(f.readLines().filter { it.isNotBlank() }, oldMs, newMs).joinToString("") { it + "\n" })
+    }
+
     @Synchronized
     fun clearRemote(ctx: Context) {
         remoteFile(ctx).delete()

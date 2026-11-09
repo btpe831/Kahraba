@@ -131,6 +131,19 @@ class MonitorService : Service(), SensorEventListener {
                 if (intent.getBooleanExtra(EXTRA_FROM_ALERT, false)) notifications().cancel(lastAlertId)
                 if (s != null) handler.post { setManual(s, calibrate) }
             }
+            ACTION_SET_SINCE -> {
+                // "Change the time" on the switch that's on now: it started at a different time.
+                val old = intent.getLongExtra(EXTRA_OLD_SINCE, -1L)
+                val new = intent.getLongExtra(EXTRA_NEW_SINCE, -1L)
+                handler.post {
+                    if (new > 0 && detector.sinceMs == old) {
+                        detector.sinceMs = new
+                        MonitorState.sinceMs = new
+                        Prefs.saveSource(this, detector.source, new)
+                        updateStatusNotification()
+                    }
+                }
+            }
             ACTION_TEST_KAHRABA -> beeper.kahraba(respectQuiet = false)
             ACTION_TEST_MOTEUR -> beeper.moteur(respectQuiet = false)
             ACTION_SILENCE -> beeper.cancel()
@@ -425,6 +438,9 @@ class MonitorService : Service(), SensorEventListener {
         const val ACTION_START = "com.kahraba.power.START"
         const val ACTION_STOP = "com.kahraba.power.STOP"
         const val ACTION_SET = "com.kahraba.power.SET"
+        const val ACTION_SET_SINCE = "com.kahraba.power.SET_SINCE"
+        const val EXTRA_OLD_SINCE = "old_since"
+        const val EXTRA_NEW_SINCE = "new_since"
         const val ACTION_TEST_KAHRABA = "com.kahraba.power.TEST_KAHRABA"
         const val ACTION_TEST_MOTEUR = "com.kahraba.power.TEST_MOTEUR"
         const val ACTION_SILENCE = "com.kahraba.power.SILENCE"

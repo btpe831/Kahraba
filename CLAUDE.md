@@ -140,6 +140,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
+- Next (held, 1.5.07): "Change the time" of a switch from a day's timeline (own log only; `EventLog.changeTime`, `Combine.retime` notes "(time changed by you)"; the current switch also updates the running detector via `MonitorService.ACTION_SET_SINCE`; history batches now replace the other phone's copy of their span, `EventLog.replaceRemote`/`Combine.replaceRange`, `ChangeTimeTest`).
 - Released: 1.5.06 (kahraba arriving in two steps, `twoSteps`, `TwoStepKahrabaTest`; 38 more Did you know? facts, 65 in all). 1.5.05 (day details: whole periods across midnight on both days, `kahrabaPeriodsTouching`; timeline starts with what was on at midnight; totals per day only). 1.5.04 (Amps calculator: appliances by amps (`Item.amps`, counts as its amps at any voltage), Quick
   convert both ways; tap a Kahraba pattern day (or Today's bar) for its kahraba periods and timeline
   (`showPatternDay`, `timelineRows`, `KahrabaPattern.kahrabaPeriods`, `DayPeriodsTest`)). 1.5.03 (Glance card holds only the word, at its own width and shrunk to fit; "since …" centred under it). 1.5.02 (Glance screen style Coloured card (default) / Word, brightness Low 8% / Medium 35% (default) / Full,

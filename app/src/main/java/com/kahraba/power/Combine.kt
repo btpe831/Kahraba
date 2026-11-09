@@ -24,6 +24,34 @@ object Combine {
     fun rooms(here: String, backup: String): String =
         (here.lines() + backup.lines()).map { it.trim() }.filter { it.isNotEmpty() }.distinct().joinToString("\n")
 
+    /** The note added to a switch whose time the owner changed (1.5.07). */
+    const val TIME_CHANGED = " (time changed by you)"
+
+    /**
+     * A switch-log line moved to [newMs] (1.5.07, "Change the time"): the line at [oldMs] gets the new
+     * time and a note saying so; everything else stays. The result is in time order.
+     */
+    fun retime(lines: List<String>, oldMs: Long, newMs: Long): List<String> =
+        lines.map { l ->
+            if (time(l) != oldMs) l else {
+                val rest = l.substringAfter(";")
+                "$newMs;" + if (rest.endsWith(TIME_CHANGED)) rest else rest + TIME_CHANGED
+            }
+        }.sortedBy { time(it) ?: Long.MIN_VALUE }
+
+    /**
+     * The other phone's whole log for a span arrived ([batch]): it replaces what this phone had for that
+     * span, so a changed time there doesn't leave the old line behind here. Lines outside it stay.
+     */
+    fun replaceRange(existing: List<String>, batch: List<String>): List<String> {
+        val times = batch.mapNotNull { time(it) }
+        if (times.isEmpty()) return existing
+        val from = times.minOrNull()!!
+        val to = times.maxOrNull()!!
+        return (existing.filter { l -> time(l)?.let { it < from || it > to } ?: false } + batch)
+            .filter { time(it) != null }.distinct().sortedBy { time(it) }
+    }
+
     /** A day's note: both, if they differ. */
     fun note(here: String?, backup: String?): String {
         val a = here?.trim().orEmpty()

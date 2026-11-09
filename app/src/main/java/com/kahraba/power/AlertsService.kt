@@ -132,7 +132,7 @@ class AlertsService : Service() {
         // The other phone's switch log, for the pattern card, history and log on this phone.
         if (m.log.isNotEmpty()) EventLog.mergeRemote(this, listOf(m.log))
         if (m.kind == RemoteCodec.Kind.HISTORY) {
-            history.add(m)?.let { EventLog.mergeRemote(this, it) }
+            history.add(m)?.let { EventLog.replaceRemote(this, it) }
             return
         }
         val newer = RemoteAlerts.saveHeard(this, m)

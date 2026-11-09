@@ -1,6 +1,9 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.5.07
+- Change the time of a switch: tap a day in the Kahraba pattern, then tap a switch in its timeline. Handy when the app noticed kahraba late. Your other phones get the change too.
+
 ## 1.5.06
 - Kahraba is spotted much sooner when it comes on in two quick steps (it could take almost two hours; now about 6 minutes).
 - 38 new “Did you know?” facts: where the words come from, Lebanon's power history, how bulbs and switches work, and what this app has learned.

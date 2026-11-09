@@ -764,7 +764,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
      * small grey crossed bolt when it began with a power cut (explained under the list).
      */
     private fun timelineRows(into: LinearLayout, rows: List<IndexedValue<EventLog.Entry>>, sorted: List<EventLog.Entry>,
-                             running: Boolean, now: Long, dayStart: Long? = null) {
+                             running: Boolean, now: Long, dayStart: Long? = null, onTap: ((EventLog.Entry) -> Unit)? = null) {
         val dayName = SimpleDateFormat("EEE", Locale.US)
         for ((i, e) in rows) {
             val next = sorted.getOrNull(i + 1)
@@ -787,6 +787,13 @@ class MainActivity : ThemedActivity(), SensorEventListener {
                     t.length - 1, t.length, 0)
                 text = t
                 setTextColor(themeColor(R.attr.appText))
+                if (onTap != null) {
+                    val ripple = TypedValue()
+                    theme.resolveAttribute(android.R.attr.selectableItemBackground, ripple, true)
+                    setBackgroundResource(ripple.resourceId)
+                    setPadding(0, (4 * dp).toInt(), 0, (4 * dp).toInt())
+                    setOnClickListener { onTap(e) }
+                }
             }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
                 topMargin = (2 * dp).toInt()
             })
@@ -862,11 +869,61 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             sorted.withIndex().filter { it.value.timeMs in dayStart until dayEnd && it.value.source != Source.UNKNOWN }
         if (rows.isNotEmpty()) {
             line("TIMELINE", 12f, R.attr.appMuted, bold = true, top = 16)
-            timelineRows(content, rows, sorted, live, now, dayStart)
+            // Tap a switch to change its time (1.5.07): only in this phone's own log.
+            val own = !EventLog.showsRemote(this)
+            val tap: ((EventLog.Entry) -> Unit)? = if (!own) null else fun(e: EventLog.Entry) {
+                sheet.dismiss()
+                changeTime(e, sorted) { showPatternDay(dayStart, dayEnd) }
+            }
+            timelineRows(content, rows, sorted, live, now, dayStart, tap)
+            line(if (own) "Tap a switch to change its time." else "To change a time, use ${otherPhoneName()}.",
+                12f, R.attr.appMuted, top = 8)
         }
         v.findViewById<View>(R.id.sheetDone).setOnClickListener { sheet.dismiss() }
         sheet.setContentView(v)
         sheet.show()
+    }
+
+    /**
+     * "Change the time" (1.5.07): when the app noticed a switch late (e.g. kahraba that came on at
+     * 10:29 AM but was logged at 11:23), set when it really happened. It must stay between the switches
+     * before and after it, on the same day, and not in the future. The other phones get the change too.
+     */
+    private fun changeTime(e: EventLog.Entry, sorted: List<EventLog.Entry>, then: () -> Unit) {
+        val i = sorted.indexOfFirst { it.timeMs == e.timeMs && it.source == e.source }
+        val prev = sorted.getOrNull(i - 1)?.timeMs ?: Long.MIN_VALUE
+        val next = sorted.getOrNull(i + 1)?.timeMs ?: Long.MAX_VALUE
+        val cal = java.util.Calendar.getInstance().apply { timeInMillis = e.timeMs }
+        val word = RemoteAlerts.word(e.source).lowercase()
+        android.app.TimePickerDialog(this, { _, h, m ->
+            val t = java.util.Calendar.getInstance().apply {
+                timeInMillis = e.timeMs
+                set(java.util.Calendar.HOUR_OF_DAY, h); set(java.util.Calendar.MINUTE, m)
+                set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
+            }.timeInMillis
+            val clock = { ms: Long -> PowerDetector.formatClock(ms) }
+            when {
+                t >= System.currentTimeMillis() -> toast("That time hasn't happened yet.")
+                t <= prev -> toast("It must be after the switch before it (${clock(prev)}).")
+                t >= next -> toast("It must be before the next switch (${clock(next)}).")
+                else -> {
+                    EventLog.changeTime(this, e.timeMs, t)
+                    // The switch that's on now: Always-on mode and the status show the new start too.
+                    if (next == Long.MAX_VALUE && MonitorState.running) {
+                        MonitorService.send(this, MonitorService.ACTION_SET_SINCE) {
+                            it.putExtra(MonitorService.EXTRA_OLD_SINCE, e.timeMs)
+                            it.putExtra(MonitorService.EXTRA_NEW_SINCE, t)
+                        }
+                    }
+                    RemoteAlerts.sendHistory(this)
+                    toast("${word.replaceFirstChar { it.uppercase() }} now starts at ${clock(t)}")
+                    refreshAll()
+                    then()
+                }
+            }
+        }, cal.get(java.util.Calendar.HOUR_OF_DAY), cal.get(java.util.Calendar.MINUTE), false).apply {
+            setTitle("When did $word really start?")
+        }.show()
     }
 
     /** The switch began with the power going off: a cut the moteur took over, power back after an outage, or a blink. */
