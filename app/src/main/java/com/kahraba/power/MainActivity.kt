@@ -754,43 +754,105 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             .sortedByDescending { it.value.timeMs }.take(4).reversed() // the last 4, in time order
         if (today.isNotEmpty()) {
             line("TODAY'S TIMELINE", 12f, R.attr.appMuted, bold = true, top = 12)
-            for ((i, e) in today) {
-                val next = sorted.getOrNull(i + 1)
-                val lasted = when {
-                    next != null -> "  (${KahrabaPattern.hours(next.timeMs - e.timeMs)})"
-                    running -> "  (${KahrabaPattern.hours(now - e.timeMs)} so far)"
-                    else -> ""
-                }
-                // "5:00 PM  ● Kahraba  (42m so far)", the dot in the source's colour, and a small grey
-                // crossed bolt when it began with a power cut (explained under the list).
-                val cut = isAfterCut(e)
-                val t = android.text.SpannableString(
-                    "${PowerDetector.formatClock(e.timeMs)}   ●  ${RemoteAlerts.word(e.source)}$lasted" + if (cut) "  \uFFFC" else "",
-                )
-                val dot = t.indexOf('●')
-                t.setSpan(android.text.style.ForegroundColorSpan(MonitorService.colorFor(e.source)), dot, dot + 1, 0)
-                b.addView(TextView(this).apply {
-                    textSize = 15f
-                    if (cut) t.setSpan(android.text.style.ImageSpan(cutMark(textSize.toInt()), android.text.style.ImageSpan.ALIGN_BASELINE),
-                        t.length - 1, t.length, 0)
-                    text = t
-                    setTextColor(themeColor(R.attr.appText))
-                }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                    topMargin = (2 * dp).toInt()
-                })
+            timelineRows(b, today, sorted, running, now)
+        }
+    }
+
+    /**
+     * Timeline rows ("5:00 PM  ● Kahraba  (42m so far)  ⌁"), for Today and a day's details: each with
+     * how long it lasted (until the next change in [sorted]), or "so far" for the one on now, and a
+     * small grey crossed bolt when it began with a power cut (explained under the list).
+     */
+    private fun timelineRows(into: LinearLayout, rows: List<IndexedValue<EventLog.Entry>>, sorted: List<EventLog.Entry>,
+                             running: Boolean, now: Long) {
+        for ((i, e) in rows) {
+            val next = sorted.getOrNull(i + 1)
+            val lasted = when {
+                next != null -> "  (${KahrabaPattern.hours(next.timeMs - e.timeMs)})"
+                running -> "  (${KahrabaPattern.hours(now - e.timeMs)} so far)"
+                else -> ""
             }
-            if (today.any { isAfterCut(it.value) }) {
-                val key = android.text.SpannableString("\uFFFC  after a power cut")
-                b.addView(TextView(this).apply {
-                    textSize = 12f
-                    key.setSpan(android.text.style.ImageSpan(cutMark(textSize.toInt()), android.text.style.ImageSpan.ALIGN_BASELINE), 0, 1, 0)
-                    text = key
-                    setTextColor(themeColor(R.attr.appMuted))
-                }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                    topMargin = (6 * dp).toInt()
-                })
+            val cut = isAfterCut(e)
+            val t = android.text.SpannableString(
+                "${PowerDetector.formatClock(e.timeMs)}   ●  ${RemoteAlerts.word(e.source)}$lasted" + if (cut) "  \uFFFC" else "",
+            )
+            val dot = t.indexOf('●')
+            t.setSpan(android.text.style.ForegroundColorSpan(MonitorService.colorFor(e.source)), dot, dot + 1, 0)
+            into.addView(TextView(this).apply {
+                textSize = 15f
+                if (cut) t.setSpan(android.text.style.ImageSpan(cutMark(textSize.toInt()), android.text.style.ImageSpan.ALIGN_BASELINE),
+                    t.length - 1, t.length, 0)
+                text = t
+                setTextColor(themeColor(R.attr.appText))
+            }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = (2 * dp).toInt()
+            })
+        }
+        if (rows.any { isAfterCut(it.value) }) {
+            val key = android.text.SpannableString("\uFFFC  after a power cut")
+            into.addView(TextView(this).apply {
+                textSize = 12f
+                key.setSpan(android.text.style.ImageSpan(cutMark(textSize.toInt()), android.text.style.ImageSpan.ALIGN_BASELINE), 0, 1, 0)
+                text = key
+                setTextColor(themeColor(R.attr.appMuted))
+            }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = (6 * dp).toInt()
+            })
+        }
+    }
+
+    /**
+     * A day of the Kahraba pattern, tapped (1.5.04): when kahraba was on that day, then its whole
+     * timeline. From the shown log (this phone's, or the other phone's).
+     */
+    private fun showPatternDay(dayStart: Long, dayEnd: Long) {
+        val now = System.currentTimeMillis()
+        val entries = EventLog.shown(this)
+        val live = EventLog.shownLive(this) && dayEnd > now
+        val sheet = BottomSheetDialog(this)
+        val v = layoutInflater.inflate(R.layout.sheet_day, null)
+        v.findViewById<TextView>(R.id.sheetTitle).text = SimpleDateFormat("EEEE", Locale.US).format(Date(dayStart))
+        v.findViewById<TextView>(R.id.sheetDate).text = SimpleDateFormat("d MMMM", Locale.US).format(Date(dayStart)) +
+            if (EventLog.showsRemote(this)) " · from ${otherPhoneName()}" else ""
+        v.findViewById<View>(R.id.sheetNote).visibility = View.GONE
+        val content = v.findViewById<LinearLayout>(R.id.sheetContent)
+        fun line(text: CharSequence, size: Float, color: Int, bold: Boolean = false, top: Int = 0) =
+            content.addView(TextView(this).apply {
+                this.text = text
+                textSize = size
+                setTextColor(themeColor(color))
+                if (bold) setTypeface(typeface, android.graphics.Typeface.BOLD)
+            }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = (top * dp).toInt()
+            })
+
+        val periods = KahrabaPattern.kahrabaPeriods(entries, dayStart, dayEnd, now, live || EventLog.shownLive(this))
+        val ran = KahrabaPattern.recordedMs(entries, dayStart, dayEnd, now, EventLog.shownLive(this))
+        when {
+            ran < 60_000 -> line("Nothing recorded this day: Always-on mode wasn't running.", 15f, R.attr.appMuted)
+            periods.isEmpty() -> line("No kahraba seen this day.", 17f, R.attr.appText, bold = true)
+            else -> {
+                line("Kahraba for ${KahrabaPattern.hours(periods.sumOf { it.end - it.start })}", 17f, R.attr.appText, bold = true)
+                for (p in periods) {
+                    val onNow = live && p.end >= now - 1_000
+                    val t = android.text.SpannableString(
+                        if (onNow) "●  Since ${PowerDetector.formatClock(p.start)}  (${KahrabaPattern.hours(now - p.start)} so far)"
+                        else "●  ${PowerDetector.formatClock(p.start)} – ${PowerDetector.formatClock(p.end)}  (${KahrabaPattern.hours(p.end - p.start)})",
+                    )
+                    t.setSpan(android.text.style.ForegroundColorSpan(MonitorService.colorFor(Source.KAHRABA)), 0, 1, 0)
+                    line(t, 15f, R.attr.appText, top = 4)
+                }
             }
         }
+        val sorted = entries.sortedBy { it.timeMs }
+        val rows = sorted.withIndex().filter { it.value.timeMs in dayStart until dayEnd && it.value.source != Source.UNKNOWN }
+        if (rows.isNotEmpty()) {
+            line("TIMELINE", 12f, R.attr.appMuted, bold = true, top = 16)
+            timelineRows(content, rows, sorted, live, now)
+        }
+        v.findViewById<View>(R.id.sheetDone).setOnClickListener { sheet.dismiss() }
+        sheet.setContentView(v)
+        sheet.show()
     }
 
     /** The switch began with the power going off: a cut the moteur took over, power back after an outage, or a blink. */
@@ -1833,6 +1895,11 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         val row = LinearLayout(this).apply {
             gravity = Gravity.CENTER_VERTICAL
             setPadding(0, (3 * dp).toInt(), 0, (3 * dp).toInt())
+            // Tap a day for when kahraba was on, and its timeline (1.5.04).
+            val ripple = TypedValue()
+            theme.resolveAttribute(android.R.attr.selectableItemBackground, ripple, true)
+            setBackgroundResource(ripple.resourceId)
+            setOnClickListener { showPatternDay(dayStart, dayEnd) }
         }
         row.addView(TextView(this).apply {
             text = label

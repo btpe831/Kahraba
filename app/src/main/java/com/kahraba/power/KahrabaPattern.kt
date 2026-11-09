@@ -82,6 +82,14 @@ object KahrabaPattern {
         return out
     }
 
+    /** Kahraba periods in [from, to) (touching ones joined), for a day's details (1.5.04). */
+    fun kahrabaPeriods(entries: List<EventLog.Entry>, from: Long, to: Long, nowMs: Long, running: Boolean): List<Span> =
+        kahrabaBlocks(spans(entries, nowMs, running), from, minOf(to, nowMs))
+
+    /** How long Always-on mode recorded in [from, to). */
+    fun recordedMs(entries: List<EventLog.Entry>, from: Long, to: Long, nowMs: Long, running: Boolean): Long =
+        recorded(spans(entries, nowMs, running), from, minOf(to, nowMs))
+
     private fun recorded(spans: List<Span>, from: Long, to: Long) =
         spans.sumOf { maxOf(0L, minOf(it.end, to) - maxOf(it.start, from)) }
 
