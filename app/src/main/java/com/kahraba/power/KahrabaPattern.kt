@@ -86,6 +86,13 @@ object KahrabaPattern {
     fun kahrabaPeriods(entries: List<EventLog.Entry>, from: Long, to: Long, nowMs: Long, running: Boolean): List<Span> =
         kahrabaBlocks(spans(entries, nowMs, running), from, minOf(to, nowMs))
 
+    /**
+     * Whole kahraba periods that touch [from, to), not cut at its edges: one from 11:30 PM to 1:31 AM
+     * shows in full on both days (1.5.05).
+     */
+    fun kahrabaPeriodsTouching(entries: List<EventLog.Entry>, from: Long, to: Long, nowMs: Long, running: Boolean): List<Span> =
+        kahrabaBlocks(spans(entries, nowMs, running), 0L, nowMs).filter { it.end > from && it.start < minOf(to, nowMs) }
+
     /** How long Always-on mode recorded in [from, to). */
     fun recordedMs(entries: List<EventLog.Entry>, from: Long, to: Long, nowMs: Long, running: Boolean): Long =
         recorded(spans(entries, nowMs, running), from, minOf(to, nowMs))

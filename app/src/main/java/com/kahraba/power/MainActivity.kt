@@ -764,7 +764,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
      * small grey crossed bolt when it began with a power cut (explained under the list).
      */
     private fun timelineRows(into: LinearLayout, rows: List<IndexedValue<EventLog.Entry>>, sorted: List<EventLog.Entry>,
-                             running: Boolean, now: Long) {
+                             running: Boolean, now: Long, dayStart: Long? = null) {
+        val dayName = SimpleDateFormat("EEE", Locale.US)
         for ((i, e) in rows) {
             val next = sorted.getOrNull(i + 1)
             val lasted = when {
@@ -774,7 +775,9 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             }
             val cut = isAfterCut(e)
             val t = android.text.SpannableString(
-                "${PowerDetector.formatClock(e.timeMs)}   ●  ${RemoteAlerts.word(e.source)}$lasted" + if (cut) "  \uFFFC" else "",
+                // Before the day (what was on at midnight): "11:30 PM Sun".
+                "${PowerDetector.formatClock(e.timeMs)}${if (dayStart != null && e.timeMs < dayStart) " " + dayName.format(Date(e.timeMs)) else ""}" +
+                    "   ●  ${RemoteAlerts.word(e.source)}$lasted" + if (cut) "  \uFFFC" else "",
             )
             val dot = t.indexOf('●')
             t.setSpan(android.text.style.ForegroundColorSpan(MonitorService.colorFor(e.source)), dot, dot + 1, 0)
@@ -826,18 +829,26 @@ class MainActivity : ThemedActivity(), SensorEventListener {
                 topMargin = (top * dp).toInt()
             })
 
-        val periods = KahrabaPattern.kahrabaPeriods(entries, dayStart, dayEnd, now, live || EventLog.shownLive(this))
-        val ran = KahrabaPattern.recordedMs(entries, dayStart, dayEnd, now, EventLog.shownLive(this))
+        val running = EventLog.shownLive(this)
+        // The day's total counts only its own hours; each period is shown whole, with the other day's
+        // name where it starts before midnight or runs past it (1.5.05).
+        val inDay = KahrabaPattern.kahrabaPeriods(entries, dayStart, dayEnd, now, running)
+        val periods = KahrabaPattern.kahrabaPeriodsTouching(entries, dayStart, dayEnd, now, running)
+        val ran = KahrabaPattern.recordedMs(entries, dayStart, dayEnd, now, running)
+        val dayName = SimpleDateFormat("EEEE", Locale.US).format(Date(dayStart))
+        val shortDay = SimpleDateFormat("EEE", Locale.US)
+        fun at(ms: Long) = PowerDetector.formatClock(ms) +
+            if (ms < dayStart || ms >= dayEnd) " " + shortDay.format(Date(ms)) else ""
         when {
-            ran < 60_000 -> line("Nothing recorded this day: Always-on mode wasn't running.", 15f, R.attr.appMuted)
-            periods.isEmpty() -> line("No kahraba seen this day.", 17f, R.attr.appText, bold = true)
+            ran < 60_000 && periods.isEmpty() -> line("Nothing recorded this day: Always-on mode wasn't running.", 15f, R.attr.appMuted)
+            periods.isEmpty() -> line("No kahraba on $dayName.", 17f, R.attr.appText, bold = true)
             else -> {
-                line("Kahraba for ${KahrabaPattern.hours(periods.sumOf { it.end - it.start })}", 17f, R.attr.appText, bold = true)
+                line("Kahraba on $dayName: ${KahrabaPattern.hours(inDay.sumOf { it.end - it.start })}", 17f, R.attr.appText, bold = true)
                 for (p in periods) {
-                    val onNow = live && p.end >= now - 1_000
+                    val onNow = running && p.end >= now - 1_000
                     val t = android.text.SpannableString(
-                        if (onNow) "●  Since ${PowerDetector.formatClock(p.start)}  (${KahrabaPattern.hours(now - p.start)} so far)"
-                        else "●  ${PowerDetector.formatClock(p.start)} – ${PowerDetector.formatClock(p.end)}  (${KahrabaPattern.hours(p.end - p.start)})",
+                        if (onNow) "●  Since ${at(p.start)}  (${KahrabaPattern.hours(now - p.start)} so far)"
+                        else "●  ${at(p.start)} – ${at(p.end)}  (${KahrabaPattern.hours(p.end - p.start)})",
                     )
                     t.setSpan(android.text.style.ForegroundColorSpan(MonitorService.colorFor(Source.KAHRABA)), 0, 1, 0)
                     line(t, 15f, R.attr.appText, top = 4)
@@ -845,10 +856,13 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             }
         }
         val sorted = entries.sortedBy { it.timeMs }
-        val rows = sorted.withIndex().filter { it.value.timeMs in dayStart until dayEnd && it.value.source != Source.UNKNOWN }
+        // The day's switches, starting with whatever was on at midnight (unless Always-on was stopped).
+        val before = sorted.withIndex().lastOrNull { it.value.timeMs < dayStart }?.takeIf { it.value.source != Source.UNKNOWN }
+        val rows = listOfNotNull(before) +
+            sorted.withIndex().filter { it.value.timeMs in dayStart until dayEnd && it.value.source != Source.UNKNOWN }
         if (rows.isNotEmpty()) {
             line("TIMELINE", 12f, R.attr.appMuted, bold = true, top = 16)
-            timelineRows(content, rows, sorted, live, now)
+            timelineRows(content, rows, sorted, live, now, dayStart)
         }
         v.findViewById<View>(R.id.sheetDone).setOnClickListener { sheet.dismiss() }
         sheet.setContentView(v)

@@ -1,6 +1,9 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.5.05
+- A day's details show kahraba that ran past midnight in full on both days (for example 11:30 PM – 1:31 AM), and the timeline starts with what was on at midnight. Each day's total still counts only its own hours.
+
 ## 1.5.04
 - Amps calculator: add an appliance by its amps when you don't know the watts (for example, a water heater that uses 4 A).
 - Quick convert now works both ways: watts to amps, and amps to watts.

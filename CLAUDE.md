@@ -136,7 +136,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
-- Released: 1.5.04 (Amps calculator: appliances by amps (`Item.amps`, counts as its amps at any voltage), Quick
+- Released: 1.5.05 (day details: whole periods across midnight on both days, `kahrabaPeriodsTouching`; timeline starts with what was on at midnight; totals per day only). 1.5.04 (Amps calculator: appliances by amps (`Item.amps`, counts as its amps at any voltage), Quick
   convert both ways; tap a Kahraba pattern day (or Today's bar) for its kahraba periods and timeline
   (`showPatternDay`, `timelineRows`, `KahrabaPattern.kahrabaPeriods`, `DayPeriodsTest`)). 1.5.03 (Glance card holds only the word, at its own width and shrunk to fit; "since …" centred under it). 1.5.02 (Glance screen style Coloured card (default) / Word, brightness Low 8% / Medium 35% (default) / Full,
   `Prefs.glanceStyle/glanceBright`, buttons on the Glance screen for 6 s and in Settings › Always-on mode; no full-screen

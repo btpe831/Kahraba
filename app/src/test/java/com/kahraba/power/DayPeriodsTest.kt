@@ -22,5 +22,11 @@ class DayPeriodsTest {
         val p = KahrabaPattern.kahrabaPeriods(log, day.first, day.last + 1, now, running = true)
         assertEquals(listOf(24 * h to 25 * h, 30 * h to 32 * h, 41 * h to 42 * h), p.map { it.start to it.end })
         assertEquals(18 * h, KahrabaPattern.recordedMs(log, day.first, day.last + 1, now, running = true))
+        // Whole periods (1.5.05): the one from 11 PM the day before shows in full, 23:00-01:00.
+        val whole = KahrabaPattern.kahrabaPeriodsTouching(log, day.first, day.last + 1, now, running = true)
+        assertEquals(listOf(23 * h to 25 * h, 30 * h to 32 * h, 41 * h to 42 * h), whole.map { it.start to it.end })
+        // And the day before sees it whole too.
+        val before = KahrabaPattern.kahrabaPeriodsTouching(log, 0L, 24 * h, now, running = true)
+        assertEquals(listOf(23 * h to 25 * h), before.map { it.start to it.end })
     }
 }
