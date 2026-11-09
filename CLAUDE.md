@@ -136,7 +136,9 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
-- Released: 1.5.03 (Glance card holds only the word, at its own width and shrunk to fit; "since …" centred under it). 1.5.02 (Glance screen style Coloured card (default) / Word, brightness Low 8% / Medium 35% (default) / Full,
+- Released: 1.5.04 (Amps calculator: appliances by amps (`Item.amps`, counts as its amps at any voltage), Quick
+  convert both ways; tap a Kahraba pattern day (or Today's bar) for its kahraba periods and timeline
+  (`showPatternDay`, `timelineRows`, `KahrabaPattern.kahrabaPeriods`, `DayPeriodsTest`)). 1.5.03 (Glance card holds only the word, at its own width and shrunk to fit; "since …" centred under it). 1.5.02 (Glance screen style Coloured card (default) / Word, brightness Low 8% / Medium 35% (default) / Full,
   `Prefs.glanceStyle/glanceBright`, buttons on the Glance screen for 6 s and in Settings › Always-on mode; no full-screen
   colour (wear, light next to the sensor)). 1.5.01 (Always-on screen: everything in the coloured card (Start/Stop, Glance, It's kahraba/moteur), readings
   in one row and ranges in one line so the graph fits on the first screen; menu › Tools (Light meter, Amps calculator);
