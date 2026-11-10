@@ -86,6 +86,9 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   10:29:46 in two steps 74 s apart, 1,290 -> 1,566 -> 1,683 lux; the creep check rejected the tail at 1,566, alert 12:11
   dated 11:23 by stillness; 1.5.06 `twoSteps`: a first step >= 12% within `TWO_STEPS_MS` (2 min) is part of the switch,
   alert 10:36. The 45-minute cases so far were missed clear jumps; only 3 Nov 10:35 was a truly quiet kahraba).
+  `nov10-pixel2-raw-flicker-kahraba.csv` (`FlickerKahrabaTest`; 10 Nov 06:00-12:00, ms from 06:00: daytime moteur ~1,100
+  dead still 9:12-9:58 (46 min!); kahraba 9:58:40 with a switch-over flicker (811 lux for 0.1 s) and only +11%; 1.5.07's
+  45-min stillness rule alerted 10:06 dated 9:18 and would have fired with no kahraba at all. 1.5.08: flicker rule, alert 10:03).
 - Kahraba is dead still (zero wobble for 20+ min); a daytime moteur wobbles most minutes. In the
   evening a moteur also calms down and creeps brighter, but gradually (30 Oct 20:40-21:45).
 - Voltmeter: moteur 208 V (31 Oct, 8 pm) to 223 V; kahraba 231-234 V (1 Nov morning too).
@@ -106,10 +109,16 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 - Wobble stops (1.2.0): the moteur was busy (>= 10 wobbling seconds in a minute; its level = median
   of the 10 min before), then 5 min of completely still light >= 10% brighter -> kahraba. The still
   stretch must start within 5 min of the last busy moment, or after a power cut/outage since then.
-- Daytime stillness (1.4.09, `quietDaytime`, `QuietKahrabaTest`): from moteur, 45 min with <= 2 separate wobbles,
+- Switch-over flicker (1.5.08, `watchSwitchFlicker`, rule 1b, `FlickerKahrabaTest`): the changeover switch dips the
+  light 15-30% for < 1 s as kahraba comes on (seen at most arrivals; not all). Dip >= 15% (`SWITCH_DIP`) back within 1.5 s,
+  then still from 5 s after it for 2 min and >= 8% (`SWITCH_FLICKER_RISE_PCT`) above the 3 min before -> kahraba, dated
+  at the flicker. Busy moteurs flicker too (31 Oct: dozens), but after a >= 15% dip a still moteur came back at most +5.7%
+  (7 Nov 11:05); kahraba +11% (3 Nov 10:35, 10 Nov 9:58) to +31%.
+- Daytime stillness (1.4.09, 60 min since 1.5.08, was 45; last resort): from moteur, 60 min with <= 2 separate wobbles,
   all judged, both ends 7 AM-7 PM (`hourOf`, `PowerDetector.localHour` in the app; tests pass `recordingClock`), light
   now >= the 15 min before -> kahraba since the start of the 45 min. Longest still spell: daytime moteur 24 min, kahraba
-  71; night moteur 39 (2 Nov), 31 (4 Nov) and 60 (5 Nov), so never at night. 3 Nov 10:35 kahraba was only ~5% brighter: alert 11:23.
+  71; night moteur 39 (2 Nov), 31 (4 Nov) and 60 (5 Nov), so never at night; daytime moteur 46 on 10 Nov, hence 60.
+  `longSeconds` kept `LONG_KEEP_MS` (76 min). 3 Nov 10:35 kahraba: 45-min alert 11:23; flicker rule 10:40.
 - Light switched off (1.4.08): light < 20% of the level before for 30 s while the charger stays on -> alert (no
   beep, no switch); in a cut the charger goes off too. When it's back (>= 50%), the light history starts again.
 - Phone moved (1.2.0): motion, then the charger off within 10 s -> not a cut: "Phone moved – please
@@ -140,7 +149,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
-- Released: 1.5.07: "Change the time" of a switch from a day's timeline (own log only; `EventLog.changeTime`, `Combine.retime` notes "(time changed by you)"; the current switch also updates the running detector via `MonitorService.ACTION_SET_SINCE`; history batches now replace the other phone's copy of their span, `EventLog.replaceRemote`/`Combine.replaceRange`, `ChangeTimeTest`). 1.5.06 (kahraba arriving in two steps, `twoSteps`, `TwoStepKahrabaTest`; 38 more Did you know? facts, 65 in all). 1.5.05 (day details: whole periods across midnight on both days, `kahrabaPeriodsTouching`; timeline starts with what was on at midnight; totals per day only). 1.5.04 (Amps calculator: appliances by amps (`Item.amps`, counts as its amps at any voltage), Quick
+- Released: 1.5.08 (switch-over flicker rule; stillness 60 min; Today timeline starts with what was on at midnight; overnight kahraba "from 11:18 PM yesterday"). 1.5.07: "Change the time" of a switch from a day's timeline (own log only; `EventLog.changeTime`, `Combine.retime` notes "(time changed by you)"; the current switch also updates the running detector via `MonitorService.ACTION_SET_SINCE`; history batches now replace the other phone's copy of their span, `EventLog.replaceRemote`/`Combine.replaceRange`, `ChangeTimeTest`). 1.5.06 (kahraba arriving in two steps, `twoSteps`, `TwoStepKahrabaTest`; 38 more Did you know? facts, 65 in all). 1.5.05 (day details: whole periods across midnight on both days, `kahrabaPeriodsTouching`; timeline starts with what was on at midnight; totals per day only). 1.5.04 (Amps calculator: appliances by amps (`Item.amps`, counts as its amps at any voltage), Quick
   convert both ways; tap a Kahraba pattern day (or Today's bar) for its kahraba periods and timeline
   (`showPatternDay`, `timelineRows`, `KahrabaPattern.kahrabaPeriods`, `DayPeriodsTest`)). 1.5.03 (Glance card holds only the word, at its own width and shrunk to fit; "since …" centred under it). 1.5.02 (Glance screen style Coloured card (default) / Word, brightness Low 8% / Medium 35% (default) / Full,
   `Prefs.glanceStyle/glanceBright`, buttons on the Glance screen for 6 s and in Settings › Always-on mode; no full-screen

@@ -128,7 +128,7 @@ class PowerDetector(
     private var lightOffAlert = false
 
     /**
-     * The last [BUSY_KEEP_MS] of light, second by second, to remember the latest busy moteur (light
+     * The last [LONG_KEEP_MS] of light, second by second, to remember the latest busy moteur (light
      * wobbling again and again: surely the moteur) and how bright it was. Kept through power cuts
      * (the phone hasn't moved), cleared when the phone moves.
      */
@@ -189,7 +189,39 @@ class PowerDetector(
      * short dips that fall between ticks, so they count as wobble.
      */
     fun addReading(nowMs: Long, lux: Double) {
-        if (nowMs >= motionUntilMs) samples.addLast(Sample(nowMs, lux))
+        if (nowMs < motionUntilMs) return
+        watchSwitchFlicker(nowMs, lux)
+        samples.addLast(Sample(nowMs, lux))
+    }
+
+    /** A dip under way: when it began and the light just before it. */
+    private var dipAtMs = -1L
+    private var dipRef = 0.0
+    /** The last switch-over flicker: a short, deep dip with the light straight back (or -1). */
+    private var switchFlickerMs = -1L
+
+    /**
+     * The changeover switch flicks the light as kahraba comes on: down 15-30% for a fraction of a
+     * second, then straight back (seen at most switches to kahraba, 31 Oct to 10 Nov).
+     */
+    private fun watchSwitchFlicker(now: Long, lux: Double) {
+        if (dipAtMs < 0) {
+            val last = samples.lastOrNull()?.lux ?: return
+            if (lux >= last * 0.9) return
+            val ref = median(samples.filter { it.t in (now - 20_000)..(now - 2_000) }.map { it.lux }) ?: return
+            if (ref >= config.minLux && lux < ref * (1 - SWITCH_DIP) && lux > ref * 0.25) {
+                dipAtMs = now
+                dipRef = ref
+            }
+            return
+        }
+        when {
+            lux <= dipRef * 0.25 || now - dipAtMs > SWITCH_DIP_MS -> dipAtMs = -1L
+            lux >= dipRef * 0.95 -> {
+                switchFlickerMs = dipAtMs
+                dipAtMs = -1L
+            }
+        }
     }
 
     /**
@@ -400,7 +432,7 @@ class PowerDetector(
         lightStatus = status
         seconds.addLast(Second(now, flicker, level))
         longSeconds.addLast(Second(now, flicker, level))
-        while (longSeconds.isNotEmpty() && longSeconds.first().t < now - BUSY_KEEP_MS) longSeconds.removeFirst()
+        while (longSeconds.isNotEmpty() && longSeconds.first().t < now - LONG_KEEP_MS) longSeconds.removeFirst()
         // Separate wobbles: kahraba has at most one in 5 minutes (a step in brightness), a moteur
         // three or more, even when calm (1 Nov: 222 V evening moteur).
         if (level == null) judgedSinceMs = -1L else if (judgedSinceMs < 0) judgedSinceMs = now
@@ -524,6 +556,25 @@ class PowerDetector(
                 }
             }
 
+            // 1b) The changeover switch flickered and the light came back clearly brighter, and has
+            //    stayed completely still since (10 Nov, 9:58: +11%, too little for (1)). The moteur
+            //    flickers like that too, but then never came back more than ~6% brighter and still.
+            val f = switchFlickerMs
+            if (source == Source.MOTEUR && f >= 0 && recent != null && now - f >= minutesMs(need) + FLICKER_WINDOW_MS + 1_000) {
+                val after = seconds.filter { it.t > f + FLICKER_WINDOW_MS + 1_000 }
+                val steadyAfter = after.none { (it.flicker ?: 0.0) > thr } && after.count { it.flicker != null } >= 0.7 * after.size
+                val before = seconds.filter { it.t in (f - 5_000 - minutesMs(REFERENCE_MINUTES))..(f - 5_000) }.mapNotNull { it.level }
+                if (!steadyAfter || now - f > SWITCH_FLICKER_KEEP_MS) switchFlickerMs = -1L
+                else if (before.size >= 0.7 * REFERENCE_MINUTES * 60) {
+                    val rise = (recent / median(before)!! - 1) * 100
+                    if (rise >= SWITCH_FLICKER_RISE_PCT && rise <= config.levelRiseMaxPct) {
+                        switchFlickerMs = -1L
+                        propose(now, f, "Light flickered as the power switched and came back ${rise.toInt()}% brighter – kahraba is back")
+                        return
+                    }
+                }
+            }
+
             // 2) The moteur was busy (wobbling), then the light went completely still and is clearly
             //    brighter than that moteur. On 31 Oct kahraba came at 13:00 in steps over 5 minutes
             //    (4090 -> 3642 lux), too slowly for (1), after half an hour of busy moteur at ~3150.
@@ -550,10 +601,10 @@ class PowerDetector(
                 }
             }
 
-            // 2b) Daytime stillness. In the day the moteur never stayed still for long (at most 24 min
-            //    without a wobble), kahraba often for an hour; at night a calm moteur can be as still
-            //    as kahraba (4 Nov), so only 7 AM-7 PM. On 3 Nov, 10:35, kahraba came only ~5% brighter
-            //    than the morning moteur and every other rule missed it; it ended with a 1m 13s cut.
+            // 2b) Daytime stillness, the last resort. In the day the moteur rarely stays still for long
+            //    (24 min until 10 Nov, then 46), kahraba often for an hour; at night a calm moteur can be
+            //    as still as kahraba (4 Nov), so only 7 AM-7 PM. Made for 3 Nov, 10:35 (kahraba only a
+            //    little brighter), which (1b) now finds at once.
             if (source == Source.MOTEUR && quietDaytime(now)) {
                 val from = now - QUIET_MS
                 propose(now, from, "Light stayed still for ${QUIET_MS / 60_000} minutes – a daytime moteur doesn't – kahraba is back")
@@ -600,7 +651,7 @@ class PowerDetector(
     private fun quietDaytime(now: Long): Boolean {
         val hour = hourOf ?: return false
         val from = now - QUIET_MS
-        // Both ends in the daytime (and it's only 45 minutes, so the same day).
+        // Both ends in the daytime (and it's only an hour, so the same day).
         if (hour(from) !in QUIET_DAY_FROM until QUIET_DAY_TO || hour(now) !in QUIET_DAY_FROM until QUIET_DAY_TO) return false
         if (judgedSinceMs < 0 || judgedSinceMs > from || historyStartMs > from) return false
         if (quietEpisodes.count { it > from } > QUIET_MAX_WOBBLES) return false
@@ -710,6 +761,8 @@ class PowerDetector(
         seconds.clear()
         historyStartMs = now
         darkStartMs = null
+        dipAtMs = -1L
+        switchFlickerMs = -1L
     }
 
     companion object {
@@ -740,8 +793,11 @@ class PowerDetector(
         const val EPISODE_GAP_S = 5
         /** A busy moteur is remembered this long. */
         const val BUSY_KEEP_MS = 60 * 60_000L
-        /** Daytime stillness (1.4.09): this long with at most [QUIET_MAX_WOBBLES] wobbles. */
-        const val QUIET_MS = 45 * 60_000L
+        /**
+         * Daytime stillness (1.4.09): this long with at most [QUIET_MAX_WOBBLES] wobbles. 45 minutes
+         * until 1.5.08: on 10 Nov a daytime moteur was still for 46 (9:12-9:58).
+         */
+        const val QUIET_MS = 60 * 60_000L
         const val QUIET_MAX_WOBBLES = 2
         /** The light before the still stretch it must not be dimmer than. */
         const val QUIET_REF_MS = 15 * 60_000L
@@ -774,6 +830,15 @@ class PowerDetector(
         const val BEFORE_SPREAD = 0.06
         /** Kahraba arriving in two steps: at most this long between them (9 Nov: 74 s). */
         const val TWO_STEPS_MS = 2 * 60_000L
+        /** How long [longSeconds] is kept: the busy moteur, and the stillness rule with its level before. */
+        val LONG_KEEP_MS = maxOf(BUSY_KEEP_MS, QUIET_MS + QUIET_REF_MS + 60_000L)
+        /** Switch-over flicker: the light dips at least this much (fraction)… */
+        const val SWITCH_DIP = 0.15
+        /** …and is back within this long. */
+        const val SWITCH_DIP_MS = 1_500L
+        /** Then still and at least this much brighter (%) than the 3 minutes before. */
+        const val SWITCH_FLICKER_RISE_PCT = 8.0
+        const val SWITCH_FLICKER_KEEP_MS = 4 * 60_000L
         const val SAMPLE_KEEP_MS = 30_000L
         const val DISTURBANCE_PCT = 25.0
         // The moteur took 75 s to come on during the 26 Oct cut.

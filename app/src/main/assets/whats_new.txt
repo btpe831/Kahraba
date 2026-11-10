@@ -2,6 +2,8 @@
 # Plain words about what's improved; no dates or times. Newest first.
 
 ## 1.5.08
+- Kahraba is spotted within minutes when it comes on only a little brighter: the app now notices the quick flicker the light gives as the power switches over. The alert also shows the right start time.
+- Fewer false kahraba alerts: a very calm moteur can stay perfectly still for a long time, so the app now waits a full hour of still light before relying on stillness alone.
 - Today's timeline starts with what was on at midnight, such as kahraba that began the evening before.
 - Today's summary says when overnight kahraba really began (“from 11:18 PM yesterday to 1:18 AM”), instead of “12:00 AM”.
 
