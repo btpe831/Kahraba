@@ -123,10 +123,18 @@ object KahrabaPattern {
             sb.append("No kahraba seen today.")
         } else {
             val total = blocks.sumOf { it.end - it.start }
-            val times = blocks.mapIndexed { i, b ->
-                if (onNow && i == blocks.lastIndex) "since ${clock(b.start)}" else "${clock(b.start)} to ${clock(b.end)}"
+            // Kahraba that began before midnight says so ("11:18 PM yesterday to 1:18 AM"), not "12:00 AM":
+            // the total still counts only today's part (1.5.08).
+            val whole = kahrabaBlocks(spans, 0L, nowMs)
+            fun began(b: Span): String {
+                val f = whole.firstOrNull { it.start < dayStart && it.end > dayStart && b.start <= dayStart }
+                return if (f != null) "${clock(f.start)} yesterday" else clock(b.start)
             }
-            sb.append("Kahraba for ${hours(total)}: ")
+            val fromYesterday = blocks.any { b -> whole.any { it.start < dayStart && it.end > dayStart } && b.start <= dayStart }
+            val times = blocks.mapIndexed { i, b ->
+                if (onNow && i == blocks.lastIndex) "since ${began(b)}" else "${if (i == 0 && fromYesterday) "from " else ""}${began(b)} to ${clock(b.end)}"
+            }
+            sb.append(if (fromYesterday) "Kahraba for ${hours(total)} today: " else "Kahraba for ${hours(total)}: ")
             sb.append(if (times.size == 1) times[0] else times.dropLast(1).joinToString(", ") + " and " + times.last())
             sb.append(".")
         }

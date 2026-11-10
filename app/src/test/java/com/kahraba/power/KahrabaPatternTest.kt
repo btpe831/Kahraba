@@ -128,6 +128,22 @@ class KahrabaOverviewTest {
     }
 
     @Test
+    fun kahrabaFromLastNightSaysWhenItBegan() = inZone {
+        // 1.5.08: kahraba from 11:18 PM, cut at 1:18 AM; then 9:18 AM to 12:01 PM. Not "12:00 AM to 1:18 AM".
+        val night = listOf(
+            EventLog.Entry(at(1, 23, 18), Source.KAHRABA, back),
+            EventLog.Entry(at(2, 1, 18), Source.MOTEUR, cut),
+            EventLog.Entry(at(2, 9, 18), Source.KAHRABA, back),
+            EventLog.Entry(at(2, 12, 1), Source.MOTEUR, cut),
+        )
+        val text = KahrabaPattern.today(night, at(2, 13, 26), running = true, dayStart = midnight(2))
+        assertEquals("Kahraba for 4h 1m today: from 11:18 PM yesterday to 1:18 AM and 9:18 AM to 12:01 PM. 2 power cuts.", text)
+        // Still on: "since 11:18 PM yesterday".
+        val onNow = KahrabaPattern.today(night.take(1), at(2, 0, 30), running = true, dayStart = midnight(2))
+        assertEquals("Kahraba for 30m today: since 11:18 PM yesterday. No power cuts.", onNow)
+    }
+
+    @Test
     fun stoppedTimeIsNotRecordedTime() = inZone {
         val stopped = log + EventLog.Entry(at(2, 12, 30), Source.UNKNOWN, "Always-on mode stopped")
         val text = KahrabaPattern.today(stopped, at(2, 18, 0), running = false, dayStart = midnight(2))
