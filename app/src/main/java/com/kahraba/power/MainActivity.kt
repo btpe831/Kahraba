@@ -750,11 +750,14 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         // The last few switches today, newest first.
         // Each with how long it lasted (until the next change), or "so far" for the one on now.
         val sorted = entries.sortedBy { it.timeMs }
-        val today = sorted.withIndex().filter { it.value.timeMs >= dayStart && it.value.source != Source.UNKNOWN }
-            .sortedByDescending { it.value.timeMs }.take(4).reversed() // the last 4, in time order
+        // Starting with whatever was on at midnight, from yesterday ("11:18 PM Mon ● Kahraba"), unless
+        // Always-on was stopped then (1.5.08). The last 4, in time order.
+        val before = sorted.withIndex().lastOrNull { it.value.timeMs < dayStart }?.takeIf { it.value.source != Source.UNKNOWN }
+        val today = (listOfNotNull(before) +
+            sorted.withIndex().filter { it.value.timeMs >= dayStart && it.value.source != Source.UNKNOWN }).takeLast(4)
         if (today.isNotEmpty()) {
             line("TODAY'S TIMELINE", 12f, R.attr.appMuted, bold = true, top = 12)
-            timelineRows(b, today, sorted, running, now)
+            timelineRows(b, today, sorted, running, now, dayStart)
         }
     }
 
