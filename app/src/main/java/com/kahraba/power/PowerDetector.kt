@@ -449,9 +449,11 @@ class PowerDetector(
         while (quietEpisodes.isNotEmpty() && quietEpisodes.first() < now - QUIET_MS - 60_000) quietEpisodes.removeFirst()
         if (flicker != null && flicker > config.flickerThresholdPct) {
             // Busy: wobbling again and again within a minute (one step in brightness only shows for a
-            // few seconds). Its level is the typical light over the minutes before.
+            // few seconds), and in several of the last 10 minutes: a calm evening moteur creeping up two
+            // steps at once is not busy (11 Nov, 18:54: a false kahraba). Its level is the typical light
+            // over the minutes before.
             val wobbles = longSeconds.count { it.t > now - 60_000 && (it.flicker ?: 0.0) > config.flickerThresholdPct }
-            if (wobbles >= BUSY_WOBBLES) {
+            if (wobbles >= BUSY_WOBBLES && busyMinutes(now) >= BUSY_MINUTES) {
                 lastBusyMs = now
                 val levels = longSeconds.filter { it.t > now - BUSY_LEVEL_MS }.mapNotNull { it.level }
                 if (levels.size >= BUSY_LEVEL_MS / 2_000) busyLevel = median(levels)
@@ -461,6 +463,13 @@ class PowerDetector(
         val keepMs = (maxOf(config.steadyMinutes + REFERENCE_MINUTES, config.flickerMinutes) * 60_000).roundToLong() +
             SWITCH_MS + 60_000
         while (seconds.isNotEmpty() && seconds.first().t < now - keepMs) seconds.removeFirst()
+    }
+
+    /** How many of the last 10 minutes had [BUSY_WOBBLES] or more wobbling seconds. */
+    private fun busyMinutes(now: Long): Int = (0 until 10).count { k ->
+        val from = now - (k + 1) * 60_000L
+        val to = now - k * 60_000L
+        longSeconds.count { it.t > from && it.t <= to && (it.flicker ?: 0.0) > config.flickerThresholdPct } >= BUSY_WOBBLES
     }
 
     /** Start times of separate wobbles (after [EPISODE_GAP_S] calm seconds). */
@@ -810,6 +819,11 @@ class PowerDetector(
             java.util.Calendar.getInstance().apply { timeInMillis = ms }.get(java.util.Calendar.HOUR_OF_DAY)
         /** Wobbling seconds within a minute that make the moteur "busy". */
         const val BUSY_WOBBLES = 10
+        /**
+         * …in at least this many of the last 10 minutes (1.5.09). A busy moteur: 3-10 (30 Oct, 29 Oct,
+         * 31 Oct); a calm evening moteur creeping up: 1 (11 Nov).
+         */
+        const val BUSY_MINUTES = 3
         /** The busy moteur's level: the typical light over this long. */
         const val BUSY_LEVEL_MS = 10 * 60_000L
         /** Minutes before the steady stretch used as the "before" brightness. */

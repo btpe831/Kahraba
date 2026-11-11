@@ -89,6 +89,9 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   `nov10-pixel2-raw-flicker-kahraba.csv` (`FlickerKahrabaTest`; 10 Nov 06:00-12:00, ms from 06:00: daytime moteur ~1,100
   dead still 9:12-9:58 (46 min!); kahraba 9:58:40 with a switch-over flicker (811 lux for 0.1 s) and only +11%; 1.5.07's
   45-min stillness rule alerted 10:06 dated 9:18 and would have fired with no kahraba at all. 1.5.08: flicker rule, alert 10:03).
+  `nov11-pixel2-raw-evening-moteur-creeps.csv` (`EveningCreepTest`; 11 Nov 15:00-19:11, ms from 15:00: moteur after the
+  15:16 cut, evening creep 2,330 -> 2,700 lux, 222 V; 1.5.08 false kahraba 19:02 by the wobble-stops rule; owner set
+  moteur 19:11). Same day: kahraba 09:28 (+18%) and 12:53 (+12%), cuts 11:37 and 15:16.
 - Kahraba is dead still (zero wobble for 20+ min); a daytime moteur wobbles most minutes. In the
   evening a moteur also calms down and creeps brighter, but gradually (30 Oct 20:40-21:45).
 - Voltmeter: moteur 208 V (31 Oct, 8 pm) to 223 V; kahraba 231-234 V (1 Nov morning too).
@@ -109,6 +112,9 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 - Wobble stops (1.2.0): the moteur was busy (>= 10 wobbling seconds in a minute; its level = median
   of the 10 min before), then 5 min of completely still light >= 10% brighter -> kahraba. The still
   stretch must start within 5 min of the last busy moment, or after a power cut/outage since then.
+  1.5.09: busy also needs >= 10 wobbling s in 3 of the last 10 minutes (`BUSY_MINUTES`; `EveningCreepTest`): on 11 Nov
+  18:54 a calm evening moteur (222 V, pole light green) creeping up in sensor steps had two steps 10 s apart, counted
+  as busy, then was still 10% brighter: false kahraba 19:02. Busy minutes before real kahraba: 10 (31 Oct), 5, 3.
 - Switch-over flicker (1.5.08, `watchSwitchFlicker`, rule 1b, `FlickerKahrabaTest`): the changeover switch dips the
   light 15-30% for < 1 s as kahraba comes on (seen at most arrivals; not all). Dip >= 15% (`SWITCH_DIP`) back within 1.5 s,
   then still from 5 s after it for 2 min and >= 8% (`SWITCH_FLICKER_RISE_PCT`) above the 3 min before -> kahraba, dated
