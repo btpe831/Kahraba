@@ -124,7 +124,10 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 - Phone moved (1.2.0): motion, then the charger off within 10 s -> not a cut: "Phone moved – please
   check" alert; carries on when plugged back in. Power back after an outage: alert with
   "It's kahraba" / "It's moteur" buttons.
-- All beeps at 3000 Hz (kitchen timer); rhythm tells them apart.
+- All beeps at 3000 Hz (kitchen timer); rhythm tells them apart. 1.5.09 (owner's choice): kahraba 70 ms beeps, 4 x 3,
+  7 rounds (~18 s); moteur three 3 s beeps 3 s apart (no repeats after 1 and 2 min). While an alert beeps, the power
+  button (screen on/off broadcast, 1.5 s grace) or a volume button (a "playing" `MediaSession` with a remote
+  `VolumeProvider`) stops it (`Beeper.startButtons`); a volume press goes to another app if it's playing sound.
 - Power cuts only (1.2.03, `Prefs.POWER_CUTS_ONLY`; switch on the screen). Starting asks "Choose an option"
   (1.2.04, `Prefs.monitorLight`): Halogen or filament bulb / LED / Other light / Power cuts only; all but
   halogen turn power cuts only on. Light ignored, nothing learned, kahraba/moteur buttons hidden. States POWER_ON / NO_POWER; logs

@@ -1,6 +1,11 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.5.09
+- Press the power button or a volume button to stop the beeps, even while you're in another app.
+- The kahraba beeps are faster and last longer, so they're easier to notice.
+- Moteur now gives three long beeps in a row, without beeping again a minute later.
+
 ## 1.5.08
 - Kahraba is spotted within minutes when it comes on only a little brighter: the app now notices the quick flicker the light gives as the power switches over. The alert also shows the right start time.
 - Fewer false kahraba alerts: a very calm moteur can stay perfectly still for a long time, so the app now waits a full hour of still light before relying on stillness alone.
