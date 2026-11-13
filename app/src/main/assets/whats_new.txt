@@ -1,6 +1,9 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.5.10
+- Fewer false kahraba alerts: when the light gets brighter without the quick flicker kahraba usually brings, the app now makes sure it stays brighter, and cancels the alert if it goes back down (for example, a lamp switched on nearby, or a moteur getting brighter for a few minutes in the evening).
+
 ## 1.5.09
 - Press the power button or a volume button to stop the beeps, even while you're in another app.
 - The kahraba beeps are faster and last longer, so they're easier to notice.

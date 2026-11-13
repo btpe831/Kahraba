@@ -199,6 +199,8 @@ class PowerDetector(
     private var dipRef = 0.0
     /** The last switch-over flicker: a short, deep dip with the light straight back (or -1). */
     private var switchFlickerMs = -1L
+    /** The last switch-over flicker seen, kept after rule 1b has looked at it. */
+    private var lastDipMs = -1L
 
     /**
      * The changeover switch flicks the light as kahraba comes on: down 15-30% for a fraction of a
@@ -219,6 +221,7 @@ class PowerDetector(
             lux <= dipRef * 0.25 || now - dipAtMs > SWITCH_DIP_MS -> dipAtMs = -1L
             lux >= dipRef * 0.95 -> {
                 switchFlickerMs = dipAtMs
+                lastDipMs = dipAtMs
                 dipAtMs = -1L
             }
         }
@@ -485,12 +488,32 @@ class PowerDetector(
      * it came on (the time shown), [foundMs] when it was spotted. A calm moteur at a high voltage can
      * look like kahraba for a few minutes, but it soon wobbles again (1 Nov, 18:37).
      */
-    private data class Pending(val sinceMs: Long, val foundMs: Long, val reason: String)
+    private data class Pending(
+        val sinceMs: Long, val foundMs: Long, val reason: String,
+        /** The moteur's brightest in the 10 minutes before: back down to it means still moteur. */
+        val floor: Double? = null,
+        val confirmMs: Long = CONFIRM_MS,
+    )
     private var pending: Pending? = null
 
-    /** Light says kahraba: check it for [CONFIRM_MS] before switching. */
-    private fun propose(now: Long, sinceMs: Long, reason: String) {
-        if (pending == null) pending = Pending(minOf(sinceMs, now), now, reason)
+    /**
+     * Light says kahraba: check it for [CONFIRM_MS] before switching. With [guard] (a brighter
+     * level), the light must also stay above the moteur's brightest of the 10 minutes before, and
+     * if it isn't clearly above it, the check lasts [MARGINAL_CONFIRM_MS]: on 12 Nov an evening
+     * moteur stepped up to its usual top and stayed 5 minutes (17:13), and a hallway lamp was on for
+     * 3 (18:10); both went back down, kahraba never does without a cut.
+     */
+    private fun propose(now: Long, sinceMs: Long, reason: String, guard: Boolean = false) {
+        if (pending != null) return
+        var floor: Double? = null
+        var confirm = CONFIRM_MS
+        if (guard) {
+            val end = sinceMs - SWITCH_MS
+            floor = longSeconds.filter { it.t in (end - FLOOR_MS)..end }.mapNotNull { it.level }.maxOrNull()
+            val recent = levelBetween(now - 60_000, now)
+            if (floor != null && recent != null && recent < floor * (1 + MARGINAL_PCT / 100)) confirm = MARGINAL_CONFIRM_MS
+        }
+        pending = Pending(minOf(sinceMs, now), now, reason, floor, confirm)
     }
 
     /** True while a kahraba is being confirmed (nothing else is decided meanwhile). */
@@ -501,12 +524,18 @@ class PowerDetector(
             lightStatus = "Light wobbling – still moteur"
             return true
         }
-        if (now - p.foundMs >= CONFIRM_MS) {
+        val level = seconds.lastOrNull()?.level
+        if (p.floor != null && level != null && level <= p.floor) {
+            pending = null
+            lightStatus = "Light went back down – still moteur"
+            return true
+        }
+        if (now - p.foundMs >= p.confirmMs) {
             pending = null
             out += change(p.sinceMs, Source.KAHRABA, p.reason)
             return true
         }
-        val left = (CONFIRM_MS - (now - p.foundMs) + 59_999) / 60_000
+        val left = (p.confirmMs - (now - p.foundMs) + 59_999) / 60_000
         lightStatus = "Looks like kahraba – checking the light stays still ($left min)"
         return true
     }
@@ -559,7 +588,10 @@ class PowerDetector(
                     val (ref, start) = found
                     val rise = (recent / ref - 1) * 100
                     if (rise >= config.levelRisePct && rise <= config.levelRiseMaxPct) {
-                        propose(now, start, "Light got ${rise.toInt()}% brighter and stayed steady – kahraba is back")
+                        // A switch-over flicker at the change (or its first step, 4 Nov 12:00) is evidence enough;
+                        // without it, the extra check.
+                        val flickered = lastDipMs in (start - TWO_STEPS_MS)..(start + 5_000)
+                        propose(now, start, "Light got ${rise.toInt()}% brighter and stayed steady – kahraba is back", guard = !flickered)
                         return
                     }
                 }
@@ -772,6 +804,7 @@ class PowerDetector(
         darkStartMs = null
         dipAtMs = -1L
         switchFlickerMs = -1L
+        lastDipMs = -1L
     }
 
     companion object {
@@ -844,6 +877,11 @@ class PowerDetector(
         const val BEFORE_SPREAD = 0.06
         /** Kahraba arriving in two steps: at most this long between them (9 Nov: 74 s). */
         const val TWO_STEPS_MS = 2 * 60_000L
+        /** A brighter level is checked against the moteur's brightest over this long before it (1.5.10). */
+        const val FLOOR_MS = 10 * 60_000L
+        /** Less than this much (%) above that brightest: a longer check, [MARGINAL_CONFIRM_MS]. */
+        const val MARGINAL_PCT = 10.0
+        const val MARGINAL_CONFIRM_MS = 10 * 60_000L
         /** How long [longSeconds] is kept: the busy moteur, and the stillness rule with its level before. */
         val LONG_KEEP_MS = maxOf(BUSY_KEEP_MS, QUIET_MS + QUIET_REF_MS + 60_000L)
         /** Switch-over flicker: the light dips at least this much (fraction)… */

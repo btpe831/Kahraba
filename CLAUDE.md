@@ -120,6 +120,15 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   then still from 5 s after it for 2 min and >= 8% (`SWITCH_FLICKER_RISE_PCT`) above the 3 min before -> kahraba, dated
   at the flicker. Busy moteurs flicker too (31 Oct: dozens), but after a >= 15% dip a still moteur came back at most +5.7%
   (7 Nov 11:05); kahraba +11% (3 Nov 10:35, 10 Nov 9:58) to +31%.
+- Drop-back guard (1.5.10, `Pending.floor`, `MoteurStepAndLampTest`): a rule-1 proposal with no switch-over flicker
+  within `TWO_STEPS_MS` before its level start (`lastDipMs`) gets floor = the moteur's brightest per-second level in the
+  10 min before (start - 45 s); the pending kahraba is cancelled if the light falls to <= floor, and if the level is
+  < 10% above floor (`MARGINAL_PCT`) the check lasts 10 min (`MARGINAL_CONFIRM_MS`). 12 Nov: evening moteur stepped to its
+  usual top 2,036 and stayed 5 min (17:13, 219 V) and a hallway lamp for ~3 min (18:10); both dropped back. Also removes
+  11 Nov 12:53 (light wobbled like a moteur from 13:00; kahraba likely 13:33 with a flicker, unseen by any rule). Kahraba
+  alerts kept: flicker ones unguarded (3 Nov 10:35 and 12 Nov 10:44 look like a moteur step but had the flicker).
+  Real kahraba overMax (above the moteur's 10-min max): 6-31%; false 4-9%: too close for a threshold alone.
+  Owner: kahraba always ends with a power cut. Likely missed: 12 Nov 22:59 (+11%, 10% dip) to the 01:00 cut.
 - Daytime stillness (1.4.09, 60 min since 1.5.08, was 45; last resort): from moteur, 60 min with <= 2 separate wobbles,
   all judged, both ends 7 AM-7 PM (`hourOf`, `PowerDetector.localHour` in the app; tests pass `recordingClock`), light
   now >= the 15 min before -> kahraba since the start of the 45 min. Longest still spell: daytime moteur 24 min, kahraba
