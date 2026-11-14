@@ -19,6 +19,7 @@ object Prefs {
     const val QUIET_START = "quiet_start"
     const val QUIET_END = "quiet_end"
     const val BEEP_VOLUME = "beep_volume"
+    const val BEEP_STEP = "beep_step"
     const val AUTO_CHECK = "auto_check"
     const val HELP_SEEN = "help_seen"
     private const val SPOTS = "spots"
@@ -66,11 +67,15 @@ object Prefs {
         sp(ctx).edit().putString(MONITOR_LIGHT, light).putBoolean(POWER_CUTS_ONLY, light != LIGHT_HALOGEN).apply()
     }
 
-    /** Beep loudness as a share of the alarm channel's maximum: low, medium or full. */
-    fun beepVolume(ctx: Context): Double = when (sp(ctx).getString(BEEP_VOLUME, "full")) {
-        "low" -> 0.3
-        "medium" -> 0.6
-        else -> 1.0
+    /**
+     * Beep loudness as a step of the alarm channel, 1 to [max] (7 on Pixels; 1.5.12, a slider). Before
+     * 1.5.12 it was Low / Medium / Full: about 30%, 60% and 100% of the steps.
+     */
+    fun beepStep(ctx: Context, max: Int): Int {
+        val p = sp(ctx)
+        if (p.contains(BEEP_STEP)) return p.getInt(BEEP_STEP, max).coerceIn(1, max)
+        val share = when (p.getString(BEEP_VOLUME, "full")) { "low" -> 0.3; "medium" -> 0.6; else -> 1.0 }
+        return Math.round(max * share).toInt().coerceIn(1, max)
     }
 
     /** The chosen theme (older theme names fall back to the default). */

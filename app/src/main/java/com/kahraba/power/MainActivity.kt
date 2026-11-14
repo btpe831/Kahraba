@@ -140,7 +140,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         findViewById<View>(R.id.updateLater).setOnClickListener { Updates.snooze(this, Updates.LATER_DAYS); renderUpdate() }
         findViewById<View>(R.id.setupHide).setOnClickListener {
             Prefs.sp(this).edit().putBoolean(SETUP_CARD, false).apply()
-            android.widget.Toast.makeText(this, "You can turn it back on in Settings › Cards", android.widget.Toast.LENGTH_LONG).show()
+            android.widget.Toast.makeText(this, "You can turn it back on in Settings › Your power cards", android.widget.Toast.LENGTH_LONG).show()
             renderSetup()
         }
         findViewById<View>(R.id.feedbackButton).apply {
@@ -148,6 +148,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             setOnClickListener { Feedback.open(this@MainActivity) }
         }
         findViewById<View>(R.id.footerNote).setOnClickListener { startActivity(Intent(this, HelpActivity::class.java)) }
+        // Where the cards are arranged, right under them (1.5.12): people looked for it in the menu.
+        findViewById<View>(R.id.arrangeCards).setOnClickListener { startActivity(Intent(this, CardsActivity::class.java)) }
         findViewById<View>(R.id.barSettings).setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
         findViewById<View>(R.id.barHistory).setOnClickListener { showAllChecks() }
         spotButton.setOnClickListener {
@@ -398,6 +400,16 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     private fun toast(text: String) = android.widget.Toast.makeText(this, text, android.widget.Toast.LENGTH_LONG).show()
 
     private fun openAlwaysOn() = startActivity(Intent(this, MonitorActivity::class.java))
+
+    /** Settings › Your power cards › "Open Your power" (1.5.12): back here, with Your power open. */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.getBooleanExtra(EXTRA_OPEN_POWER, false)) {
+            intent.removeExtra(EXTRA_OPEN_POWER)
+            ui.post { showPower(true) }
+        }
+    }
 
     /** Slides the Your power sheet up over home, or back down to home. */
     private fun showPower(show: Boolean) {
@@ -1052,7 +1064,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             return
         }
         item(R.drawable.ic_bolt, "Always-on mode", if (MonitorState.running) "Active" else "Inactive") { openAlwaysOn() }
-        item(R.drawable.ic_chart, "Glance screen", "A dim screen with one big word, to read across the room") {
+        item(R.drawable.ic_chart, "At a glance", "A dim screen with one big word, to read across the room") {
             startActivity(Intent(this, GlanceActivity::class.java))
         }
         item(R.drawable.ic_bolt, "Alerts on other phones",
@@ -2602,6 +2614,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
     }
 
     companion object {
+        /** Opens the Your power sheet when MainActivity comes back to the front (from Cards). */
+        const val EXTRA_OPEN_POWER = "open_power"
         private const val SETTLE_MS = 3_000L
         /** 2 minutes of readings at 5 a second; plenty for a check. */
         private const val CHART_MAX = 600

@@ -147,8 +147,11 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 - Phone moved (1.2.0): motion, then the charger off within 10 s -> not a cut: "Phone moved – please
   check" alert; carries on when plugged back in. Power back after an outage: alert with
   "It's kahraba" / "It's moteur" buttons.
-- All beeps at 3000 Hz (kitchen timer); rhythm tells them apart. 1.5.09 (owner's choice): kahraba 70 ms beeps, 4 x 3,
-  7 rounds (~18 s); moteur three 3 s beeps 3 s apart (no repeats after 1 and 2 min). While an alert beeps, the power
+- All beeps at 3000 Hz (kitchen timer); rhythm tells them apart. 1.5.12 (owner's choice, "like a Honda key chime"):
+  kahraba 4 x 120 ms beeps, three sets 0.5 s apart (~3 s); light off with the charger on: 900 ms + 2 x 150 ms, twice
+  (`Beeper.lightOff`, `RemoteCodec.BEEP_LIGHT_OFF` to other phones); phone moved silent (notification only);
+  moteur three 3 s beeps 3 s apart (1.5.09; no repeats after 1 and 2 min). Volume: Settings slider of the phone's
+  STREAM_ALARM steps (`Prefs.BEEP_STEP`, `beepStep`; old Low/Medium/Full = 30/60/100%), sample on release (`Beeper.sample`). While an alert beeps, the power
   button (screen on/off broadcast, 1.5 s grace) or a volume button (a "playing" `MediaSession` with a remote
   `VolumeProvider`) stops it (`Beeper.startButtons`); a volume press goes to another app if it's playing sound.
 - Power cuts only (1.2.03, `Prefs.POWER_CUTS_ONLY`; switch on the screen). Starting asks "Choose an option"
@@ -175,6 +178,10 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
+- 1.5.12 (tester feedback): At a glance (was Glance screen; a tap shows faded buttons, a tap while shown closes;
+  "Brightness: Medium" as ☀ was blank on a Pixel 10 Pro); Settings › Your power cards (cards are on Your power, not the
+  menu) with "Open Your power" (`MainActivity.EXTRA_OPEN_POWER`, onNewIntent) and "Arrange cards" at the bottom of Your
+  power (`@id/arrangeCards`); Settings Tools section removed (they're in the ☰ menu).
 - Released: 1.5.08 (switch-over flicker rule; stillness 60 min; Today timeline starts with what was on at midnight; overnight kahraba "from 11:18 PM yesterday"). 1.5.07: "Change the time" of a switch from a day's timeline (own log only; `EventLog.changeTime`, `Combine.retime` notes "(time changed by you)"; the current switch also updates the running detector via `MonitorService.ACTION_SET_SINCE`; history batches now replace the other phone's copy of their span, `EventLog.replaceRemote`/`Combine.replaceRange`, `ChangeTimeTest`). 1.5.06 (kahraba arriving in two steps, `twoSteps`, `TwoStepKahrabaTest`; 38 more Did you know? facts, 65 in all). 1.5.05 (day details: whole periods across midnight on both days, `kahrabaPeriodsTouching`; timeline starts with what was on at midnight; totals per day only). 1.5.04 (Amps calculator: appliances by amps (`Item.amps`, counts as its amps at any voltage), Quick
   convert both ways; tap a Kahraba pattern day (or Today's bar) for its kahraba periods and timeline
   (`showPatternDay`, `timelineRows`, `KahrabaPattern.kahrabaPeriods`, `DayPeriodsTest`)). 1.5.03 (Glance card holds only the word, at its own width and shrunk to fit; "since …" centred under it). 1.5.02 (Glance screen style Coloured card (default) / Word, brightness Low 8% / Medium 35% (default) / Full,

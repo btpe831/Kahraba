@@ -1,6 +1,7 @@
 package com.kahraba.power
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -16,7 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.materialswitch.MaterialSwitch
 
-/** Settings > Cards: show or hide each main-screen card, and drag the lower ones into any order. */
+/** Settings › Your power cards: show or hide each card on Your power, and drag them into any order. */
 class CardsActivity : ThemedActivity() {
 
     /** A row in the list: a section label, or a card (movable or fixed at the top). */
@@ -43,6 +44,15 @@ class CardsActivity : ThemedActivity() {
         touch = ItemTouchHelper(DragCallback())
         touch.attachToRecyclerView(list)
 
+        // Back to the home screen with Your power open, to see the cards as arranged (1.5.12).
+        findViewById<View>(R.id.openPower).setOnClickListener {
+            startActivity(
+                Intent(this, MainActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    .putExtra(MainActivity.EXTRA_OPEN_POWER, true),
+            )
+            finish()
+        }
         findViewById<View>(R.id.resetOrder).setOnClickListener {
             Prefs.setCardOrder(this, null)
             buildRows()

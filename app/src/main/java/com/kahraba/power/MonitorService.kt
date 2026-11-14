@@ -292,7 +292,6 @@ class MonitorService : Service(), SensorEventListener {
 
     /** The phone moved and its charger came off (it may have fallen): not a power cut. */
     private fun onPhoneMoved() {
-        beeper.phoneMoved()
         val text = "${PowerDetector.formatClock(System.currentTimeMillis())} – The phone moved and its charger came off. " +
             "Put it back on its stand under the light, with the charger plugged in."
         val n = NotificationCompat.Builder(this, CHANNEL_ALERTS)
@@ -305,7 +304,7 @@ class MonitorService : Service(), SensorEventListener {
             .setAutoCancel(true)
             .build()
         notifications().notify(nextAlertId(), n)
-        remote(RemoteCodec.Kind.ALERT, detector.source, detector.sinceMs, PowerDetector.PHONE_MOVED, text, RemoteCodec.BEEP_MOVED)
+        remote(RemoteCodec.Kind.ALERT, detector.source, detector.sinceMs, PowerDetector.PHONE_MOVED, text)
     }
 
     /** The latest alert's notification (cancelled when its button is tapped). */
@@ -330,7 +329,8 @@ class MonitorService : Service(), SensorEventListener {
             .setAutoCancel(true)
             .build()
         notifications().notify(nextAlertId(), n)
-        remote(RemoteCodec.Kind.ALERT, detector.source, detector.sinceMs, PowerDetector.LIGHT_OFF, text)
+        beeper.lightOff()
+        remote(RemoteCodec.Kind.ALERT, detector.source, detector.sinceMs, PowerDetector.LIGHT_OFF, text, RemoteCodec.BEEP_LIGHT_OFF)
     }
 
     private fun setFromAlert(s: Source): PendingIntent {

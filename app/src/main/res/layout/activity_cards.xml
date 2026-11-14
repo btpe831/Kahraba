@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:lineSpacingExtra="2dp"
-        android:text="Switch a card off to hide it. Drag ≡ to move it. You can also press and hold a card on the main screen and drag it up or down."
+        android:text="These cards are on the Your power page: swipe up twice from the home screen, or tap Your power at the bottom. Switch a card off to hide it, and drag ≡ to move it. On Your power you can also press and hold a card and drag it up or down."
         android:textColor="?attr/appMuted"
         android:textSize="14sp" />
 
@@ -26,6 +26,14 @@
         android:layout_weight="1"
         android:clipToPadding="false"
         android:paddingBottom="12dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/openPower"
+        style="@style/OutlinePill"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Open Your power" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/resetOrder"

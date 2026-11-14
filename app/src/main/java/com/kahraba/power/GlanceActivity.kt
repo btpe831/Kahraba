@@ -20,13 +20,13 @@ import androidx.core.view.WindowInsetsControllerCompat
 import kotlin.random.Random
 
 /**
- * Glance screen (1.5.0): for a phone left on all day, readable across the room without wearing out
+ * At a glance (1.5.0; called the Glance screen until 1.5.12): for a phone left on all day, readable across the room without wearing out
  * the screen. Black, with "KAHRABA" and "since 5:00 PM" either on a coloured card (white words, the
  * default since 1.5.02) or as coloured words. It drifts to a new spot every minute so no pixel stays
  * lit in the same place (OLED screens can keep a ghost image), and stays below the top edge, where the
  * light sensor is. Shows Always-on mode on this phone, or the other phone's news if this one gets
  * alerts. Style and brightness: Settings › Always-on mode, or the two buttons shown for a few seconds.
- * Tap anywhere else to close.
+ * A tap brings the buttons back when they've faded (1.5.12); a tap while they show closes the screen.
  */
 class GlanceActivity : AppCompatActivity() {
 
@@ -38,6 +38,7 @@ class GlanceActivity : AppCompatActivity() {
     private lateinit var controls: LinearLayout
     private lateinit var styleButton: TextView
     private lateinit var brightButton: TextView
+    private lateinit var hint: TextView
     private var lastMoveMs = 0L
     private val dp get() = resources.displayMetrics.density
 
@@ -69,7 +70,8 @@ class GlanceActivity : AppCompatActivity() {
 
         val root = FrameLayout(this).apply {
             setBackgroundColor(Color.BLACK)
-            setOnClickListener { finish() }
+            // Buttons showing: close. Faded: bring them back first (1.5.12).
+            setOnClickListener { if (controls.visibility == View.VISIBLE) finish() else showControls(again = true) }
         }
         box = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -107,11 +109,12 @@ class GlanceActivity : AppCompatActivity() {
         row.addView(styleButton)
         row.addView(brightButton, LinearLayout.LayoutParams(-2, -2).apply { marginStart = (10 * dp).toInt() })
         controls.addView(row)
-        controls.addView(TextView(this).apply {
+        hint = TextView(this).apply {
             text = "Tap anywhere else to close"
             textSize = 13f
             setTextColor(DARK_GREY)
-        }, LinearLayout.LayoutParams(-2, -2).apply { topMargin = (10 * dp).toInt() })
+        }
+        controls.addView(hint, LinearLayout.LayoutParams(-2, -2).apply { topMargin = (10 * dp).toInt() })
         root.addView(controls, FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
             bottomMargin = (28 * dp).toInt()
         })
@@ -146,7 +149,8 @@ class GlanceActivity : AppCompatActivity() {
         }
     }
 
-    private fun showControls() {
+    private fun showControls(again: Boolean = false) {
+        if (again) hint.text = "Tap again to close"
         controls.visibility = View.VISIBLE
         ui.removeCallbacks(hideControls)
         ui.postDelayed(hideControls, 6000)
@@ -154,7 +158,8 @@ class GlanceActivity : AppCompatActivity() {
 
     private fun labelButtons() {
         styleButton.text = if (Prefs.glanceStyle(this) == "word") "Style: Word" else "Style: Card"
-        brightButton.text = "☀ " + when (Prefs.glanceBright(this)) { "low" -> "Low"; "full" -> "Full"; else -> "Medium" }
+        // Words only: the ☀ didn't show on a Pixel 10 Pro and took the whole label with it.
+        brightButton.text = "Brightness: " + when (Prefs.glanceBright(this)) { "low" -> "Low"; "full" -> "Full"; else -> "Medium" }
     }
 
     private fun cycleStyle() {

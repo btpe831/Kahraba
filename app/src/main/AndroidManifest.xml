@@ -68,7 +68,7 @@
 
         <activity
             android:name=".GlanceActivity"
-            android:label="Glance screen"
+            android:label="At a glance"
             android:theme="@style/AppTheme.Main" />
 
         <service

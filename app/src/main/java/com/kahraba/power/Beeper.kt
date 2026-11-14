@@ -25,9 +25,10 @@ import kotlin.math.sin
 /**
  * Plays the alerts on the alarm channel, so they sound even when the phone is on silent.
  *
- * Kahraba back (1.5.09): 4 fast beeps, pause, 4, pause, 4 — seven times, about 18 seconds.
+ * Kahraba back (1.5.12): 4 short beeps, pause, 4, pause, 4, about 3 seconds (like a car's key chime).
  * Moteur took over (1.5.09): three 3-second beeps with 3 seconds between them, about 15 seconds.
- * Phone moved: 2 beeps, pause, 2 beeps, pause, 2 beeps.
+ * The light went off with the power still on (1.5.12): a long beep and two short, twice.
+ * Phone moved: no sound since 1.5.12, the notification only.
  * Power cuts only: one long beep when the power goes off, 4 quick beeps twice when it's back.
  * All at a kitchen-timer pitch ([PITCH_HZ]); the rhythm tells them apart.
  * While an alert beeps, the power button or a volume button stops it (1.5.09), from any app.
@@ -37,19 +38,18 @@ class Beeper(private val ctx: Context) {
     private val pending = mutableListOf<ScheduledFuture<*>>()
     private val audio = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
+    /** One set of 4 short beeps: kahraba plays it 3 times; the volume sample once. */
+    private val kahrabaSet: ShortArray by lazy {
+        concat((1..4).flatMap { listOf(tone(120, PITCH_HZ), silence(90)) })
+    }
     private val kahrabaSound: ShortArray by lazy {
-        val parts = ArrayList<ShortArray>()
-        repeat(KAHRABA_ROUNDS) { round ->
-            repeat(3) { group ->
-                repeat(4) {
-                    parts += tone(70, PITCH_HZ)
-                    parts += silence(55)
-                }
-                if (group < 2) parts += silence(225)
-            }
-            if (round < KAHRABA_ROUNDS - 1) parts += silence(750)
-        }
-        concat(parts)
+        concat(listOf(kahrabaSet, silence(500), kahrabaSet, silence(500), kahrabaSet))
+    }
+
+    /** The light went off but the power is still on: beeeep-beep-beep, pause, beeeep-beep-beep. */
+    private val lightOffSound: ShortArray by lazy {
+        val set = concat(listOf(tone(900, PITCH_HZ), silence(150), tone(150, PITCH_HZ), silence(120), tone(150, PITCH_HZ)))
+        concat(listOf(set, silence(600), set))
     }
 
     /** One 3-second beep: power off (power cuts only). */
@@ -57,10 +57,6 @@ class Beeper(private val ctx: Context) {
     /** Moteur took over: three 3-second beeps, 3 seconds apart. */
     private val moteurAlertSound: ShortArray by lazy {
         concat(listOf(moteurSound, silence(3000), moteurSound, silence(3000), moteurSound))
-    }
-
-    private val phoneMovedSound: ShortArray by lazy {
-        concat((1..3).flatMap { listOf(tone(140, PITCH_HZ), silence(110), tone(140, PITCH_HZ), silence(600)) })
     }
 
     private val quickKahrabaSound: ShortArray by lazy {
@@ -93,9 +89,16 @@ class Beeper(private val ctx: Context) {
     @Synchronized
     fun moteur(respectQuiet: Boolean = true) = alert(moteurAlertSound, respectQuiet)
 
-    /** The phone moved and its charger came off: check it's back on its stand. */
+    /** The light went dark while the charger is still on (someone switched it off). */
     @Synchronized
-    fun phoneMoved(respectQuiet: Boolean = true) = alert(phoneMovedSound, respectQuiet)
+    fun lightOff(respectQuiet: Boolean = true) = alert(lightOffSound, respectQuiet)
+
+    /** Settings › Sound: one set of kahraba beeps at alarm volume [step], even on silent or at night. */
+    @Synchronized
+    fun sample(step: Int) {
+        cancel()
+        pending += exec.schedule(Runnable { play(kahrabaSet, respectQuiet = false, step = step) }, 0, TimeUnit.MILLISECONDS)
+    }
 
     /** Power cuts only: the power went off. */
     @Synchronized
@@ -208,12 +211,12 @@ class Beeper(private val ctx: Context) {
         session = null
     }
 
-    private fun play(pcm: ShortArray, respectQuiet: Boolean) {
+    private fun play(pcm: ShortArray, respectQuiet: Boolean, step: Int? = null) {
         if (respectQuiet && Prefs.isQuietNow(ctx)) return
         val stream = AudioManager.STREAM_ALARM
         val oldVolume = audio.getStreamVolume(stream)
         val max = audio.getStreamMaxVolume(stream)
-        val target = Math.round(max * Prefs.beepVolume(ctx)).toInt().coerceIn(1, max)
+        val target = (step ?: Prefs.beepStep(ctx, max)).coerceIn(1, max.coerceAtLeast(1))
         var track: AudioTrack? = null
         try {
             runCatching { audio.setStreamVolume(stream, target, 0) }
@@ -251,8 +254,6 @@ class Beeper(private val ctx: Context) {
         private const val RATE = 22050
         /** A typical kitchen-timer beep; phone speakers are loud at this pitch. */
         private const val PITCH_HZ = 3000.0
-        /** Kahraba's pattern (4 fast beeps × 3) this many times: about 18 seconds. */
-        private const val KAHRABA_ROUNDS = 7
         /** Screen changes this soon after an alert starts don't count as a button press. */
         private const val SCREEN_GRACE_MS = 1_500L
 

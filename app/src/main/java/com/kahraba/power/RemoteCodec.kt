@@ -46,6 +46,7 @@ object RemoteCodec {
     const val BEEP_OFF = "off"
     const val BEEP_BACK = "back"
     const val BEEP_MOVED = "moved"
+    const val BEEP_LIGHT_OFF = "lightoff"
 
     /**
      * One message. [source] and [sinceMs] are what the sending phone shows now; [title] and [text]

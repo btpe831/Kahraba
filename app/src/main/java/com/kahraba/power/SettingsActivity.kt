@@ -1,6 +1,7 @@
 package com.kahraba.power
 
 import android.app.TimePickerDialog
+import android.media.AudioManager
 import android.content.Intent
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -27,6 +28,8 @@ import java.util.Locale
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.materialswitch.MaterialSwitch
+import com.google.android.material.slider.LabelFormatter
+import com.google.android.material.slider.Slider
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
@@ -42,6 +45,8 @@ class SettingsActivity : ThemedActivity() {
     /** null for Settings itself; [PAGE_ADVANCED] or [PAGE_BACKUP] for those screens. */
     private var page: String? = null
     private lateinit var scroll: ScrollView
+    /** Plays the volume sample (Settings › Sound), made when first needed. */
+    private var sampler: Beeper? = null
     /** A scroll position waiting to be restored after a theme change (kept if the screen is rebuilt again first). */
     private var pendingScrollY = 0
 
@@ -232,11 +237,30 @@ class SettingsActivity : ThemedActivity() {
         section("Sound")
         body.addView(card {
             addView(text("Beep volume", 18f, R.attr.appText, bold = true))
-            val now = Prefs.sp(this@SettingsActivity).getString(Prefs.BEEP_VOLUME, "full") ?: "full"
-            addView(segmented(listOf("Low" to "low", "Medium" to "medium", "Full" to "full"), now) {
-                Prefs.sp(this@SettingsActivity).edit().putString(Prefs.BEEP_VOLUME, it).apply()
-            }, lp(top = 12))
-            addView(text("Beeps play on the alarm channel, so they sound even when the phone is on silent.", 14f, R.attr.appMuted), lp(top = 10))
+            // The phone's own alarm volume steps (7 on Pixels), so each stop is exactly what it plays.
+            val max = (getSystemService(android.content.Context.AUDIO_SERVICE) as AudioManager).getStreamMaxVolume(AudioManager.STREAM_ALARM).coerceAtLeast(2)
+            val start = Prefs.beepStep(this@SettingsActivity, max)
+            val label = text("Volume: $start", 16f, R.attr.appText)
+            addView(label, lp(top = 8))
+            addView(Slider(this@SettingsActivity).apply {
+                valueFrom = 1f
+                valueTo = max.toFloat()
+                stepSize = 1f
+                value = start.toFloat()
+                labelBehavior = LabelFormatter.LABEL_GONE
+                addOnChangeListener { _, v, _ -> label.text = "Volume: ${v.toInt()}" }
+                // Letting go saves it and plays a sample at that volume.
+                addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+                    override fun onStartTrackingTouch(slider: Slider) {}
+                    override fun onStopTrackingTouch(slider: Slider) {
+                        val step = slider.value.toInt()
+                        Prefs.sp(this@SettingsActivity).edit().putInt(Prefs.BEEP_STEP, step).apply()
+                        val b = sampler ?: Beeper(applicationContext).also { sampler = it }
+                        b.sample(step)
+                    }
+                })
+            }, lp(top = 2))
+            addView(text("Let go to hear it. Beeps play on the alarm channel, so they sound even when the phone is on silent.", 14f, R.attr.appMuted), lp(top = 6))
         })
 
         // QUICK CHECK
@@ -247,9 +271,9 @@ class SettingsActivity : ThemedActivity() {
         })
 
         // CARDS
-        section("Cards")
+        section("Your power cards")
         body.addView(card {
-            addView(link("Arrange cards", "Show or hide cards. To move one, press and hold it on the main screen and drag.") {
+            addView(link("Arrange cards", "Show, hide or reorder the cards on the Your power page (swipe up twice from the home screen).") {
                 startActivity(Intent(this@SettingsActivity, CardsActivity::class.java))
             })
         })
@@ -283,14 +307,14 @@ class SettingsActivity : ThemedActivity() {
             addView(timeRow("Quiet until", Prefs.QUIET_END, "07:00"))
         })
         body.addView(card {
-            addView(text("Glance screen", 18f, R.attr.appText, bold = true))
+            addView(text("At a glance", 18f, R.attr.appText, bold = true))
             addView(segmented(listOf("Coloured card" to "card", "Word" to "word"), Prefs.glanceStyle(this@SettingsActivity)) {
                 Prefs.sp(this@SettingsActivity).edit().putString(Prefs.GLANCE_STYLE, it).apply()
             }, lp(top = 12))
             addView(segmented(listOf("Low" to "low", "Medium" to "medium", "Full" to "full"), Prefs.glanceBright(this@SettingsActivity)) {
                 Prefs.sp(this@SettingsActivity).edit().putString(Prefs.GLANCE_BRIGHT, it).apply()
             }, lp(top = 8))
-            addView(text("Brightness while the Glance screen is open. Full is easiest to read in a bright room, but wears the " +
+            addView(text("Brightness while At a glance is open. Full is easiest to read in a bright room, but wears the " +
                 "screen faster over months; the words move a little every minute to help.", 14f, R.attr.appMuted), lp(top = 10))
         }, lp(top = 12))
         body.addView(card {
@@ -324,22 +348,6 @@ class SettingsActivity : ThemedActivity() {
         body.addView(card {
             addView(link("Back up or restore", "Keep a copy of your checks, rooms and settings, or move them to another phone.") {
                 startActivity(Intent(this@SettingsActivity, SettingsActivity::class.java).putExtra(PAGE, PAGE_BACKUP))
-            })
-        })
-
-        // TOOLS
-        section("Tools")
-        body.addView(card {
-            addView(link("Always-on mode", "For a spare phone left under a light: tracks every switch.") {
-                startActivity(Intent(this@SettingsActivity, MonitorActivity::class.java))
-            })
-            addView(divider())
-            addView(link("Amps calculator", "Watts to amps, and what fits in your moteur subscription.") {
-                startActivity(Intent(this@SettingsActivity, AmpsActivity::class.java))
-            })
-            addView(divider())
-            addView(link("Light meter", "Live lux, a chart, and recordings you can save as CSV.") {
-                startActivity(Intent(this@SettingsActivity, LightMeterActivity::class.java))
             })
         })
 
@@ -681,6 +689,11 @@ class SettingsActivity : ThemedActivity() {
             letterSpacing = 0.14f
             setPadding(px(4), px(30), 0, px(4))
         })
+    }
+
+    override fun onDestroy() {
+        sampler?.shutdown()
+        super.onDestroy()
     }
 
     private fun card(fill: LinearLayout.() -> Unit): LinearLayout = LinearLayout(this).apply {
