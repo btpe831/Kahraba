@@ -129,6 +129,14 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   alerts kept: flicker ones unguarded (3 Nov 10:35 and 12 Nov 10:44 look like a moteur step but had the flicker).
   Real kahraba overMax (above the moteur's 10-min max): 6-31%; false 4-9%: too close for a threshold alone.
   Owner: kahraba always ends with a power cut. Likely missed: 12 Nov 22:59 (+11%, 10% dip) to the 01:00 cut.
+- Switch then still (1.5.11, rule 1c, `stillAfterSwitch`, `BlinkStillKahrabaTest`): a switch moment (`lastSwitchMs`: a
+  switch-over flicker, or a blink: dark < 25% and back >= 90% within 3 s with the charger on, `watchBlink`), then from 10 s
+  after it (`SWITCH_SETTLE_MS`) no wobble at all for 15 min (`SWITCH_STILL_MS`; 25 after a blink, `BLINK_STILL_MS`, as a
+  hand on the light switch looks the same), daytime 7 AM-7 PM, light not < 97% of the 3 min before -> kahraba since the
+  switch. After a flicker/blink the moteur stayed still <= 8.5 min (7 Nov 16:56, 6 Nov 20:02, 14 Nov 6:13 blink 4.7);
+  kahraba 10-60 min. 13 Nov 9:07 (flicker, +6%, cut 9:17) and 14 Nov 8:19 (0.9 s blink, +6%, still 38 min to the 8:57 cut)
+  were missed by everything else; 1.5.11 catches 14 Nov (alert 8:48) and 11 Nov 13:33 (alert 13:51), not 13 Nov (10 min).
+  Owner: kahraba always ends with a cut (~70 s); an idea not built: mark switch-to-cut spans as kahraba afterwards.
 - Daytime stillness (1.4.09, 60 min since 1.5.08, was 45; last resort): from moteur, 60 min with <= 2 separate wobbles,
   all judged, both ends 7 AM-7 PM (`hourOf`, `PowerDetector.localHour` in the app; tests pass `recordingClock`), light
   now >= the 15 min before -> kahraba since the start of the 45 min. Longest still spell: daytime moteur 24 min, kahraba

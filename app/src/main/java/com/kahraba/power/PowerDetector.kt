@@ -191,6 +191,7 @@ class PowerDetector(
     fun addReading(nowMs: Long, lux: Double) {
         if (nowMs < motionUntilMs) return
         watchSwitchFlicker(nowMs, lux)
+        watchBlink(nowMs, lux)
         samples.addLast(Sample(nowMs, lux))
     }
 
@@ -222,9 +223,69 @@ class PowerDetector(
             lux >= dipRef * 0.95 -> {
                 switchFlickerMs = dipAtMs
                 lastDipMs = dipAtMs
+                lastSwitchMs = dipAtMs
+                lastSwitchBlink = false
                 dipAtMs = -1L
             }
         }
+    }
+
+    /** A blink under way (the light gone dark): when, and the light just before it. */
+    private var blinkAtMs = -1L
+    private var blinkRef = 0.0
+    /** The last switch moment: a switch-over flicker, or a blink too short for the charger (1.5.11). */
+    private var lastSwitchMs = -1L
+    /** Whether that moment was a blink (dark), which a hand on the light switch can also make. */
+    private var lastSwitchBlink = false
+
+    /**
+     * The light goes dark for a second or so and comes straight back, with the charger still on: the
+     * changeover switch moving (14 Nov, 8:19 AM: dark for ~1 s, then kahraba at the moteur's brightness).
+     * The moteur blinks too (14 Nov, 6:13 AM), so on its own it proves nothing; see [stillAfterSwitch].
+     */
+    private fun watchBlink(now: Long, lux: Double) {
+        if (blinkAtMs < 0) {
+            val last = samples.lastOrNull()?.lux ?: return
+            if (lux >= last * 0.5) return
+            val ref = median(samples.filter { it.t in (now - 20_000)..(now - 2_000) }.map { it.lux }) ?: return
+            if (ref >= config.minLux && lux < ref * 0.25) {
+                blinkAtMs = now
+                blinkRef = ref
+            }
+            return
+        }
+        when {
+            now - blinkAtMs > SWITCH_BLINK_MS -> blinkAtMs = -1L
+            lux >= blinkRef * 0.9 -> {
+                lastSwitchMs = blinkAtMs
+                lastSwitchBlink = true
+                blinkAtMs = -1L
+            }
+        }
+    }
+
+    /** How long the light must stay still after the last switch moment: longer after a blink. */
+    private fun switchStillMs() = if (lastSwitchBlink) BLINK_STILL_MS else SWITCH_STILL_MS
+
+    /**
+     * Daytime, from moteur: a switch moment, then the light completely still (no wobble at all) for
+     * [SWITCH_STILL_MS] after a flicker, [BLINK_STILL_MS] after a blink (someone switching the light
+     * off and on looks the same), and not dimmer than before. After a flicker or blink the moteur
+     * stayed still for at most 8.5 minutes (7 Nov, 16:56); kahraba for 10 to 60 (13 and 14 Nov:
+     * kahraba only ~6% brighter than the moteur, missed by every other rule).
+     */
+    private fun stillAfterSwitch(now: Long, thr: Double): Long? {
+        val hour = hourOf ?: return null
+        val sw = lastSwitchMs
+        val need = switchStillMs()
+        if (sw < 0 || now - sw < need + SWITCH_SETTLE_MS || now - sw > need + 2 * 60_000) return null
+        if (hour(sw) !in QUIET_DAY_FROM until QUIET_DAY_TO || hour(now) !in QUIET_DAY_FROM until QUIET_DAY_TO) return null
+        val after = longSeconds.filter { it.t > sw + SWITCH_SETTLE_MS }
+        if (after.size < need / 1_000 * 0.9) return null
+        if (after.any { (it.flicker ?: 0.0) > thr } || after.count { it.level == null } > after.size / 10) return null
+        val before = median(longSeconds.filter { it.t in (sw - 5_000 - 3 * 60_000)..(sw - 5_000) }.mapNotNull { it.level }) ?: return null
+        val nowLevel = median(after.mapNotNull { it.level }) ?: return null
+        return if (nowLevel >= before * 0.97) sw else null
     }
 
     /**
@@ -616,6 +677,18 @@ class PowerDetector(
                 }
             }
 
+            // 1c) A switch moment (flicker or blink), then 15 minutes completely still: kahraba even when
+            //    it's no brighter than the moteur (13 Nov 9:07, 14 Nov 8:19).
+            if (source == Source.MOTEUR) {
+                val sw = stillAfterSwitch(now, thr)
+                if (sw != null) {
+                    val minutes = switchStillMs() / 60_000
+                    lastSwitchMs = -1L
+                    propose(now, sw, "The power switched and the light stayed completely still for $minutes minutes – kahraba is back")
+                    return
+                }
+            }
+
             // 2) The moteur was busy (wobbling), then the light went completely still and is clearly
             //    brighter than that moteur. On 31 Oct kahraba came at 13:00 in steps over 5 minutes
             //    (4090 -> 3642 lux), too slowly for (1), after half an hour of busy moteur at ~3150.
@@ -805,6 +878,9 @@ class PowerDetector(
         dipAtMs = -1L
         switchFlickerMs = -1L
         lastDipMs = -1L
+        blinkAtMs = -1L
+        lastSwitchMs = -1L
+        lastSwitchBlink = false
     }
 
     companion object {
@@ -877,6 +953,14 @@ class PowerDetector(
         const val BEFORE_SPREAD = 0.06
         /** Kahraba arriving in two steps: at most this long between them (9 Nov: 74 s). */
         const val TWO_STEPS_MS = 2 * 60_000L
+        /** A blink: dark and back within this long, with the charger on (1.5.11). */
+        const val SWITCH_BLINK_MS = 3_000L
+        /** After a switch moment, completely still this long: kahraba (1.5.11). */
+        const val SWITCH_STILL_MS = 15 * 60_000L
+        /** The same after a blink, which someone switching the light off and on can also make. */
+        const val BLINK_STILL_MS = 25 * 60_000L
+        /** The light may settle in a step or two just after the switch (11 Nov, 13:33: 2,590 then 2,749). */
+        const val SWITCH_SETTLE_MS = 10_000L
         /** A brighter level is checked against the moteur's brightest over this long before it (1.5.10). */
         const val FLOOR_MS = 10 * 60_000L
         /** Less than this much (%) above that brightest: a longer check, [MARGINAL_CONFIRM_MS]. */
