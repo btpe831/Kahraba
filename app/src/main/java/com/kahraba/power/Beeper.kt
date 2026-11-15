@@ -25,7 +25,7 @@ import kotlin.math.sin
 /**
  * Plays the alerts on the alarm channel, so they sound even when the phone is on silent.
  *
- * Kahraba back (1.5.12): 4 short beeps, pause, 4, pause, 4, about 3 seconds (like a car's key chime).
+ * Kahraba back (1.5.13): 4 short beeps, pause, six times, about 6 seconds (like a car's key chime).
  * Moteur took over (1.5.09): three 3-second beeps with 3 seconds between them, about 15 seconds.
  * The light went off with the power still on (1.5.12): a long beep and two short, twice.
  * Phone moved: no sound since 1.5.12, the notification only.
@@ -38,12 +38,12 @@ class Beeper(private val ctx: Context) {
     private val pending = mutableListOf<ScheduledFuture<*>>()
     private val audio = ctx.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
-    /** One set of 4 short beeps: kahraba plays it 3 times; the volume sample once. */
+    /** One set of 4 short beeps: kahraba plays it 6 times (1.5.13; 3 in 1.5.12); the volume sample once. */
     private val kahrabaSet: ShortArray by lazy {
         concat((1..4).flatMap { listOf(tone(120, PITCH_HZ), silence(90)) })
     }
     private val kahrabaSound: ShortArray by lazy {
-        concat(listOf(kahrabaSet, silence(500), kahrabaSet, silence(500), kahrabaSet))
+        concat((1..KAHRABA_SETS).flatMap { listOf(kahrabaSet) + if (it < KAHRABA_SETS) listOf(silence(500)) else emptyList() })
     }
 
     /** The light went off but the power is still on: beeeep-beep-beep, pause, beeeep-beep-beep. */
@@ -254,6 +254,8 @@ class Beeper(private val ctx: Context) {
         private const val RATE = 22050
         /** A typical kitchen-timer beep; phone speakers are loud at this pitch. */
         private const val PITCH_HZ = 3000.0
+        /** Sets of 4 short beeps for kahraba: 3 in 1.5.12 felt too short, so 6. */
+        private const val KAHRABA_SETS = 6
         /** Screen changes this soon after an alert starts don't count as a button press. */
         private const val SCREEN_GRACE_MS = 1_500L
 

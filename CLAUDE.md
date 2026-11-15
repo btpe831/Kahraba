@@ -148,7 +148,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   check" alert; carries on when plugged back in. Power back after an outage: alert with
   "It's kahraba" / "It's moteur" buttons.
 - All beeps at 3000 Hz (kitchen timer); rhythm tells them apart. 1.5.12 (owner's choice, "like a Honda key chime"):
-  kahraba 4 x 120 ms beeps, three sets 0.5 s apart (~3 s); light off with the charger on: 900 ms + 2 x 150 ms, twice
+  kahraba 4 x 120 ms beeps, sets 0.5 s apart: 3 in 1.5.12 (~3 s), 6 since 1.5.13 (~6 s, `KAHRABA_SETS`); light off with the charger on: 900 ms + 2 x 150 ms, twice
   (`Beeper.lightOff`, `RemoteCodec.BEEP_LIGHT_OFF` to other phones); phone moved silent (notification only);
   moteur three 3 s beeps 3 s apart (1.5.09; no repeats after 1 and 2 min). Volume: Settings slider of the phone's
   STREAM_ALARM steps (`Prefs.BEEP_STEP`, `beepStep`; old Low/Medium/Full = 30/60/100%), sample on release (`Beeper.sample`). While an alert beeps, the power

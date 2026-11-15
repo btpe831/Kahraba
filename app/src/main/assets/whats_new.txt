@@ -4,6 +4,7 @@
 ## 1.5.13
 - Updates from inside the app: when a new version is ready, the home screen shows “Update ready”. Tap it to see what's new, then Update: it downloads and installs right in the app, keeping your data. Check for updates in the menu works the same way.
 - At a glance: the Style and Brightness buttons now always show their words in full.
+- The kahraba beeps last twice as long, so they're harder to miss.
 
 ## 1.5.12
 - New beeps: kahraba is now 4 short beeps, three times, like a car's key chime. A new tone (one long beep and two short ones) tells you when the light goes off while the power is still on. Phone moved is now a notification only, without a sound.
