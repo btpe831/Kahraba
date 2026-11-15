@@ -108,7 +108,9 @@ class GlanceActivity : AppCompatActivity() {
         brightButton = pill { cycleBrightness() }
         row.addView(styleButton)
         row.addView(brightButton, LinearLayout.LayoutParams(-2, -2).apply { marginStart = (10 * dp).toInt() })
-        controls.addView(row)
+        // The row as wide as both buttons need (as a default it was only as wide as the hint under it,
+        // which cut the second button's words off: "Bri", or nothing on a Pixel 10 Pro).
+        controls.addView(row, LinearLayout.LayoutParams(-2, -2))
         hint = TextView(this).apply {
             text = "Tap anywhere else to close"
             textSize = 13f
@@ -136,6 +138,7 @@ class GlanceActivity : AppCompatActivity() {
 
     private fun pill(onTap: () -> Unit) = TextView(this).apply {
         textSize = 14f
+        maxLines = 1
         setTypeface(typeface, Typeface.BOLD)
         setTextColor(GREY)
         setPadding((16 * dp).toInt(), (9 * dp).toInt(), (16 * dp).toInt(), (9 * dp).toInt())

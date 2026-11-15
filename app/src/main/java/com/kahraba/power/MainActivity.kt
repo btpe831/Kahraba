@@ -136,7 +136,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         // The bottom bar's status fades out while the NOW card (which shows the same) is on screen.
         findViewById<android.widget.ScrollView>(R.id.scroll).setOnScrollChangeListener { _, _, _, _, _ -> renderBarStatus(animate = true) }
         findViewById<View>(R.id.factsCard).setOnClickListener { Facts.next(this); renderFact() }
-        findViewById<View>(R.id.updateCheck).setOnClickListener { Updates.open(this); renderUpdate() }
+        findViewById<View>(R.id.updateCheck).setOnClickListener { Updates.checkNow(this); Updates.snooze(this, Updates.REMIND_AFTER_DAYS); renderUpdate() }
+        findViewById<View>(R.id.homeUpdate).setOnClickListener { Updates.found(this)?.let { Updates.offer(this, it) } }
         findViewById<View>(R.id.updateLater).setOnClickListener { Updates.snooze(this, Updates.LATER_DAYS); renderUpdate() }
         findViewById<View>(R.id.setupHide).setOnClickListener {
             Prefs.sp(this).edit().putBoolean(SETUP_CARD, false).apply()
@@ -199,6 +200,8 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         refreshAll()
         ui.post(ticker)
         showIntroIfNew()
+        // Once a day: is there a newer version on GitHub? (1.5.13)
+        Updates.autoCheck(this) { renderUpdate() }
         // Getting alerts from another phone: make sure it's listening (e.g. after Android stopped it).
         AlertsService.start(this)
     }
@@ -1083,7 +1086,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
         item(R.drawable.ic_settings, "Settings", "Sound, cards, backup and more") {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
-        item(R.drawable.ic_update, "Check for updates", "Opens the download page") { Updates.open(this) }
+        item(R.drawable.ic_update, "Check for updates", "See if there's a newer version, and install it") { Updates.checkNow(this) }
         item(R.drawable.ic_help, "Help", "How it works, and tips") { startActivity(Intent(this, HelpActivity::class.java)) }
         if (Feedback.enabled) item(R.drawable.ic_feedback, "Send feedback", "Tell us what to improve") { Feedback.open(this) }
         v.findViewById<View>(R.id.sheetDone).setOnClickListener { sheet.dismiss() }
@@ -1461,9 +1464,17 @@ class MainActivity : ThemedActivity(), SensorEventListener {
 
     private var barStatusShown: Boolean? = null
 
-    /** UPDATE: shown a month after this version was installed, until checked or put off. */
+    /**
+     * Home's "Update ready" (1.5.13, from the daily check of GitHub). The old card (shown a month after
+     * this version was installed, in Your power) is only for test builds, which can't update themselves.
+     */
     private fun renderUpdate() {
-        val due = Updates.reminderDue(this)
+        val ready = Updates.found(this)
+        findViewById<TextView>(R.id.homeUpdate).apply {
+            visibility = if (ready != null) View.VISIBLE else View.GONE
+            if (ready != null) text = "Update ready: version ${ready.version}"
+        }
+        val due = Updates.reminderDue(this) && !Updates.selfUpdates(this)
         findViewById<View>(R.id.updateCard).visibility = if (due) View.VISIBLE else View.GONE
         if (due) findViewById<TextView>(R.id.updateText).text =
             "You've had version ${Updates.version(this)} for a month. There may be a newer one with fixes."

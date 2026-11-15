@@ -12,6 +12,8 @@
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <!-- Only for Alerts on other phones (1.5.0): sends and gets encrypted alerts through ntfy.sh. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- In-app updates (1.5.13): the app checks GitHub for a newer version and hands it to Android's installer. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:name=".KahrabaApp"

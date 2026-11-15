@@ -178,6 +178,12 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
+- 1.5.13: in-app updates (`Updates.autoCheck` once a day on resume, `checkNow` from the menu / Settings, `offer`, `install`):
+  GitHub API releases/latest, asset `KahrabaOrNot-X.apk` (`AppVersion.fromApkName/isNewer/notesFrom`, `AppVersionTest`),
+  download to cache/updates with progress, SHA-256 vs the asset digest, same package + same signing cert as the installed
+  app (`sameAppAndKey`), then ACTION_VIEW via FileProvider (`cache-path updates`); `REQUEST_INSTALL_PACKAGES`, first time
+  "Allow from this source". Home pill `@id/homeUpdate` "Update ready: version X". Test builds (.test) keep the old monthly
+  reminder + browser. At a glance pills: row as wide as the buttons (was the hint's width: "Bri"), maxLines 1.
 - 1.5.12 (tester feedback): At a glance (was Glance screen; a tap shows faded buttons, a tap while shown closes;
   "Brightness: Medium" as ☀ was blank on a Pixel 10 Pro); Settings › Your power cards (cards are on Your power, not the
   menu) with "Open Your power" (`MainActivity.EXTRA_OPEN_POWER`, onNewIntent) and "Arrange cards" at the bottom of Your

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
     <files-path name="files" path="." />
+    <!-- In-app updates (1.5.13): the downloaded APK, handed to Android's installer. -->
+    <cache-path name="updates" path="updates/" />
 </paths>
