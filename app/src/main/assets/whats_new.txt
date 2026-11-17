@@ -3,7 +3,8 @@
 
 ## 1.5.13
 - Updates from inside the app: when a new version is ready, the home screen shows “Update ready”. Tap it to see what's new, then Update: it downloads and installs right in the app, keeping your data. Check for updates in the menu works the same way.
-- At a glance: the Style and Brightness buttons now always show their words in full.
+- At a glance: the Style and Brightness buttons now always show their words in full, and the Brightness button no longer disappears.
+- At a glance on a phone that gets alerts from another: if it hasn't heard from that phone for 20 minutes, it says when it last did (for example, during a power cut with the internet down), and keeps showing the last news instead of "Off".
 - The kahraba beeps last twice as long, so they're harder to miss.
 
 ## 1.5.12

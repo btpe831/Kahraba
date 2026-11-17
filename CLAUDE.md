@@ -183,7 +183,9 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   download to cache/updates with progress, SHA-256 vs the asset digest, same package + same signing cert as the installed
   app (`sameAppAndKey`), then ACTION_VIEW via FileProvider (`cache-path updates`); `REQUEST_INSTALL_PACKAGES`, first time
   "Allow from this source". Home pill `@id/homeUpdate` "Update ready: version X". Test builds (.test) keep the old monthly
-  reminder + browser. At a glance pills: row as wide as the buttons (was the hint's width: "Bri"), maxLines 1.
+  reminder + browser. At a glance pills: row as wide as the buttons (was the hint's width: "Br", and squeezed out entirely
+  when the hint became the shorter "Tap again to close"), maxLines 1. At a glance on a receiver: last news kept after
+  `SILENT_MS` (was "OFF"), with "· last heard X min ago" after 20 min (`STALE_MS`); stopped -> "Always-on mode was stopped on X".
 - 1.5.12 (tester feedback): At a glance (was Glance screen; a tap shows faded buttons, a tap while shown closes;
   "Brightness: Medium" as ☀ was blank on a Pixel 10 Pro); Settings › Your power cards (cards are on Your power, not the
   menu) with "Open Your power" (`MainActivity.EXTRA_OPEN_POWER`, onNewIntent) and "Arrange cards" at the bottom of Your

@@ -184,10 +184,18 @@ class GlanceActivity : AppCompatActivity() {
     }
 
     private fun render() {
-        val remote = if (MonitorState.running) null else RemoteAlerts.current(this)
+        // The other phone's news (this phone gets its alerts): kept on screen even when it's gone quiet,
+        // with when it was last heard from after 20 minutes, so an old card isn't mistaken for news (1.5.13).
+        val now = System.currentTimeMillis()
+        val heard = if (MonitorState.running || RemoteAlerts.getPairing(this) == null) null else RemoteAlerts.heard(this)
+        val stopped = heard?.kind == RemoteCodec.Kind.STOPPED
+        val remote = heard?.takeIf { !stopped }
+        val quiet = remote != null && now - remote.heardMs >= STALE_MS
         val (source, sinceMs, from) = when {
             MonitorState.running -> Triple(MonitorState.source, MonitorState.sinceMs, "")
-            remote != null -> Triple(remote.source, remote.sinceMs, "From ${remote.device}")
+            remote != null -> Triple(remote.source, remote.sinceMs,
+                "From ${remote.device}" + if (quiet) " · last heard ${RemoteCodec.ago(now - remote.heardMs)}" else "")
+            stopped -> Triple(Source.UNKNOWN, 0L, "Always-on mode was stopped on ${heard?.device}")
             else -> Triple(Source.UNKNOWN, 0L, "")
         }
         word.text = when (source) {
@@ -206,7 +214,7 @@ class GlanceActivity : AppCompatActivity() {
         note.visibility = if (from.isEmpty()) View.GONE else View.VISIBLE
 
         since.setTextColor(GREY)
-        note.setTextColor(DARK_GREY)
+        note.setTextColor(if (quiet) GREY else DARK_GREY)
         if (Prefs.glanceStyle(this) == "word") {
             word.background = null
             word.setPadding(0, 0, 0, 0)
@@ -251,6 +259,8 @@ class GlanceActivity : AppCompatActivity() {
 
     companion object {
         private const val MOVE_MS = 60_000L
+        /** The other phone sends news at least every 15 minutes: after 20 without any, say when it was last heard. */
+        private const val STALE_MS = 20 * 60_000L
         private const val WORD_SP = 56f
         private const val GREY = 0xFF9CA3AF.toInt()
         private const val DARK_GREY = 0xFF6B7280.toInt()
