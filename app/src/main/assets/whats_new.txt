@@ -6,6 +6,7 @@
 - At a glance: the Style and Brightness buttons now always show their words in full, and the Brightness button no longer disappears.
 - At a glance on a phone that gets alerts from another: if it hasn't heard from that phone for 20 minutes, it says when it last did (for example, during a power cut with the internet down), and keeps showing the last news instead of "Off".
 - The kahraba beeps last twice as long, so they're harder to miss.
+- Much less battery use on phones that get alerts from another phone: the app no longer keeps the phone awake all the time, only for a few seconds when news arrives.
 
 ## 1.5.12
 - New beeps: kahraba is now 4 short beeps, three times, like a car's key chime. A new tone (one long beep and two short ones) tells you when the light goes off while the power is still on. Phone moved is now a notification only, without a sound.

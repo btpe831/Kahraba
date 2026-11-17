@@ -186,6 +186,9 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   reminder + browser. At a glance pills: row as wide as the buttons (was the hint's width: "Br", and squeezed out entirely
   when the hint became the shorter "Tap again to close"), maxLines 1. At a glance on a receiver: last news kept after
   `SILENT_MS` (was "OFF"), with "· last heard X min ago" after 20 min (`STALE_MS`); stopped -> "Always-on mode was stopped on X".
+  Battery: `AlertsService` no longer holds a permanent PARTIAL_WAKE_LOCK (high drain on a tester's Pixel 10 Pro); a
+  non-counted lock for `AWAKE_FOR_NEWS_MS` (20 s) per incoming message; unrestricted battery asked on pairing
+  ("Allow instant alerts"). MonitorService keeps its lock (Always-on phone is on its charger).
 - 1.5.12 (tester feedback): At a glance (was Glance screen; a tap shows faded buttons, a tap while shown closes;
   "Brightness: Medium" as ☀ was blank on a Pixel 10 Pro); Settings › Your power cards (cards are on Your power, not the
   menu) with "Open Your power" (`MainActivity.EXTRA_OPEN_POWER`, onNewIntent) and "Arrange cards" at the bottom of Your

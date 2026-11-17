@@ -441,7 +441,7 @@ class SettingsActivity : ThemedActivity() {
                     RemoteAlerts.beepHere(ctx)) { RemoteAlerts.setBeepHere(ctx, it) }, lp(top = 8))
                 if (!ignoringBattery()) {
                     addView(divider())
-                    addView(link("Allow alerts in the background", "Needed so alerts arrive with the screen off.") { askBattery() })
+                    addView(link("Allow instant alerts", "Lets alerts arrive straight away while the screen is off (unrestricted battery use). The app only wakes the phone when news comes in.") { askBattery() })
                 }
                 addView(divider())
                 addView(link("Stop getting alerts", "This phone stops listening. Scan the code again to start.") {

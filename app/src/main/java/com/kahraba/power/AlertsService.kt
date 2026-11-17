@@ -22,6 +22,11 @@ import java.net.URL
  * Gets alerts from another phone (1.5.0): keeps a connection open to the other phone's private
  * ntfy.sh topic, opens each message with the key from its code, and shows it here with the usual
  * beeps. Runs in the background like Always-on mode, and warns if the other phone goes quiet.
+ *
+ * Battery (1.5.13): it no longer keeps the phone awake all the time (that stopped it ever sleeping
+ * deeply: high drain reported on a Pixel 10 Pro). The open connection wakes the phone when news
+ * arrives; it's then kept awake for a few seconds, for the notification and the beeps. Unrestricted
+ * battery use (asked when the code is added) lets the connection stay open while the phone sleeps.
  */
 class AlertsService : Service() {
 
@@ -53,10 +58,10 @@ class AlertsService : Service() {
             return
         }
         beeper = Beeper(this)
-        // Like ntfy's own "instant delivery": the phone must stay able to receive.
+        // Held only briefly, when news arrives (see [handle]); not all the time (1.5.13).
         wakeLock = (getSystemService(POWER_SERVICE) as PowerManager)
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "kahraba:alerts")
-            .apply { acquire() }
+            .apply { setReferenceCounted(false) }
         running = true
         worker = Thread({ loop() }, "kahraba-alerts").apply { start() }
         main.post(watch)
@@ -79,7 +84,7 @@ class AlertsService : Service() {
         runCatching { conn?.disconnect() }
         worker?.interrupt()
         if (::beeper.isInitialized) beeper.shutdown()
-        runCatching { wakeLock?.release() }
+        runCatching { if (wakeLock?.isHeld == true) wakeLock?.release() }
         super.onDestroy()
     }
 
@@ -125,6 +130,8 @@ class AlertsService : Service() {
     private fun handle(p: RemoteCodec.Pairing, line: String) {
         val j = runCatching { JSONObject(line) }.getOrNull() ?: return
         if (j.optString("event") != "message") return
+        // Awake just long enough to show it and play the beeps (the longest is about 15 seconds).
+        runCatching { wakeLock?.acquire(AWAKE_FOR_NEWS_MS) }
         // Another code was scanned meanwhile: ignore the old one's messages.
         if (RemoteAlerts.getPairing(this)?.topic != p.topic) return
         RemoteAlerts.setLastId(this, j.optString("id"))
@@ -231,6 +238,7 @@ class AlertsService : Service() {
         private const val STATUS_ID = 2
         private const val ALERT_ID_FIRST = 1100
         private const val ALERT_ID_COUNT = 50
+        private const val AWAKE_FOR_NEWS_MS = 20_000L
 
         /** Starts (or reconnects) when this phone gets alerts from another; harmless otherwise. */
         fun start(ctx: Context, reconnect: Boolean = false) {
