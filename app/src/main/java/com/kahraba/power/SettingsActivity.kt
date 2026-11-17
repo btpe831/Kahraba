@@ -240,15 +240,22 @@ class SettingsActivity : ThemedActivity() {
             // The phone's own alarm volume steps (7 on Pixels), so each stop is exactly what it plays.
             val max = (getSystemService(android.content.Context.AUDIO_SERVICE) as AudioManager).getStreamMaxVolume(AudioManager.STREAM_ALARM).coerceAtLeast(2)
             val start = Prefs.beepStep(this@SettingsActivity, max)
-            val label = text("Volume: $start", 16f, R.attr.appText)
+            fun volumeText(v: Int) = if (v == 0) "Volume: 0 (silent)" else "Volume: $v"
+            fun hintText(v: Int) = if (v == 0) "No beeps: alerts show as notifications only."
+                else "Let go to hear it. Beeps play on the alarm channel, so they sound even when the phone is on silent."
+            val label = text(volumeText(start), 16f, R.attr.appText)
+            val hint = text(hintText(start), 14f, R.attr.appMuted)
             addView(label, lp(top = 8))
             addView(Slider(this@SettingsActivity).apply {
-                valueFrom = 1f
+                valueFrom = 0f
                 valueTo = max.toFloat()
                 stepSize = 1f
                 value = start.toFloat()
                 labelBehavior = LabelFormatter.LABEL_GONE
-                addOnChangeListener { _, v, _ -> label.text = "Volume: ${v.toInt()}" }
+                addOnChangeListener { _, v, _ ->
+                    label.text = volumeText(v.toInt())
+                    hint.text = hintText(v.toInt())
+                }
                 // Letting go saves it and plays a sample at that volume.
                 addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
                     override fun onStartTrackingTouch(slider: Slider) {}
@@ -260,7 +267,7 @@ class SettingsActivity : ThemedActivity() {
                     }
                 })
             }, lp(top = 2))
-            addView(text("Let go to hear it. Beeps play on the alarm channel, so they sound even when the phone is on silent.", 14f, R.attr.appMuted), lp(top = 6))
+            addView(hint, lp(top = 6))
         })
 
         // QUICK CHECK

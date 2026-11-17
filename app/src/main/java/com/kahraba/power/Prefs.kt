@@ -73,7 +73,8 @@ object Prefs {
      */
     fun beepStep(ctx: Context, max: Int): Int {
         val p = sp(ctx)
-        if (p.contains(BEEP_STEP)) return p.getInt(BEEP_STEP, max).coerceIn(1, max)
+        // 0 = silent (1.5.15): no beeps, alerts as notifications only.
+        if (p.contains(BEEP_STEP)) return p.getInt(BEEP_STEP, max).coerceIn(0, max)
         val share = when (p.getString(BEEP_VOLUME, "full")) { "low" -> 0.3; "medium" -> 0.6; else -> 1.0 }
         return Math.round(max * share).toInt().coerceIn(1, max)
     }

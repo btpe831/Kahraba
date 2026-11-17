@@ -3,7 +3,9 @@ package com.kahraba.power
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.app.PendingIntent
 import android.content.pm.PackageInfo
+import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -226,13 +228,41 @@ object Updates {
                     failed(activity, result.exceptionOrNull()?.message ?: "The download didn't finish.")
                     return@post
                 }
-                runCatching {
+                // One tap (1.5.15): Android's package installer, with no extra confirmation on Android 12 and
+                // later; on older phones (or if Android insists) its confirmation screen comes up instead.
+                val viaSession = runCatching { installSession(activity, file) }.isSuccess
+                if (viaSession) {
+                    Toast.makeText(activity, "Installing ${r.version}… the app restarts in a moment.", Toast.LENGTH_LONG).show()
+                } else runCatching {
                     val uri = FileProvider.getUriForFile(activity, "${activity.packageName}.files", file)
                     activity.startActivity(Intent(Intent.ACTION_VIEW).setDataAndType(uri, "application/vnd.android.package-archive")
                         .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK))
                 }.onFailure { failed(activity, "Android's installer didn't open.") }
             }
         }.start()
+    }
+
+    /**
+     * Hands the checked APK to Android's package installer. The result (and, if Android wants it, its
+     * confirmation screen) comes back to [UpdateReceiver].
+     */
+    private fun installSession(ctx: Context, apk: File) {
+        val installer = ctx.packageManager.packageInstaller
+        val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
+            setAppPackageName(ctx.packageName)
+            setSize(apk.length())
+            if (Build.VERSION.SDK_INT >= 31) setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
+        }
+        val id = installer.createSession(params)
+        installer.openSession(id).use { session ->
+            session.openWrite("update.apk", 0, apk.length()).use { out ->
+                apk.inputStream().use { it.copyTo(out) }
+                session.fsync(out)
+            }
+            val flags = PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0)
+            val done = PendingIntent.getBroadcast(ctx, id, Intent(ctx, UpdateReceiver::class.java), flags)
+            session.commit(done.intentSender)
+        }
     }
 
     /** Downloads and checks the APK. Throws with a plain reason if anything isn't right. */

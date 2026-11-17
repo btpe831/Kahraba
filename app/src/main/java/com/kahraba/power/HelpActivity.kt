@@ -153,7 +153,7 @@ class HelpActivity : ThemedActivity() {
             """,
 
             "Privacy" to """
-                Everything stays on this phone, except <b>alerts to your other phones</b>, if you add one: they're encrypted and go through ntfy.sh. The only other internet use is checking for updates: once a day the app asks the download page (GitHub) for the latest version number, and sends nothing about you. When a newer version is ready, home shows “Update ready”: tap it to download and install it inside the app (Android asks you to confirm, and the first time to allow the app to install updates). Nothing else is sent anywhere unless you tap Share or Send feedback yourself. Your area (Settings › Your area) is optional, chosen by you rather than from GPS, and only included in feedback emails. Uninstalling the app deletes all its data.
+                Everything stays on this phone, except <b>alerts to your other phones</b>, if you add one: they're encrypted and go through ntfy.sh. The only other internet use is checking for updates: once a day the app asks the download page (GitHub) for the latest version number, and sends nothing about you. When a newer version is ready, home shows “Update ready”: tap it to download and install it inside the app (the first time, Android asks you to allow the app to install updates; on Android 11 and older it also asks to confirm each update). Nothing else is sent anywhere unless you tap Share or Send feedback yourself. Your area (Settings › Your area) is optional, chosen by you rather than from GPS, and only included in feedback emails. Uninstalling the app deletes all its data.
             """,
 
             "Disclaimer" to """

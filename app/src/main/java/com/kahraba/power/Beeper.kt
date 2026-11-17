@@ -97,6 +97,7 @@ class Beeper(private val ctx: Context) {
     @Synchronized
     fun sample(step: Int) {
         cancel()
+        if (step <= 0) return
         pending += exec.schedule(Runnable { play(kahrabaSet, respectQuiet = false, step = step) }, 0, TimeUnit.MILLISECONDS)
     }
 
@@ -112,6 +113,8 @@ class Beeper(private val ctx: Context) {
     private fun alert(pcm: ShortArray, respectQuiet: Boolean) {
         cancel()
         if (respectQuiet && Prefs.isQuietNow(ctx)) return
+        // Volume 0 in Settings: silent, the notifications only (1.5.15).
+        if (Prefs.beepStep(ctx, audio.getStreamMaxVolume(AudioManager.STREAM_ALARM).coerceAtLeast(1)) == 0) return
         val gen = ++alertGen
         main.post { startButtons(gen) }
         pending += exec.schedule(Runnable {
@@ -216,7 +219,9 @@ class Beeper(private val ctx: Context) {
         val stream = AudioManager.STREAM_ALARM
         val oldVolume = audio.getStreamVolume(stream)
         val max = audio.getStreamMaxVolume(stream)
-        val target = (step ?: Prefs.beepStep(ctx, max)).coerceIn(1, max.coerceAtLeast(1))
+        val wanted = step ?: Prefs.beepStep(ctx, max)
+        if (wanted <= 0) return
+        val target = wanted.coerceIn(1, max.coerceAtLeast(1))
         var track: AudioTrack? = null
         try {
             runCatching { audio.setStreamVolume(stream, target, 0) }

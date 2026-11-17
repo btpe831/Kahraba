@@ -91,6 +91,11 @@
                 android:value="Receives power alerts sent by the user's other phone running Always-on mode" />
         </service>
 
+        <!-- In-app updates (1.5.15): Android's installer reports back here. -->
+        <receiver
+            android:name=".UpdateReceiver"
+            android:exported="false" />
+
         <receiver
             android:name=".BootReceiver"
             android:exported="true">
