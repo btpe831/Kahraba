@@ -137,6 +137,14 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   kahraba 10-60 min. 13 Nov 9:07 (flicker, +6%, cut 9:17) and 14 Nov 8:19 (0.9 s blink, +6%, still 38 min to the 8:57 cut)
   were missed by everything else; 1.5.11 catches 14 Nov (alert 8:48) and 11 Nov 13:33 (alert 13:51), not 13 Nov (10 min).
   Owner: kahraba always ends with a cut (~70 s); an idea not built: mark switch-to-cut spans as kahraba afterwards.
+- Power back as a switch moment (1.5.18, `lastSwitchCutMs`, `CutStillKahrabaTest`): after a cut (>= 30 s) the power coming
+  back is a switch moment for rule 1c (15 min still, daytime, light not < 97% of the 3 min before the cut). 17 Nov: kahraba
+  11:01 (flicker +7.4%, just under 8%; a dip at 11:15 broke 1c at 14 min), 59 s cut 11:21, back dead still 31 min, cut 13:01:
+  alert 11:40 "since 11:22". Every daytime cut since 29 Oct: the moteur wobbled within 8 min; only 29 Oct 16:31/17:16 (kahraba,
+  1,300 lux still vs a busy ~950 moteur) and 17 Nov 11:22 stayed still 15+. Cuts 9:25, 9:51, 17:53 on 17 Nov: moteur both sides.
+- Wobbles kept for the whole kahraba check (1.5.18): `wobbleEpisodes` was trimmed to 6 min, so the 10-min marginal check
+  forgot early wobbles. 16 Nov 7:10: moteur stepped to 2,334 (its 10-min top 2,215), wobbles 7:12:16, 7:12:34(+43), 7:21:30;
+  1.5.17 alerted 7:22:05, light back down 7:22:35, then "kahraba" all day (real kahraba 15:00 got no alert).
 - Daytime stillness (1.4.09, 60 min since 1.5.08, was 45; last resort): from moteur, 60 min with <= 2 separate wobbles,
   all judged, both ends 7 AM-7 PM (`hourOf`, `PowerDetector.localHour` in the app; tests pass `recordingClock`), light
   now >= the 15 min before -> kahraba since the start of the 45 min. Longest still spell: daytime moteur 24 min, kahraba
@@ -178,6 +186,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
+- 1.5.18: kahraba after a cut (power back = switch moment for rule 1c); wobbles kept for the whole 10-min check.
 - 1.5.17: Check for updates' waiting window: spinner + text, centred (`Updates.checkNow`; a title-only dialog looked cramped).
 - 1.5.16: `Prefs.soundOff` ("Sound off" / "until 7:00 AM" / "on this phone") on home (`@id/homeSound`) and the
   Always-on card (`@id/soundOff`), tap -> Settings.

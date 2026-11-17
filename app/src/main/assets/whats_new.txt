@@ -1,6 +1,10 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.5.18
+- Kahraba is now caught when it comes back right after a short power cut: if the light then stays completely still during the day, the app says kahraba instead of assuming the moteur.
+- Fewer false kahraba alerts: when the moteur steps up for a few minutes, the app now counts all its wobbles during the longer check, so it no longer mistakes it for kahraba.
+
 ## 1.5.17
 - Check for updates now shows a tidy “Checking for updates…” window with a spinner, instead of a squeezed little box.
 

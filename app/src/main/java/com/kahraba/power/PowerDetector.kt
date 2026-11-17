@@ -225,6 +225,7 @@ class PowerDetector(
                 lastDipMs = dipAtMs
                 lastSwitchMs = dipAtMs
                 lastSwitchBlink = false
+                lastSwitchCutMs = -1L
                 dipAtMs = -1L
             }
         }
@@ -237,6 +238,11 @@ class PowerDetector(
     private var lastSwitchMs = -1L
     /** Whether that moment was a blink (dark), which a hand on the light switch can also make. */
     private var lastSwitchBlink = false
+    /**
+     * When the power went off, if the last switch moment was the power coming back after a cut (or -1):
+     * the light before the switch is then the light before the cut (1.5.18).
+     */
+    private var lastSwitchCutMs = -1L
 
     /**
      * The light goes dark for a second or so and comes straight back, with the charger still on: the
@@ -259,6 +265,7 @@ class PowerDetector(
             lux >= blinkRef * 0.9 -> {
                 lastSwitchMs = blinkAtMs
                 lastSwitchBlink = true
+                lastSwitchCutMs = -1L
                 blinkAtMs = -1L
             }
         }
@@ -272,7 +279,8 @@ class PowerDetector(
      * [SWITCH_STILL_MS] after a flicker, [BLINK_STILL_MS] after a blink (someone switching the light
      * off and on looks the same), and not dimmer than before. After a flicker or blink the moteur
      * stayed still for at most 8.5 minutes (7 Nov, 16:56); kahraba for 10 to 60 (13 and 14 Nov:
-     * kahraba only ~6% brighter than the moteur, missed by every other rule).
+     * kahraba only ~6% brighter than the moteur, missed by every other rule). Since 1.5.18 the power
+     * coming back after a cut is a switch moment too (15 minutes, compared with the light before the cut).
      */
     private fun stillAfterSwitch(now: Long, thr: Double): Long? {
         val hour = hourOf ?: return null
@@ -283,7 +291,8 @@ class PowerDetector(
         val after = longSeconds.filter { it.t > sw + SWITCH_SETTLE_MS }
         if (after.size < need / 1_000 * 0.9) return null
         if (after.any { (it.flicker ?: 0.0) > thr } || after.count { it.level == null } > after.size / 10) return null
-        val before = median(longSeconds.filter { it.t in (sw - 5_000 - 3 * 60_000)..(sw - 5_000) }.mapNotNull { it.level }) ?: return null
+        val ref = if (lastSwitchCutMs >= 0) lastSwitchCutMs else sw
+        val before = median(longSeconds.filter { it.t in (ref - 5_000 - 3 * 60_000)..(ref - 5_000) }.mapNotNull { it.level }) ?: return null
         val nowLevel = median(after.mapNotNull { it.level }) ?: return null
         return if (nowLevel >= before * 0.97) sw else null
     }
@@ -407,6 +416,11 @@ class PowerDetector(
             }
             out += change(now, Source.MOTEUR, reason)
             resetHistory(now)
+            // The power coming back is a switch moment too: kahraba can come back after a cut (17 Nov,
+            // 11:22 AM: a 59 s cut, then dead still for 31 minutes; 29 Oct, 4:31 and 5:16 PM). See
+            // [stillAfterSwitch]; after every other daytime cut the moteur wobbled within 8 minutes.
+            lastSwitchMs = now
+            lastSwitchCutMs = offSince
         }
     }
 
@@ -509,7 +523,9 @@ class PowerDetector(
         } else {
             calmSeconds++
         }
-        while (wobbleEpisodes.isNotEmpty() && wobbleEpisodes.first() < now - CONFIRM_MS * 2) wobbleEpisodes.removeFirst()
+        // Kept for the whole kahraba check, the longer one too (1.5.18: kept only 6 minutes, the 10-minute
+        // check missed the first two wobbles of a moteur step on 16 Nov, 7:12 AM, and alerted).
+        while (wobbleEpisodes.isNotEmpty() && wobbleEpisodes.first() < now - maxOf(CONFIRM_MS * 2, MARGINAL_CONFIRM_MS + 60_000)) wobbleEpisodes.removeFirst()
         while (quietEpisodes.isNotEmpty() && quietEpisodes.first() < now - QUIET_MS - 60_000) quietEpisodes.removeFirst()
         if (flicker != null && flicker > config.flickerThresholdPct) {
             // Busy: wobbling again and again within a minute (one step in brightness only shows for a
@@ -683,8 +699,11 @@ class PowerDetector(
                 val sw = stillAfterSwitch(now, thr)
                 if (sw != null) {
                     val minutes = switchStillMs() / 60_000
+                    val afterCut = lastSwitchCutMs >= 0
                     lastSwitchMs = -1L
-                    propose(now, sw, "The power switched and the light stayed completely still for $minutes minutes – kahraba is back")
+                    lastSwitchCutMs = -1L
+                    propose(now, sw, if (afterCut) "The power came back and the light stayed completely still for $minutes minutes – kahraba is back"
+                        else "The power switched and the light stayed completely still for $minutes minutes – kahraba is back")
                     return
                 }
             }
@@ -881,6 +900,7 @@ class PowerDetector(
         blinkAtMs = -1L
         lastSwitchMs = -1L
         lastSwitchBlink = false
+        lastSwitchCutMs = -1L
     }
 
     companion object {
