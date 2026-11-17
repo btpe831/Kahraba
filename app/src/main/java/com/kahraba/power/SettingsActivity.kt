@@ -311,10 +311,10 @@ class SettingsActivity : ThemedActivity() {
             addView(segmented(listOf("Coloured card" to "card", "Word" to "word"), Prefs.glanceStyle(this@SettingsActivity)) {
                 Prefs.sp(this@SettingsActivity).edit().putString(Prefs.GLANCE_STYLE, it).apply()
             }, lp(top = 12))
-            addView(segmented(listOf("Low" to "low", "Medium" to "medium", "Full" to "full"), Prefs.glanceBright(this@SettingsActivity)) {
+            addView(segmented(GlanceActivity.BRIGHT_LEVELS.map { GlanceActivity.brightLabel(it) to it }, Prefs.glanceBright(this@SettingsActivity)) {
                 Prefs.sp(this@SettingsActivity).edit().putString(Prefs.GLANCE_BRIGHT, it).apply()
             }, lp(top = 8))
-            addView(text("Brightness while At a glance is open. Full is easiest to read in a bright room, but wears the " +
+            addView(text("Brightness while At a glance is open. Night is the dimmest, for a dark room. Full is easiest to read in a bright room, but wears the " +
                 "screen faster over months; the words move a little every minute to help.", 14f, R.attr.appMuted), lp(top = 10))
         }, lp(top = 12))
         body.addView(card {

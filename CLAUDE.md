@@ -178,6 +178,8 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
+- 1.5.14: At a glance brightness Night 1% / Low 8% / Medium 35% (default) / High 65% / Full (`GlanceActivity.BRIGHT_LEVELS`,
+  `brightLabel`); first version to arrive through the in-app updater.
 - 1.5.13: in-app updates (`Updates.autoCheck` once a day on resume, `checkNow` from the menu / Settings, `offer`, `install`):
   GitHub API releases/latest, asset `KahrabaOrNot-X.apk` (`AppVersion.fromApkName/isNewer/notesFrom`, `AppVersionTest`),
   download to cache/updates with progress, SHA-256 vs the asset digest, same package + same signing cert as the installed

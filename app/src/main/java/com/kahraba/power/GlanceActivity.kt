@@ -162,7 +162,7 @@ class GlanceActivity : AppCompatActivity() {
     private fun labelButtons() {
         styleButton.text = if (Prefs.glanceStyle(this) == "word") "Style: Word" else "Style: Card"
         // Words only: the ☀ didn't show on a Pixel 10 Pro and took the whole label with it.
-        brightButton.text = "Brightness: " + when (Prefs.glanceBright(this)) { "low" -> "Low"; "full" -> "Full"; else -> "Medium" }
+        brightButton.text = "Brightness: " + brightLabel(Prefs.glanceBright(this))
     }
 
     private fun cycleStyle() {
@@ -173,7 +173,9 @@ class GlanceActivity : AppCompatActivity() {
     }
 
     private fun cycleBrightness() {
-        val next = when (Prefs.glanceBright(this)) { "low" -> "medium"; "medium" -> "full"; else -> "low" }
+        // Night → Low → Medium → High → Full, then back to Night (1.5.14: five levels).
+        val i = BRIGHT_LEVELS.indexOf(Prefs.glanceBright(this))
+        val next = BRIGHT_LEVELS[(i + 1) % BRIGHT_LEVELS.size]
         Prefs.sp(this).edit().putString(Prefs.GLANCE_BRIGHT, next).apply()
         labelButtons()
         applyBrightness()
@@ -265,11 +267,24 @@ class GlanceActivity : AppCompatActivity() {
         private const val GREY = 0xFF9CA3AF.toInt()
         private const val DARK_GREY = 0xFF6B7280.toInt()
 
-        /** Low is dim (the 1.5.0 level), Medium about a third, Full the phone's maximum. */
+        /** Night 1% (1.5.14, for a dark bedroom), Low 8% (the 1.5.0 level), Medium about a third, High 65%, Full the maximum. */
         fun brightness(level: String): Float = when (level) {
+            "night" -> 0.01f
             "low" -> 0.08f
+            "high" -> 0.65f
             "full" -> 1f
             else -> 0.35f
+        }
+
+        /** The brightness levels in order, darkest first (Night and High added in 1.5.14). */
+        val BRIGHT_LEVELS = listOf("night", "low", "medium", "high", "full")
+
+        fun brightLabel(level: String): String = when (level) {
+            "night" -> "Night"
+            "low" -> "Low"
+            "high" -> "High"
+            "full" -> "Full"
+            else -> "Medium"
         }
 
         /** Lighter than the app's usual colours, so coloured words read well on black. */
