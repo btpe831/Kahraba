@@ -51,7 +51,8 @@ object Updates {
     /** A newer version on GitHub: its number, APK link, size, SHA-256 (if given) and what's new. */
     data class Release(val version: String, val url: String, val size: Long, val sha256: String?, val notes: String)
 
-    private val main = Handler(Looper.getMainLooper())
+    // Made when first used, so the plain helpers (isDue) also work in unit tests.
+    private val main by lazy { Handler(Looper.getMainLooper()) }
 
     /** Whether this copy can update itself (not a test build). */
     fun selfUpdates(ctx: Context): Boolean = !ctx.packageName.endsWith(".test")
