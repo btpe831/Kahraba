@@ -257,6 +257,29 @@ object Prefs {
         return h * 60 + m
     }
 
+    /**
+     * Why alerts won't beep on this phone right now, for home and the Always-on screen (1.5.16):
+     * volume 0, quiet hours ("until 7:00 AM"), or beeps switched off for the other phone's alerts.
+     * Null when they will beep.
+     */
+    fun soundOff(ctx: Context): String? {
+        val audio = ctx.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
+        val max = audio.getStreamMaxVolume(android.media.AudioManager.STREAM_ALARM).coerceAtLeast(1)
+        if (beepStep(ctx, max) == 0) return "Sound off"
+        if (isQuietNow(ctx)) {
+            val end = parseClock(sp(ctx).getString(QUIET_END, "07:00")) ?: return "Sound off (quiet hours)"
+            val c = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, end / 60)
+                set(Calendar.MINUTE, end % 60)
+            }
+            return "Sound off until " + java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault()).format(c.time)
+        }
+        if (!MonitorState.running && RemoteAlerts.getPairing(ctx) != null && !RemoteAlerts.beepHere(ctx)) {
+            return "Sound off on this phone"
+        }
+        return null
+    }
+
     /** The room the always-on monitor's phone sits in, or "" for none. */
     fun monitorRoom(ctx: Context): String =
         (sp(ctx).getString(MONITOR_ROOM, "") ?: "").takeIf { it in spots(ctx) } ?: ""

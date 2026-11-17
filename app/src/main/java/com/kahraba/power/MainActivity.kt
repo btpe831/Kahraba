@@ -378,6 +378,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             if (!MonitorState.running && RemoteAlerts.getPairing(this) != null) SettingsActivity.openRemote(this) else openAlwaysOn()
         }
         findViewById<View>(R.id.homeHandle).setOnClickListener { showPeek(true) }
+        findViewById<View>(R.id.homeSound).setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
         findViewById<View>(R.id.homeSettings).setOnClickListener { showTools() }
         findViewById<TextView>(R.id.homeRoom).apply {
             setOnClickListener { if (check == null) pickRoom() }
@@ -1207,6 +1208,11 @@ class MainActivity : ThemedActivity(), SensorEventListener {
                 } else "No news from ${it.device}"
             } ?: "Waiting for your other phone"
             else -> "Always-on: inactive"
+        }
+        findViewById<TextView>(R.id.homeSound).apply {
+            val off = Prefs.soundOff(this@MainActivity)
+            text = off.orEmpty()
+            visibility = if (off == null) View.GONE else View.VISIBLE
         }
         findViewById<TextView>(R.id.homeRoom).apply {
             val room = Prefs.currentSpot(this@MainActivity)

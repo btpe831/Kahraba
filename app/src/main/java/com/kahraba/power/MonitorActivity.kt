@@ -95,6 +95,7 @@ class MonitorActivity : ThemedActivity() {
             }
         }
         battery.setOnClickListener { askBatteryExemption() }
+        findViewById<View>(R.id.soundOff).setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
         setUpGraph()
 
         askNotificationPermission()
@@ -266,6 +267,11 @@ class MonitorActivity : ThemedActivity() {
 
         val pm = getSystemService(POWER_SERVICE) as PowerManager
         battery.visibility = if (pm.isIgnoringBatteryOptimizations(packageName)) View.GONE else View.VISIBLE
+        findViewById<TextView>(R.id.soundOff).apply {
+            val off = Prefs.soundOff(this@MonitorActivity)
+            text = off?.let { "$it – alerts won't beep (tap to change)" }.orEmpty()
+            visibility = if (off == null) View.GONE else View.VISIBLE
+        }
     }
 
     // ---- Light graph: what Always-on mode saved, plus the last few minutes live ----
