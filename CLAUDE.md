@@ -178,6 +178,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
+- 1.5.17: Check for updates' waiting window: spinner + text, centred (`Updates.checkNow`; a title-only dialog looked cramped).
 - 1.5.16: `Prefs.soundOff` ("Sound off" / "until 7:00 AM" / "on this phone") on home (`@id/homeSound`) and the
   Always-on card (`@id/soundOff`), tap -> Settings.
 - 1.5.15: volume slider 0..max, 0 = silent (`beepStep` 0; `Beeper.alert`/`play`/`sample` skip); one-tap updates via

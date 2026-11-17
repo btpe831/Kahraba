@@ -12,11 +12,13 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.view.Gravity
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import org.json.JSONObject
 import java.io.File
@@ -112,12 +114,30 @@ object Updates {
             open(activity)
             return
         }
-        val waiting = MaterialAlertDialogBuilder(activity).setTitle("Checking for updates…").setCancelable(true).show()
+        // A spinner and the words, centred with room around them (1.5.17: a title alone looked squeezed).
+        val dp = activity.resources.displayMetrics.density
+        val row = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding((24 * dp).toInt(), (22 * dp).toInt(), (24 * dp).toInt(), (22 * dp).toInt())
+            addView(CircularProgressIndicator(activity).apply {
+                isIndeterminate = true
+                indicatorSize = (28 * dp).toInt()
+            })
+            addView(TextView(activity).apply {
+                text = "Checking for updates…"
+                textSize = 16f
+            }, LinearLayout.LayoutParams(-2, -2).apply { marginStart = (16 * dp).toInt() })
+        }
+        val stopped = java.util.concurrent.atomic.AtomicBoolean(false)
+        val waiting = MaterialAlertDialogBuilder(activity).setView(row).setCancelable(true)
+            .setOnCancelListener { stopped.set(true) }
+            .show()
         Thread {
             val r = runCatching { fetchLatest() }.getOrNull()
             main.post {
                 runCatching { waiting.dismiss() }
-                if (activity.isFinishing || activity.isDestroyed) return@post
+                if (stopped.get() || activity.isFinishing || activity.isDestroyed) return@post
                 if (r == null) {
                     MaterialAlertDialogBuilder(activity)
                         .setTitle("Couldn't check right now")

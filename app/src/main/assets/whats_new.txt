@@ -1,6 +1,9 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.5.17
+- Check for updates now shows a tidy “Checking for updates…” window with a spinner, instead of a squeezed little box.
+
 ## 1.5.16
 - “Sound off” on the home screen and the Always-on screen whenever alerts won't beep: volume at 0, quiet hours (“Sound off until 7:00 AM”), or beeps switched off for the other phone's alerts. Tap it to change.
 
