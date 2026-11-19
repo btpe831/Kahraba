@@ -130,8 +130,6 @@ class AlertsService : Service() {
     private fun handle(p: RemoteCodec.Pairing, line: String) {
         val j = runCatching { JSONObject(line) }.getOrNull() ?: return
         if (j.optString("event") != "message") return
-        // Awake just long enough to show it and play the beeps (the longest is about 15 seconds).
-        runCatching { wakeLock?.acquire(AWAKE_FOR_NEWS_MS) }
         // Another code was scanned meanwhile: ignore the old one's messages.
         if (RemoteAlerts.getPairing(this)?.topic != p.topic) return
         RemoteAlerts.setLastId(this, j.optString("id"))
@@ -144,6 +142,9 @@ class AlertsService : Service() {
         }
         val newer = RemoteAlerts.saveHeard(this, m)
         val fresh = System.currentTimeMillis() - m.timeMs < RemoteAlerts.FRESH_MS
+        // Awake just long enough to show an alert and play its beeps (the longest is about 15 seconds);
+        // check-ins and history are saved without keeping the phone awake (1.5.20, battery).
+        if (newer && fresh && m.kind == RemoteCodec.Kind.ALERT) runCatching { wakeLock?.acquire(AWAKE_FOR_NEWS_MS) }
         main.post {
             if (newer && fresh && m.kind == RemoteCodec.Kind.ALERT) alert(m)
             updateStatus()

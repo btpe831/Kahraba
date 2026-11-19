@@ -1,6 +1,10 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.5.20
+- The Today card has a line for kahraba and a line for the moteur, each with how long and when, then a short line with power cuts and any time Always-on mode wasn't running ("not recorded").
+- Phones that get alerts from another phone use less battery: they only wake up for real alerts, and the other phone checks in every 30 minutes instead of 15. Alerts still arrive straight away; if the other phone goes quiet, you're told after about an hour.
+
 ## 1.5.19
 - Fewer false kahraba alerts at night: the app now compares the light with the moteur's brightest over the last hour, not just the last few minutes, so a moteur reaching its usual top is no longer taken for kahraba.
 - A loose charger cable is no longer taken for a power cut: if the charger stops but the light stays on, the app says “The phone isn't charging – please check the cable” and carries on as before.

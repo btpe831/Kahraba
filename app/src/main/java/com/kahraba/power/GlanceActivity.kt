@@ -187,7 +187,7 @@ class GlanceActivity : AppCompatActivity() {
 
     private fun render() {
         // The other phone's news (this phone gets its alerts): kept on screen even when it's gone quiet,
-        // with when it was last heard from after 20 minutes, so an old card isn't mistaken for news (1.5.13).
+        // with when it was last heard from after 40 minutes (20 until 1.5.20), so an old card isn't mistaken for news (1.5.13).
         val now = System.currentTimeMillis()
         val heard = if (MonitorState.running || RemoteAlerts.getPairing(this) == null) null else RemoteAlerts.heard(this)
         val stopped = heard?.kind == RemoteCodec.Kind.STOPPED
@@ -261,8 +261,8 @@ class GlanceActivity : AppCompatActivity() {
 
     companion object {
         private const val MOVE_MS = 60_000L
-        /** The other phone sends news at least every 15 minutes: after 20 without any, say when it was last heard. */
-        private const val STALE_MS = 20 * 60_000L
+        /** The other phone sends news at least every 30 minutes: after 40 without any, say when it was last heard. */
+        private const val STALE_MS = 40 * 60_000L
         private const val WORD_SP = 56f
         private const val GREY = 0xFF9CA3AF.toInt()
         private const val DARK_GREY = 0xFF6B7280.toInt()

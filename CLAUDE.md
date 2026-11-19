@@ -194,6 +194,11 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
+- 1.5.20: Today card lines (`KahrabaPattern.todayLines`, `TodayLine`: "● Kahraba 1h 30m · 7:06–7:11 AM, 7:36–9:02 AM",
+  moteur the same (joined across cuts), "No power" only with an outage, > `LIST_MAX` (3) periods -> "N times"; grey last line
+  "1 power cut · not recorded for 25m"; owner chose "not recorded"; `today()` kept for the shared overview). Battery (a
+  tester's feedback; no Firebase, so it runs without Google services): `AlertsService` holds its 20 s wake lock only for
+  fresh new ALERTs (not ALIVE/HISTORY); `ALIVE_EVERY_MS` 30 min (was 15), `SILENT_MS` 70 (was 40), Glance `STALE_MS` 40 (was 20).
 - 1.5.19: floor over the last hour (night moteur step 18 Nov 3:38); charger off with the light on is not a cut.
 - 1.5.18: kahraba after a cut (power back = switch moment for rule 1c); wobbles kept for the whole 10-min check.
 - 1.5.17: Check for updates' waiting window: spinner + text, centred (`Updates.checkNow`; a title-only dialog looked cramped).

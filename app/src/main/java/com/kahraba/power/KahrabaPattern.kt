@@ -69,15 +69,21 @@ object KahrabaPattern {
     private fun clock(ms: Long) = PowerDetector.formatClock(ms)
 
     /** Kahraba periods (touching spans joined) overlapping [from, to), clipped to it. */
-    private fun kahrabaBlocks(spans: List<Span>, from: Long, to: Long): List<Span> {
+    private fun kahrabaBlocks(spans: List<Span>, from: Long, to: Long): List<Span> = blocks(spans, from, to, Source.KAHRABA)
+
+    /**
+     * Periods of [source] (touching spans joined: a moteur on both sides of a power cut is one period)
+     * overlapping [from, to), clipped to it.
+     */
+    private fun blocks(spans: List<Span>, from: Long, to: Long, source: Source): List<Span> {
         val out = ArrayList<Span>()
-        for (sp in spans.filter { it.source == Source.KAHRABA }.sortedBy { it.start }) {
+        for (sp in spans.filter { it.source == source }.sortedBy { it.start }) {
             val a = maxOf(sp.start, from)
             val b = minOf(sp.end, to)
             if (b <= a) continue
             val last = out.lastOrNull()
             if (last != null && a <= last.end + 60_000) out[out.size - 1] = last.copy(end = maxOf(last.end, b))
-            else out += Span(a, b, Source.KAHRABA)
+            else out += Span(a, b, source)
         }
         return out
     }
@@ -142,6 +148,71 @@ object KahrabaPattern {
         sb.append(if (c == 0) " No power cuts." else " ${plural(c, "power cut")}.")
         if (nowMs - dayStart - ran > 30 * 60_000) sb.append(" Always-on mode ran for ${hours(ran)} of it.")
         return sb.toString()
+    }
+
+    /** One line of the Today card: a source and its text, or (no source) the small line under them. */
+    data class TodayLine(val source: Source?, val text: String) {
+        val word: String get() = when (source) {
+            Source.KAHRABA -> "Kahraba"
+            Source.MOTEUR -> "Moteur"
+            Source.NO_POWER -> "No power"
+            Source.POWER_ON -> "Power on"
+            else -> ""
+        }
+    }
+
+    /** More periods than this on a line: say how many times instead of listing them. */
+    const val LIST_MAX = 3
+
+    /** "7:06–7:11 AM", or "11:30 AM–1:02 PM" across noon. */
+    private fun range(a: Long, b: Long): String {
+        val ca = clock(a)
+        val cb = clock(b)
+        return if (ca.takeLast(3) == cb.takeLast(3)) "${ca.dropLast(3)}–$cb" else "$ca–$cb"
+    }
+
+    /**
+     * The Today card (1.5.20), a line each: "Kahraba 1h 30m · 7:06–7:11 AM, 7:36–9:02 AM", the same
+     * for the moteur, "No power …" only on days with an outage, then "1 power cut · not recorded for
+     * 25m" (time Always-on mode wasn't running). Totals count today only; a period from before
+     * midnight says so ("from 11:02 PM yesterday to 7:06 AM"). With power cuts only (no light), the
+     * lines are "Power on" and "Power off".
+     */
+    fun todayLines(entries: List<EventLog.Entry>, nowMs: Long, running: Boolean, dayStart: Long): List<TodayLine> {
+        val spans = spans(entries, nowMs, running)
+        val ran = recorded(spans, dayStart, nowMs)
+        if (ran < 60_000) return listOf(TodayLine(null, "Nothing recorded today: Always-on mode wasn't running."))
+        val today = spans.filter { it.end > dayStart }
+        val cutsOnly = today.none { it.source == Source.KAHRABA || it.source == Source.MOTEUR } &&
+            today.any { it.source == Source.POWER_ON }
+        val shown = if (cutsOnly) listOf(Source.POWER_ON, Source.NO_POWER) else listOf(Source.KAHRABA, Source.MOTEUR, Source.NO_POWER)
+        val out = ArrayList<TodayLine>()
+        for (source in shown) {
+            val day = blocks(spans, dayStart, nowMs, source)
+            if (day.isEmpty()) {
+                if (source != Source.NO_POWER) out += TodayLine(source, "none today")
+                continue
+            }
+            val whole = blocks(spans, 0L, nowMs, source)
+            val total = day.sumOf { it.end - it.start }
+            val onNow = running && day.last().end == nowMs
+            val times = if (day.size > LIST_MAX) plural(day.size, "time") else day.mapIndexed { i, b ->
+                val from = whole.firstOrNull { it.start < dayStart && it.end > dayStart }?.takeIf { i == 0 && b.start <= dayStart }
+                when {
+                    onNow && i == day.lastIndex -> "since ${if (from != null) "${clock(from.start)} yesterday" else clock(b.start)}"
+                    from != null -> "from ${clock(from.start)} yesterday to ${clock(b.end)}"
+                    else -> range(b.start, b.end)
+                }
+            }.joinToString(", ")
+            out += TodayLine(source, "${hours(total)} · $times")
+        }
+        val notes = ArrayList<String>()
+        val c = cuts(entries, dayStart, nowMs)
+        notes += if (c == 0) "no power cuts" else plural(c, "power cut")
+        val missing = nowMs - dayStart - ran
+        if (missing >= 60_000) notes += "not recorded for ${hours(missing)}"
+        out += TodayLine(null, notes.joinToString(" · ").replaceFirstChar { it.uppercase() })
+        return out
     }
 
     /** The last 7 days (today and the 6 before), in plain words. [dayStarts]: midnight of each, today first. */

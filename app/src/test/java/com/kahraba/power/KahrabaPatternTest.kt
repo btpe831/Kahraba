@@ -151,6 +151,56 @@ class KahrabaOverviewTest {
         assertTrue(KahrabaPattern.spans(stopped, at(2, 18, 0), running = false).none { it.end > at(2, 12, 30) })
     }
 
+    private fun lines(l: List<KahrabaPattern.TodayLine>) = l.map { if (it.source == null) it.text else "${it.word}: ${it.text}" }
+
+    @Test
+    fun todayCardHasALineForKahrabaAndOneForTheMoteur() = inZone {
+        // 1.5.20: the moteur from 9:44 PM yesterday, joined across nothing (the cuts end kahraba).
+        val l = KahrabaPattern.todayLines(log, at(2, 13, 0), running = true, dayStart = midnight(2))
+        assertEquals(listOf(
+            "Kahraba: 4h 32m · 1:01–3:31 AM, 9:59 AM–12:01 PM",
+            "Moteur: 8h 28m · from 9:44 PM yesterday to 1:01 AM, 3:31–9:59 AM, since 12:01 PM",
+            "2 power cuts",
+        ), lines(l))
+        assertEquals(listOf(Source.KAHRABA, Source.MOTEUR, null), l.map { it.source })
+    }
+
+    @Test
+    fun todayCardSaysWhatWasNotRecorded() = inZone {
+        // The owner's 19 Nov: moteur from the 11:02 PM cut, kahraba set at 7:06, Always-on stopped 7:11 to
+        // 7:36 (an update), kahraba again, cut 9:02 to the moteur.
+        val day = listOf(
+            EventLog.Entry(at(18, 23, 2), Source.MOTEUR, cut),
+            EventLog.Entry(at(19, 7, 6), Source.KAHRABA, KahrabaPattern.MANUAL),
+            EventLog.Entry(at(19, 7, 11), Source.UNKNOWN, "Always-on mode stopped"),
+            EventLog.Entry(at(19, 7, 36), Source.KAHRABA, KahrabaPattern.MANUAL),
+            EventLog.Entry(at(19, 9, 2), Source.MOTEUR, cut),
+        )
+        assertEquals(listOf(
+            "Kahraba: 1h 31m · 7:06–7:11 AM, 7:36–9:02 AM",
+            "Moteur: 12h 54m · from 11:02 PM yesterday to 7:06 AM, since 9:02 AM",
+            "1 power cut · not recorded for 25m",
+        ), lines(KahrabaPattern.todayLines(day, at(19, 14, 50), running = true, dayStart = midnight(19))))
+    }
+
+    @Test
+    fun todayCardShowsNoPowerAndCountsManyPeriods() = inZone {
+        val back5 = "Power back after 12m 0s – assuming moteur"
+        val day = listOf(EventLog.Entry(at(4, 23, 0), Source.MOTEUR, cut)) +
+            (1..4).flatMap { h -> listOf(
+                EventLog.Entry(at(5, h * 3, 0), Source.KAHRABA, back),
+                EventLog.Entry(at(5, h * 3 + 1, 0), Source.MOTEUR, cut),
+            ) } +
+            listOf(EventLog.Entry(at(5, 19, 0), Source.NO_POWER, "Power off – no kahraba and no moteur"),
+                EventLog.Entry(at(5, 19, 12), Source.MOTEUR, back5))
+        assertEquals(listOf(
+            "Kahraba: 4h 0m · 4 times",
+            "Moteur: 15h 48m · 6 times",
+            "No power: 12m · 7:00–7:12 PM",
+            "5 power cuts",
+        ), lines(KahrabaPattern.todayLines(day, at(5, 20, 0), running = true, dayStart = midnight(5))))
+    }
+
     @Test
     fun theWeekInPlainWords() = inZone {
         val days = (0 until 7).map { midnight(2 - it) }

@@ -30,10 +30,13 @@ object RemoteAlerts {
     private const val PHONE_NAME = "phone_name"
     const val NAME_MAX = 30
 
-    /** The sending phone says it's still there every 15 minutes, about 100 messages a day. */
-    const val ALIVE_EVERY_MS = 15 * 60_000L
-    /** No word for this long: the other phone may be off, unplugged or offline. */
-    const val SILENT_MS = 40 * 60_000L
+    /**
+     * The sending phone says it's still there every 30 minutes, about 50 messages a day (15 until 1.5.20:
+     * fewer wake-ups on the phones getting alerts, which only stay awake for real alerts now).
+     */
+    const val ALIVE_EVERY_MS = 30 * 60_000L
+    /** No word for this long: the other phone may be off, unplugged or offline (two check-ins missed). */
+    const val SILENT_MS = 70 * 60_000L
     /** Alerts older than this (the phone was offline) update the status quietly instead of beeping. */
     const val FRESH_MS = 15 * 60_000L
     /** The switch log goes to the other phones every 6 hours (and when a phone is added), to fill any gaps. */
@@ -237,7 +240,7 @@ object RemoteAlerts {
 
     /** "Kahraba since 6:01 AM", or what's known about the other phone, for the screens. */
     fun statusLine(ctx: Context, now: Long = System.currentTimeMillis()): String {
-        val h = heard(ctx) ?: return "Waiting for your other phone. It sends news at least every 15 minutes while Always-on mode runs."
+        val h = heard(ctx) ?: return "Waiting for your other phone. It sends news at least every 30 minutes while Always-on mode runs."
         val where = h.device + if (h.room.isNotEmpty()) " (${h.room})" else ""
         val what = when {
             h.kind == RemoteCodec.Kind.STOPPED -> "Always-on mode was stopped on $where"

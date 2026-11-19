@@ -609,7 +609,7 @@ class SettingsActivity : ThemedActivity() {
                     notifyPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
                 }
                 AlertsService.start(this, reconnect = true)
-                toast("Connected. News from the other phone arrives within 15 minutes.")
+                toast("Connected. News from the other phone arrives within 30 minutes.")
                 if (!ignoringBattery()) askBattery()
                 build()
             }
