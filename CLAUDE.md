@@ -145,6 +145,14 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 - Wobbles kept for the whole kahraba check (1.5.18): `wobbleEpisodes` was trimmed to 6 min, so the 10-min marginal check
   forgot early wobbles. 16 Nov 7:10: moteur stepped to 2,334 (its 10-min top 2,215), wobbles 7:12:16, 7:12:34(+43), 7:21:30;
   1.5.17 alerted 7:22:05, light back down 7:22:35, then "kahraba" all day (real kahraba 15:00 got no alert).
+- Floor over the last hour (1.5.19, `FLOOR_LONG_MS`, `NightStepCableTest`): the drop-back guard's floor is the moteur's
+  brightest over 60 min (only since it took over, but at least the 10 min before). 18 Nov 3:38 AM: night moteur 2,826 ->
+  3,263 (+15% over its 10-min top, +4% over its 2 AM top ~3,140): 1.5.18 alerted 3:43 (false); now marginal, cancelled at
+  3:42:41 (3,007). Real kahraba made marginal (10-min check, ~7 min later): 29 Oct 6:29, 2 Nov 9:59.
+- Charger off, light on (1.5.19, `lightStayedOn`, `lastDarkMs`/`lastLitMs`): no reading < minLux from 10 s before the
+  charger went off (`DARK_LEAD_MS`) and lit now -> not a cut: after 30 s (`NOT_CHARGING_MS`) "The phone isn't charging –
+  please check the cable" (no beep, `takeNotCharging`, `MonitorService.onNotCharging`), no "Power off", and nothing
+  happens when it charges again. 18 Nov 5:59:52-6:05:30: a touched cable gave "Power off" + "assuming moteur".
 - Daytime stillness (1.4.09, 60 min since 1.5.08, was 45; last resort): from moteur, 60 min with <= 2 separate wobbles,
   all judged, both ends 7 AM-7 PM (`hourOf`, `PowerDetector.localHour` in the app; tests pass `recordingClock`), light
   now >= the 15 min before -> kahraba since the start of the 45 min. Longest still spell: daytime moteur 24 min, kahraba
@@ -186,6 +194,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
+- 1.5.19: floor over the last hour (night moteur step 18 Nov 3:38); charger off with the light on is not a cut.
 - 1.5.18: kahraba after a cut (power back = switch moment for rule 1c); wobbles kept for the whole 10-min check.
 - 1.5.17: Check for updates' waiting window: spinner + text, centred (`Updates.checkNow`; a title-only dialog looked cramped).
 - 1.5.16: `Prefs.soundOff` ("Sound off" / "until 7:00 AM" / "on this phone") on home (`@id/homeSound`) and the

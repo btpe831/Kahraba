@@ -185,6 +185,7 @@ class MonitorService : Service(), SensorEventListener {
         for (t in detector.tick(now, latestLux, plugged)) onTransition(t)
         if (detector.takePhoneMoved()) onPhoneMoved()
         if (detector.takeLightOff()) onLightOff()
+        if (detector.takeNotCharging()) onNotCharging()
 
         while (sensorEvents.isNotEmpty() && sensorEvents.first() < now - 60_000) sensorEvents.removeFirst()
 
@@ -331,6 +332,23 @@ class MonitorService : Service(), SensorEventListener {
         notifications().notify(nextAlertId(), n)
         beeper.lightOff()
         remote(RemoteCodec.Kind.ALERT, detector.source, detector.sinceMs, PowerDetector.LIGHT_OFF, text, RemoteCodec.BEEP_LIGHT_OFF)
+    }
+
+    /** The charger stopped but the light stayed on: the cable or the charger, not a power cut (no beep). */
+    private fun onNotCharging() {
+        val text = "${PowerDetector.formatClock(System.currentTimeMillis())} – The charger stopped but the light is still on, " +
+            "so it's not a power cut. Check that the phone's cable and charger are plugged in properly."
+        val n = NotificationCompat.Builder(this, CHANNEL_ALERTS)
+            .setSmallIcon(R.drawable.ic_bolt)
+            .setContentTitle(PowerDetector.NOT_CHARGING)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setContentIntent(openApp())
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .build()
+        notifications().notify(nextAlertId(), n)
+        remote(RemoteCodec.Kind.ALERT, detector.source, detector.sinceMs, PowerDetector.NOT_CHARGING, text)
     }
 
     private fun setFromAlert(s: Source): PendingIntent {

@@ -1,6 +1,10 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.5.19
+- Fewer false kahraba alerts at night: the app now compares the light with the moteur's brightest over the last hour, not just the last few minutes, so a moteur reaching its usual top is no longer taken for kahraba.
+- A loose charger cable is no longer taken for a power cut: if the charger stops but the light stays on, the app says “The phone isn't charging – please check the cable” and carries on as before.
+
 ## 1.5.18
 - Kahraba is now caught when it comes back right after a short power cut: if the light then stays completely still during the day, the app says kahraba instead of assuming the moteur.
 - Fewer false kahraba alerts: when the moteur steps up for a few minutes, the app now counts all its wobbles during the longer check, so it no longer mistakes it for kahraba.

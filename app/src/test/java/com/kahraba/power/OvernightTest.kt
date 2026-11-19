@@ -42,13 +42,13 @@ class OvernightTest {
     private val morningMoteur get() = morning.start..switchToKahraba - 1000
     private val morningKahraba get() = switchToKahraba + 1000..morning.end
 
-    private fun monitor(r: Rec, startAs: Source, pluggedAt: (Long) -> Boolean): List<Transition> {
+    private fun monitor(r: Rec, startAs: Source, extraMs: Long = 0L, pluggedAt: (Long) -> Boolean): List<Transition> {
         val d = PowerDetector(hourOf = recordingClock(if (r === night) 22 else 6))
         d.setManual(r.start, startAs)
         val out = mutableListOf<Transition>()
         var i = 0
         var t = r.start
-        while (t <= r.end) {
+        while (t <= r.end + extraMs) {
             while (i < r.t.size && r.t[i] <= t) { d.addReading(r.t[i], r.v[i]); i++ }
             out += d.tick(t, r.at(t), pluggedAt(t))
             t += 200
@@ -81,7 +81,10 @@ class OvernightTest {
 
     @Test
     fun monitorSeesKahrabaComeBackInTheMorning() {
-        val sw = monitor(morning, Source.MOTEUR) { true }.filter { !it.manual }
+        // Since 1.5.19 the light is compared with the moteur's brightest of the last hour (157 lux at
+        // 06:05): only 7% above it, so the check lasts 10 minutes and ends after the recording does
+        // (06:38). The light is held at its last reading for 6 more minutes: kahraba lasted until 07:11.
+        val sw = monitor(morning, Source.MOTEUR, extraMs = 6 * 60_000L) { true }.filter { !it.manual }
         assertEquals("switches: $sw", listOf(Source.KAHRABA), sw.map { it.to })
         // The real monitor said so at 06:31:49, about two minutes after the switch.
         assertTrue("at ${sw[0].timeMs}", sw[0].timeMs in switchToKahraba..switchToKahraba + 4 * 60_000)

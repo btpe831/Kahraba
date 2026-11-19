@@ -119,6 +119,17 @@ class PowerDetector(
     private var phoneMovedAlert = false
 
     /**
+     * The last reading too dark to judge, and the last bright enough one. In a power cut the light
+     * goes dark with the charger; if it stays on, the charger or its cable stopped, not the power
+     * (18 Nov, 5:59 AM: a touched cable, "Power off" for 5 minutes with the light on all along).
+     */
+    private var lastDarkMs = -1L
+    private var lastLitMs = -1L
+    /** The charger is off but the light stayed on: alerted once until it charges again. */
+    private var notCharging = false
+    private var notChargingAlert = false
+
+    /**
      * The light went dark while the charger stayed on: someone switched it off (or the bulb went),
      * not a power cut. When it went dark and how bright it was before; alerted once until it's back.
      */
@@ -143,6 +154,7 @@ class PowerDetector(
         val out = mutableListOf<Transition>()
         if (historyStartMs < 0) historyStartMs = nowMs
 
+        if (lux != null) watchDark(nowMs, lux)
         syncMode(nowMs, isPlugged, out)
         handleCharger(nowMs, isPlugged, out)
 
@@ -180,6 +192,7 @@ class PowerDetector(
             lastEvalMs = nowMs
             evaluate(nowMs, out)
             if (lightOffAlerted) lightStatus = LIGHT_OFF
+            if (notCharging) lightStatus = NOT_CHARGING
         }
         return out
     }
@@ -189,6 +202,7 @@ class PowerDetector(
      * short dips that fall between ticks, so they count as wobble.
      */
     fun addReading(nowMs: Long, lux: Double) {
+        watchDark(nowMs, lux)
         if (nowMs < motionUntilMs) return
         watchSwitchFlicker(nowMs, lux)
         watchBlink(nowMs, lux)
@@ -320,6 +334,20 @@ class PowerDetector(
     /** True once when the light has been off for [LIGHT_OFF_MS] with the charger still on. */
     fun takeLightOff(): Boolean = lightOffAlert.also { lightOffAlert = false }
 
+    /** True once when the charger has been off for [NOT_CHARGING_MS] with the light still on. */
+    fun takeNotCharging(): Boolean = notChargingAlert.also { notChargingAlert = false }
+
+    private fun watchDark(now: Long, lux: Double) {
+        if (lux < config.minLux) lastDarkMs = now else lastLitMs = now
+    }
+
+    /**
+     * The light stayed on all the while the charger was off (from a little before, as the two don't
+     * report at the same moment), and is on now: not a power cut.
+     */
+    private fun lightStayedOn(offSince: Long, now: Long): Boolean =
+        lastLitMs >= now - LIT_RECENT_MS && lastDarkMs < offSince - DARK_LEAD_MS
+
     /** The user says which source it is (when they know for sure). */
     fun setManual(nowMs: Long, to: Source): Transition {
         val t = Transition(nowMs, source, to, "Set by you", manual = true)
@@ -390,15 +418,23 @@ class PowerDetector(
         }
 
         val offSince = unpluggedAtMs
-        if (!isPlugged && offSince != null && source != Source.NO_POWER &&
+        val stayedOn = offSince != null && lightStayedOn(offSince, now)
+        if (!isPlugged && offSince != null && stayedOn && !notCharging && now - offSince >= NOT_CHARGING_MS) {
+            notCharging = true
+            notChargingAlert = true
+        }
+        if (!isPlugged && offSince != null && !stayedOn && source != Source.NO_POWER &&
             now - offSince >= config.noPowerAfterSec * 1000
         ) {
             out += change(offSince, Source.NO_POWER, "Power off – no kahraba and no moteur")
         }
 
+        if (isPlugged) notCharging = false
         if (prev == false && isPlugged && offSince != null) {
             val off = now - offSince
             unpluggedAtMs = null
+            // The light never went out: the cable or the charger, not the power. Carry on as before.
+            if (stayedOn) return
             // Too short for a moteur to start (every "kahraba cut -> moteur" took 1-1.5 min): a
             // changeover, which can be the switch TO kahraba (31 Oct, 04:41: a 10 s blink). Keep
             // the light history and decide once the light has settled (see [checkBlink]).
@@ -586,7 +622,11 @@ class PowerDetector(
         var confirm = CONFIRM_MS
         if (guard) {
             val end = sinceMs - SWITCH_MS
-            floor = longSeconds.filter { it.t in (end - FLOOR_MS)..end }.mapNotNull { it.level }.maxOrNull()
+            // The moteur's brightest over the last hour (1.5.19; was 10 minutes), but only since it took
+            // over: on 18 Nov at 3:38 AM a night moteur stepped up 15% above its last 10 minutes, to the
+            // top it had already reached at 2 AM, and was called kahraba.
+            val from = maxOf(end - FLOOR_LONG_MS, minOf(this.sinceMs, end - FLOOR_MS))
+            floor = longSeconds.filter { it.t in from..end }.mapNotNull { it.level }.maxOrNull()
             val recent = levelBetween(now - 60_000, now)
             if (floor != null && recent != null && recent < floor * (1 + MARGINAL_PCT / 100)) confirm = MARGINAL_CONFIRM_MS
         }
@@ -913,6 +953,13 @@ class PowerDetector(
         /** Dark this long with the charger still on: the light was switched off, not a power cut. */
         const val LIGHT_OFF_MS = 30_000L
         const val LIGHT_OFF = "The light is off – please switch it back on"
+        /** The charger off this long with the light still on: the phone isn't charging (1.5.19). */
+        const val NOT_CHARGING_MS = 30_000L
+        const val NOT_CHARGING = "The phone isn't charging – please check the cable"
+        /** The light may go dark a moment before the charger reports it is off. */
+        const val DARK_LEAD_MS = 10_000L
+        /** A bright reading this recent means the light is on now (the sensor reports changes only). */
+        const val LIT_RECENT_MS = 5_000L
         const val CUTS_ONLY = "Power cuts only – the light isn't used"
         /** Minutes of completely still light needed after a busy moteur. */
         const val CALM_MINUTES = 5.0
@@ -983,6 +1030,8 @@ class PowerDetector(
         const val SWITCH_SETTLE_MS = 10_000L
         /** A brighter level is checked against the moteur's brightest over this long before it (1.5.10). */
         const val FLOOR_MS = 10 * 60_000L
+        /** How far back the moteur's brightest is looked for, when it has been on that long (1.5.19). */
+        const val FLOOR_LONG_MS = 60 * 60_000L
         /** Less than this much (%) above that brightest: a longer check, [MARGINAL_CONFIRM_MS]. */
         const val MARGINAL_PCT = 10.0
         const val MARGINAL_CONFIRM_MS = 10 * 60_000L
