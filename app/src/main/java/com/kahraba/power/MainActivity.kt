@@ -749,25 +749,7 @@ class MainActivity : ThemedActivity(), SensorEventListener {
             }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, if (i == 4) 0.01f else 1f))
         }
         b.addView(hours)
-        // A line each for kahraba and the moteur ("● Kahraba 1h 30m · 7:06–7:11 AM"), no power on days
-        // with an outage, then power cuts and time not recorded, small and grey (1.5.20).
-        for ((i, l) in KahrabaPattern.todayLines(entries, now, running, dayStart).withIndex()) {
-            val src = l.source
-            if (src == null) {
-                line(l.text, 13f, R.attr.appMuted, top = 6)
-                continue
-            }
-            val t = android.text.SpannableString("●  ${l.word}  ${l.text}")
-            t.setSpan(android.text.style.ForegroundColorSpan(MonitorService.colorFor(src)), 0, 1, 0)
-            t.setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 3, 3 + l.word.length, 0)
-            b.addView(TextView(this).apply {
-                text = t
-                textSize = 15f
-                setTextColor(themeColor(R.attr.appText))
-            }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                topMargin = ((if (i == 0) 8 else 2) * dp).toInt()
-            })
-        }
+        line(KahrabaPattern.today(entries, now, running, dayStart), 15f, R.attr.appText, top = 8)
 
         // The next kahraba, or how long this one usually lasts.
         val s = KahrabaPattern.summary(entries, now, running)
