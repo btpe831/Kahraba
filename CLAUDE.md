@@ -204,7 +204,8 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
-- 1.5.21: power cut told to other phones at once, own falling sound (`BEEP_CUT`).
+- 1.5.21: power cut told to other phones at once, own falling sound (`BEEP_CUT`). At a glance "Darkest" (1% + card/words at
+  `DARKEST_ALPHA` 0.33): the Pixel 9's lowest screen brightness is much brighter than the Pixel 2's; Settings picker `segmented(perRow = 3)`.
 - 1.5.20: after a cut, stillness also judged from 5 min after (23 Nov 10:16). Battery (a tester's feedback; no Firebase, so it runs without Google services): `AlertsService` holds its 20 s wake lock only for
   fresh new ALERTs (not ALIVE/HISTORY); `ALIVE_EVERY_MS` 30 min (was 15), `SILENT_MS` 70 (was 40), Glance `STALE_MS` 40 (was 20).
   A two-line Today card (a line each for kahraba and moteur) was built, shown as a mockup and dropped by the owner.

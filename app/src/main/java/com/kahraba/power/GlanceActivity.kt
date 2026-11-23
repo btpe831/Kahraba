@@ -76,6 +76,7 @@ class GlanceActivity : AppCompatActivity() {
         box = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
+            if (Prefs.glanceBright(this@GlanceActivity) == "darkest") alpha = DARKEST_ALPHA
         }
         word = TextView(this).apply {
             textSize = WORD_SP
@@ -173,7 +174,7 @@ class GlanceActivity : AppCompatActivity() {
     }
 
     private fun cycleBrightness() {
-        // Night → Low → Medium → High → Full, then back to Night (1.5.14: five levels).
+        // Darkest → Night → Low → Medium → High → Full, then back to Darkest (1.5.14: five levels; 1.5.21: Darkest).
         val i = BRIGHT_LEVELS.indexOf(Prefs.glanceBright(this))
         val next = BRIGHT_LEVELS[(i + 1) % BRIGHT_LEVELS.size]
         Prefs.sp(this).edit().putString(Prefs.GLANCE_BRIGHT, next).apply()
@@ -182,7 +183,11 @@ class GlanceActivity : AppCompatActivity() {
     }
 
     private fun applyBrightness() {
-        window.attributes = window.attributes.apply { screenBrightness = brightness(Prefs.glanceBright(this@GlanceActivity)) }
+        val level = Prefs.glanceBright(this@GlanceActivity)
+        window.attributes = window.attributes.apply { screenBrightness = brightness(level) }
+        // Darkest: the screen can't go dimmer than the phone allows (a Pixel 9's lowest is much brighter than a
+        // Pixel 2's), so the card and words are drawn at a third of their brightness too; black stays black.
+        if (::box.isInitialized) box.alpha = if (level == "darkest") DARKEST_ALPHA else 1f
     }
 
     private fun render() {
@@ -267,19 +272,26 @@ class GlanceActivity : AppCompatActivity() {
         private const val GREY = 0xFF9CA3AF.toInt()
         private const val DARK_GREY = 0xFF6B7280.toInt()
 
-        /** Night 1% (1.5.14, for a dark bedroom), Low 8% (the 1.5.0 level), Medium about a third, High 65%, Full the maximum. */
+        /** Darkest also draws the card and words this bright (1.5.21). */
+        private const val DARKEST_ALPHA = 0.33f
+
+        /**
+         * Darkest and Night 1% (1.5.14, for a dark bedroom; Darkest also dims the words, 1.5.21), Low 8% (the 1.5.0
+         * level), Medium about a third, High 65%, Full the maximum.
+         */
         fun brightness(level: String): Float = when (level) {
-            "night" -> 0.01f
+            "darkest", "night" -> 0.01f
             "low" -> 0.08f
             "high" -> 0.65f
             "full" -> 1f
             else -> 0.35f
         }
 
-        /** The brightness levels in order, darkest first (Night and High added in 1.5.14). */
-        val BRIGHT_LEVELS = listOf("night", "low", "medium", "high", "full")
+        /** The brightness levels in order, darkest first (Night and High added in 1.5.14, Darkest in 1.5.21). */
+        val BRIGHT_LEVELS = listOf("darkest", "night", "low", "medium", "high", "full")
 
         fun brightLabel(level: String): String = when (level) {
+            "darkest" -> "Darkest"
             "night" -> "Night"
             "low" -> "Low"
             "high" -> "High"

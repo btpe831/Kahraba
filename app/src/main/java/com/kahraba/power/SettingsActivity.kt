@@ -318,10 +318,10 @@ class SettingsActivity : ThemedActivity() {
             addView(segmented(listOf("Coloured card" to "card", "Word" to "word"), Prefs.glanceStyle(this@SettingsActivity)) {
                 Prefs.sp(this@SettingsActivity).edit().putString(Prefs.GLANCE_STYLE, it).apply()
             }, lp(top = 12))
-            addView(segmented(GlanceActivity.BRIGHT_LEVELS.map { GlanceActivity.brightLabel(it) to it }, Prefs.glanceBright(this@SettingsActivity)) {
+            addView(segmented(GlanceActivity.BRIGHT_LEVELS.map { GlanceActivity.brightLabel(it) to it }, Prefs.glanceBright(this@SettingsActivity), perRow = 3) {
                 Prefs.sp(this@SettingsActivity).edit().putString(Prefs.GLANCE_BRIGHT, it).apply()
             }, lp(top = 8))
-            addView(text("Brightness while At a glance is open. Night is the dimmest, for a dark room. Full is easiest to read in a bright room, but wears the " +
+            addView(text("Brightness while At a glance is open. Night is for a dark room; Darkest also dims the words, for phones whose Night is still too bright. Full is easiest to read in a bright room, but wears the " +
                 "screen faster over months; the words move a little every minute to help.", 14f, R.attr.appMuted), lp(top = 10))
         }, lp(top = 12))
         body.addView(card {
@@ -712,34 +712,41 @@ class SettingsActivity : ThemedActivity() {
     }
 
     /** Pill-shaped choice, like "Low | Medium | Full". */
-    private fun segmented(options: List<Pair<String, String>>, selected: String, onPick: (String) -> Unit): View {
-        val bar = LinearLayout(this).apply {
-            setPadding(px(4), px(4), px(4), px(4))
-            background = rounded(color(R.attr.appSurfaceAlt), color(R.attr.appBorder), 28f)
-        }
+    /** One choice of several, as pills; more than [perRow] options go on further rows (1.5.21: six brightness levels). */
+    private fun segmented(options: List<Pair<String, String>>, selected: String, perRow: Int = options.size, onPick: (String) -> Unit): View {
+        val all = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val cells = ArrayList<Pair<TextView, String>>()
+        var chosen = selected
         fun paint() {
-            val chosen = bar.tag as String
-            for (i in 0 until bar.childCount) {
-                val tv = bar.getChildAt(i) as TextView
-                val on = options[i].second == chosen
+            for ((tv, value) in cells) {
+                val on = value == chosen
                 tv.setTextColor(color(if (on) R.attr.appOnAccent else R.attr.appMuted))
                 tv.background = if (on) rounded(color(R.attr.appAccent), color(R.attr.appAccent), 24f) else null
             }
         }
-        bar.tag = selected
-        for ((label, value) in options) {
-            bar.addView(text(label, 17f, R.attr.appText, bold = true).apply {
-                gravity = Gravity.CENTER
-                setPadding(0, px(12), 0, px(12))
-                setOnClickListener {
-                    bar.tag = value
-                    paint()
-                    onPick(value)
+        for ((r, row) in options.chunked(perRow).withIndex()) {
+            val bar = LinearLayout(this).apply {
+                setPadding(px(4), px(4), px(4), px(4))
+                background = rounded(color(R.attr.appSurfaceAlt), color(R.attr.appBorder), 28f)
+            }
+            for ((label, value) in row) {
+                val tv = text(label, 17f, R.attr.appText, bold = true).apply {
+                    gravity = Gravity.CENTER
+                    maxLines = 1
+                    setPadding(0, px(12), 0, px(12))
+                    setOnClickListener {
+                        chosen = value
+                        paint()
+                        onPick(value)
+                    }
                 }
-            }, LinearLayout.LayoutParams(0, -2, 1f))
+                cells += tv to value
+                bar.addView(tv, LinearLayout.LayoutParams(0, -2, 1f))
+            }
+            all.addView(bar, LinearLayout.LayoutParams(-1, -2).apply { if (r > 0) topMargin = px(6) })
         }
         paint()
-        return bar
+        return all
     }
 
     private fun toggle(title: String, sub: String, key: String, def: Boolean): View {
