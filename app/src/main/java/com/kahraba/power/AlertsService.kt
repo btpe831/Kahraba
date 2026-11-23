@@ -158,6 +158,7 @@ class AlertsService : Service() {
             RemoteCodec.BEEP_OFF -> beeper.powerOff()
             RemoteCodec.BEEP_BACK -> beeper.powerBack()
             RemoteCodec.BEEP_LIGHT_OFF -> beeper.lightOff()
+            RemoteCodec.BEEP_CUT -> beeper.powerCut()
         }
         val text = m.text + "\nFrom ${m.device}" + if (m.room.isNotEmpty()) " (${m.room})" else ""
         val n = NotificationCompat.Builder(this, MonitorService.CHANNEL_ALERTS)

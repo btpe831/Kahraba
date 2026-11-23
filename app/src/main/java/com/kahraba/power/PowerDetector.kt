@@ -130,6 +130,16 @@ class PowerDetector(
     private var notChargingAlert = false
 
     /**
+     * A power cut as it happens (1.5.21): the charger off and the light out together, the light on
+     * just before. Told to the other phones at once; what took over is still judged when the power
+     * comes back. [cutAlertedFor]: the cut (when the charger went off) already told.
+     */
+    private var cutAlertedFor = -1L
+    private var cutStartAlert: Long? = null
+    /** That cut was only a blink (shorter than [SHORT_BLINK_MS]): how long, to say the power is back. */
+    private var blinkBackAlert: Long? = null
+
+    /**
      * The light went dark while the charger stayed on: someone switched it off (or the bulb went),
      * not a power cut. When it went dark and how bright it was before; alerted once until it's back.
      */
@@ -348,6 +358,12 @@ class PowerDetector(
     /** True once when the charger has been off for [NOT_CHARGING_MS] with the light still on. */
     fun takeNotCharging(): Boolean = notChargingAlert.also { notChargingAlert = false }
 
+    /** Once per power cut, as it starts: when the power went off (the charger and the light together). */
+    fun takeCutStart(): Long? = cutStartAlert.also { cutStartAlert = null }
+
+    /** Once, when a power cut already told turned out to be a short blink: how long the power was off. */
+    fun takeBlinkBack(): Long? = blinkBackAlert.also { blinkBackAlert = null }
+
     private fun watchDark(now: Long, lux: Double) {
         if (lux < config.minLux) lastDarkMs = now else lastLitMs = now
     }
@@ -430,6 +446,14 @@ class PowerDetector(
 
         val offSince = unpluggedAtMs
         val stayedOn = offSince != null && lightStayedOn(offSince, now)
+        // The power went off: the charger off and the light dark now, after being on until a moment
+        // before (the two don't report at the same instant). Not when the light was already off.
+        if (!isPlugged && offSince != null && cutAlertedFor != offSince && now - offSince <= CUT_ALERT_WINDOW_MS &&
+            lastDarkMs > lastLitMs && lastLitMs >= offSince - DARK_LEAD_MS
+        ) {
+            cutAlertedFor = offSince
+            cutStartAlert = offSince
+        }
         if (!isPlugged && offSince != null && stayedOn && !notCharging && now - offSince >= NOT_CHARGING_MS) {
             notCharging = true
             notChargingAlert = true
@@ -450,6 +474,7 @@ class PowerDetector(
             // changeover, which can be the switch TO kahraba (31 Oct, 04:41: a 10 s blink). Keep
             // the light history and decide once the light has settled (see [checkBlink]).
             if (off < SHORT_BLINK_MS && source != Source.NO_POWER) {
+                if (cutAlertedFor == offSince) blinkBackAlert = off
                 pending = null
                 blink = levelBetween(offSince - minutesMs(REFERENCE_MINUTES), offSince - 2_000)?.let { Blink(now, off, it) }
                 return
@@ -969,6 +994,8 @@ class PowerDetector(
         const val NOT_CHARGING = "The phone isn't charging – please check the cable"
         /** The light may go dark a moment before the charger reports it is off. */
         const val DARK_LEAD_MS = 10_000L
+        /** A power cut is told only if the light goes dark this soon after the charger went off (1.5.21). */
+        const val CUT_ALERT_WINDOW_MS = 30_000L
         /** A bright reading this recent means the light is on now (the sensor reports changes only). */
         const val LIT_RECENT_MS = 5_000L
         const val CUTS_ONLY = "Power cuts only – the light isn't used"

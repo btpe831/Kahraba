@@ -54,6 +54,14 @@ class Beeper(private val ctx: Context) {
 
     /** One 3-second beep: power off (power cuts only). */
     private val moteurSound: ShortArray by lazy { tone(3000, PITCH_HZ) }
+    /**
+     * The power just went off, on the phones getting alerts (1.5.21, the owner's choice "A"): three
+     * notes falling, like something switching off, three times. Much lower than every other alert.
+     */
+    private val powerCutSound: ShortArray by lazy {
+        val set = concat(listOf(tone(250, 1400.0), silence(60), tone(250, 1000.0), silence(60), tone(400, 700.0)))
+        concat(listOf(set, silence(700), set, silence(700), set))
+    }
     /** Moteur took over: three 3-second beeps, 3 seconds apart. */
     private val moteurAlertSound: ShortArray by lazy {
         concat(listOf(moteurSound, silence(3000), moteurSound, silence(3000), moteurSound))
@@ -100,6 +108,10 @@ class Beeper(private val ctx: Context) {
         if (step <= 0) return
         pending += exec.schedule(Runnable { play(kahrabaSet, respectQuiet = false, step = step) }, 0, TimeUnit.MILLISECONDS)
     }
+
+    /** Another phone says the power just went off. */
+    @Synchronized
+    fun powerCut(respectQuiet: Boolean = true) = alert(powerCutSound, respectQuiet)
 
     /** Power cuts only: the power went off. */
     @Synchronized

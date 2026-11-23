@@ -47,6 +47,8 @@ object RemoteCodec {
     const val BEEP_BACK = "back"
     const val BEEP_MOVED = "moved"
     const val BEEP_LIGHT_OFF = "lightoff"
+    /** The power just went off (1.5.21): a lower, falling sound, unlike every other alert. */
+    const val BEEP_CUT = "cut"
 
     /**
      * One message. [source] and [sinceMs] are what the sending phone shows now; [title] and [text]

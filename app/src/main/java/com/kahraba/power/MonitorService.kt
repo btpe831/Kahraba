@@ -186,6 +186,8 @@ class MonitorService : Service(), SensorEventListener {
         if (detector.takePhoneMoved()) onPhoneMoved()
         if (detector.takeLightOff()) onLightOff()
         if (detector.takeNotCharging()) onNotCharging()
+        detector.takeCutStart()?.let { onCutStart(it) }
+        detector.takeBlinkBack()?.let { onBlinkBack(it) }
 
         while (sensorEvents.isNotEmpty() && sensorEvents.first() < now - 60_000) sensorEvents.removeFirst()
 
@@ -332,6 +334,21 @@ class MonitorService : Service(), SensorEventListener {
         notifications().notify(nextAlertId(), n)
         beeper.lightOff()
         remote(RemoteCodec.Kind.ALERT, detector.source, detector.sinceMs, PowerDetector.LIGHT_OFF, text, RemoteCodec.BEEP_LIGHT_OFF)
+    }
+
+    /**
+     * The power just went off (1.5.21): the other phones are told at once, with their own falling
+     * "power cut" sound. This phone stays quiet; it says what took over when the power comes back.
+     */
+    private fun onCutStart(atMs: Long) {
+        remote(RemoteCodec.Kind.ALERT, Source.NO_POWER, atMs, "Power cut",
+            "${PowerDetector.formatClock(atMs)} – The power went off. You'll hear when it's back.", RemoteCodec.BEEP_CUT)
+    }
+
+    /** That power cut was only a blink of a few seconds: the other phones go back to what was on. */
+    private fun onBlinkBack(offMs: Long) {
+        remote(RemoteCodec.Kind.ALERT, detector.source, detector.sinceMs, "Power's back",
+            "${PowerDetector.formatClock(System.currentTimeMillis())} – The power was off for ${PowerDetector.formatDuration(offMs)} only.")
     }
 
     /** The charger stopped but the light stayed on: the cable or the charger, not a power cut (no beep). */

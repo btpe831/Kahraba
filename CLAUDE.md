@@ -157,6 +157,12 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   charger went off (`DARK_LEAD_MS`) and lit now -> not a cut: after 30 s (`NOT_CHARGING_MS`) "The phone isn't charging –
   please check the cable" (no beep, `takeNotCharging`, `MonitorService.onNotCharging`), no "Power off", and nothing
   happens when it charges again. 18 Nov 5:59:52-6:05:30: a touched cable gave "Power off" + "assuming moteur".
+- Cut told at once (1.5.21, `takeCutStart`/`takeBlinkBack`, `cutAlertedFor`, `CutStartTest`; the router has a UPS): charger
+  off and light dark now (`lastDarkMs > lastLitMs`), lit within `DARK_LEAD_MS` before the charger went off, within
+  `CUT_ALERT_WINDOW_MS` (30 s) -> `MonitorService.onCutStart`: remote ALERT source NO_POWER "Power cut", `BEEP_CUT`
+  (`Beeper.powerCut`: 1400/1000/700 Hz falling, x3; owner chose "A" from WAV samples), no log line, the Pixel 2 silent.
+  A blink (< 30 s) after it -> "Power's back" (no beep, current source). Owner: set the Always-on phone's volume to 0 so
+  only the receiver beeps (their beeps overlap with a network delay).
 - Daytime stillness (1.4.09, 60 min since 1.5.08, was 45; last resort): from moteur, 60 min with <= 2 separate wobbles,
   all judged, both ends 7 AM-7 PM (`hourOf`, `PowerDetector.localHour` in the app; tests pass `recordingClock`), light
   now >= the 15 min before -> kahraba since the start of the 45 min. Longest still spell: daytime moteur 24 min, kahraba
@@ -198,6 +204,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
+- 1.5.21: power cut told to other phones at once, own falling sound (`BEEP_CUT`).
 - 1.5.20: after a cut, stillness also judged from 5 min after (23 Nov 10:16). Battery (a tester's feedback; no Firebase, so it runs without Google services): `AlertsService` holds its 20 s wake lock only for
   fresh new ALERTs (not ALIVE/HISTORY); `ALIVE_EVERY_MS` 30 min (was 15), `SILENT_MS` 70 (was 40), Glance `STALE_MS` 40 (was 20).
   A two-line Today card (a line each for kahraba and moteur) was built, shown as a mockup and dropped by the owner.

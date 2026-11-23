@@ -1,6 +1,9 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.5.21
+- A phone getting alerts from another now hears about a power cut the moment it happens, with its own sound: three low notes falling, unlike any other alert. Its screen says "Power off" until the power is back. The Always-on phone stays quiet.
+
 ## 1.5.20
 - Kahraba that comes straight back after a short power cut is caught sooner, even when the light takes a few minutes to settle.
 - Phones that get alerts from another phone use less battery: they only wake up for real alerts, and the other phone checks in every 30 minutes instead of 15. Alerts still arrive straight away; if the other phone goes quiet, you're told after about an hour.
