@@ -299,16 +299,27 @@ class PowerDetector(
     private fun stillAfterSwitch(now: Long, thr: Double): Long? {
         val hour = hourOf ?: return null
         val sw = lastSwitchMs
-        val need = switchStillMs()
-        if (sw < 0 || now - sw < need + SWITCH_SETTLE_MS || now - sw > need + 2 * 60_000) return null
+        if (sw < 0) return null
         if (hour(sw) !in QUIET_DAY_FROM until QUIET_DAY_TO || hour(now) !in QUIET_DAY_FROM until QUIET_DAY_TO) return null
-        val after = longSeconds.filter { it.t > sw + SWITCH_SETTLE_MS }
-        if (after.size < need / 1_000 * 0.9) return null
-        if (after.any { (it.flicker ?: 0.0) > thr } || after.count { it.level == null } > after.size / 10) return null
+        val need = switchStillMs()
+        // After a cut the light may still settle in steps for a few minutes (23 Nov, 10:16 AM: kahraba back
+        // after a 47 s cut, steps at +30 s and +4 min, then dead still): then it is also judged from 5 minutes
+        // after the power came back (1.5.20). After a cut the moteur still wobbled within 8 minutes, counted
+        // from there too (every daytime cut since 29 Oct).
+        val settles = if (lastSwitchCutMs >= 0) listOf(SWITCH_SETTLE_MS, CUT_SETTLE_MS) else listOf(SWITCH_SETTLE_MS)
+        return if (settles.any { stillFrom(now, sw, need, it, thr) }) sw else null
+    }
+
+    /** The light completely still for [need] from [settle] after the switch, and not dimmer than before it. */
+    private fun stillFrom(now: Long, sw: Long, need: Long, settle: Long, thr: Double): Boolean {
+        if (now - sw < need + settle || now - sw > need + settle + 2 * 60_000) return false
+        val after = longSeconds.filter { it.t > sw + settle }
+        if (after.size < need / 1_000 * 0.9) return false
+        if (after.any { (it.flicker ?: 0.0) > thr } || after.count { it.level == null } > after.size / 10) return false
         val ref = if (lastSwitchCutMs >= 0) lastSwitchCutMs else sw
-        val before = median(longSeconds.filter { it.t in (ref - 5_000 - 3 * 60_000)..(ref - 5_000) }.mapNotNull { it.level }) ?: return null
-        val nowLevel = median(after.mapNotNull { it.level }) ?: return null
-        return if (nowLevel >= before * 0.97) sw else null
+        val before = median(longSeconds.filter { it.t in (ref - 5_000 - 3 * 60_000)..(ref - 5_000) }.mapNotNull { it.level }) ?: return false
+        val nowLevel = median(after.mapNotNull { it.level }) ?: return false
+        return nowLevel >= before * 0.97
     }
 
     /**
@@ -1028,6 +1039,8 @@ class PowerDetector(
         const val BLINK_STILL_MS = 25 * 60_000L
         /** The light may settle in a step or two just after the switch (11 Nov, 13:33: 2,590 then 2,749). */
         const val SWITCH_SETTLE_MS = 10_000L
+        /** After a cut, the stillness may also be judged from this long after the power came back (1.5.20). */
+        const val CUT_SETTLE_MS = 5 * 60_000L
         /** A brighter level is checked against the moteur's brightest over this long before it (1.5.10). */
         const val FLOOR_MS = 10 * 60_000L
         /** How far back the moteur's brightest is looked for, when it has been on that long (1.5.19). */

@@ -142,6 +142,10 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   11:01 (flicker +7.4%, just under 8%; a dip at 11:15 broke 1c at 14 min), 59 s cut 11:21, back dead still 31 min, cut 13:01:
   alert 11:40 "since 11:22". Every daytime cut since 29 Oct: the moteur wobbled within 8 min; only 29 Oct 16:31/17:16 (kahraba,
   1,300 lux still vs a busy ~950 moteur) and 17 Nov 11:22 stayed still 15+. Cuts 9:25, 9:51, 17:53 on 17 Nov: moteur both sides.
+- Settling after a cut (1.5.20, `CUT_SETTLE_MS`, `stillFrom`, `CutSettleKahrabaTest`): after a cut, rule 1c also accepts
+  15 still min starting 5 min after the power came back (as well as from +10 s). 23 Nov: kahraba 10:06, 47 s cut 10:15:47,
+  kahraba back (236 V at 11:25), steps at +30 s and +4 min, then dead still: 1.5.19 alerted 11:20 by the 60-min rule; now
+  10:39 "since 10:16". From +5 min the moteur still wobbled within 7.8 min after every daytime cut since 29 Oct.
 - Wobbles kept for the whole kahraba check (1.5.18): `wobbleEpisodes` was trimmed to 6 min, so the 10-min marginal check
   forgot early wobbles. 16 Nov 7:10: moteur stepped to 2,334 (its 10-min top 2,215), wobbles 7:12:16, 7:12:34(+43), 7:21:30;
   1.5.17 alerted 7:22:05, light back down 7:22:35, then "kahraba" all day (real kahraba 15:00 got no alert).
@@ -194,7 +198,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
-- 1.5.20: battery (a tester's feedback; no Firebase, so it runs without Google services): `AlertsService` holds its 20 s wake lock only for
+- 1.5.20: after a cut, stillness also judged from 5 min after (23 Nov 10:16). Battery (a tester's feedback; no Firebase, so it runs without Google services): `AlertsService` holds its 20 s wake lock only for
   fresh new ALERTs (not ALIVE/HISTORY); `ALIVE_EVERY_MS` 30 min (was 15), `SILENT_MS` 70 (was 40), Glance `STALE_MS` 40 (was 20).
   A two-line Today card (a line each for kahraba and moteur) was built, shown as a mockup and dropped by the owner.
 - 1.5.19: floor over the last hour (night moteur step 18 Nov 3:38); charger off with the light on is not a cut.
