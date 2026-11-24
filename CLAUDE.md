@@ -120,6 +120,11 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
   then still from 5 s after it for 2 min and >= 8% (`SWITCH_FLICKER_RISE_PCT`) above the 3 min before -> kahraba, dated
   at the flicker. Busy moteurs flicker too (31 Oct: dozens), but after a >= 15% dip a still moteur came back at most +5.7%
   (7 Nov 11:05); kahraba +11% (3 Nov 10:35, 10 Nov 9:58) to +31%.
+- Small flicker (1.5.22, `SMALL_DIP` 12%, `dipLow`, `SmallFlickerKahrabaTest`): rule 1b takes a dip >= 12% (back >= 95%
+  within 1.5 s); only a dip >= 15% (`SWITCH_DIP`) is a switch moment for rule 1c / `lastDipMs` (with 12% everywhere, 1c
+  called a 13.6% moteur dip at 22 Nov 2:05 PM kahraba). 24 Nov 4:40:24 (12.8% dip, +9%, kahraba at 228 V under 8.3 A,
+  confirmed; cut 6:28) and 22 Nov 5:00:29 (~13%, still an hour, cut 6:05) were missed: now alerts 4:45 and 5:05.
+  23 Nov ~12:00 the phone was moved: it reads ~30% more light since.
 - Drop-back guard (1.5.10, `Pending.floor`, `MoteurStepAndLampTest`): a rule-1 proposal with no switch-over flicker
   within `TWO_STEPS_MS` before its level start (`lastDipMs`) gets floor = the moteur's brightest per-second level in the
   10 min before (start - 45 s); the pending kahraba is cancelled if the light falls to <= floor, and if the level is
@@ -204,6 +209,7 @@ the app: aubs115@duck.com). Public repo, © 2026 Aubrey Arenas, all rights reser
 
 ## Status (1 Nov 2026)
 
+- 1.5.22: flicker rule 1b takes 12% dips (night kahraba 24 Nov 4:40, 22 Nov 5:00).
 - 1.5.21: power cut told to other phones at once, own falling sound (`BEEP_CUT`). At a glance "Darkest" (1% + card/words at
   `DARKEST_ALPHA` 0.33): the Pixel 9's lowest screen brightness is much brighter than the Pixel 2's; Settings picker `segmented(perRow = 3)`.
 - 1.5.20: after a cut, stillness also judged from 5 min after (23 Nov 10:16). Battery (a tester's feedback; no Firebase, so it runs without Google services): `AlertsService` holds its 20 s wake lock only for

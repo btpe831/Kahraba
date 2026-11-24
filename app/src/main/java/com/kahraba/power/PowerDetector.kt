@@ -222,6 +222,8 @@ class PowerDetector(
     /** A dip under way: when it began and the light just before it. */
     private var dipAtMs = -1L
     private var dipRef = 0.0
+    /** The darkest reading in that dip. */
+    private var dipLow = 0.0
     /** The last switch-over flicker: a short, deep dip with the light straight back (or -1). */
     private var switchFlickerMs = -1L
     /** The last switch-over flicker seen, kept after rule 1b has looked at it. */
@@ -236,22 +238,30 @@ class PowerDetector(
             val last = samples.lastOrNull()?.lux ?: return
             if (lux >= last * 0.9) return
             val ref = median(samples.filter { it.t in (now - 20_000)..(now - 2_000) }.map { it.lux }) ?: return
-            if (ref >= config.minLux && lux < ref * (1 - SWITCH_DIP) && lux > ref * 0.25) {
+            if (ref >= config.minLux && lux < ref * (1 - SMALL_DIP) && lux > ref * 0.25) {
                 dipAtMs = now
                 dipRef = ref
+                dipLow = lux
             }
             return
         }
         when {
             lux <= dipRef * 0.25 || now - dipAtMs > SWITCH_DIP_MS -> dipAtMs = -1L
             lux >= dipRef * 0.95 -> {
+                // Any dip of [SMALL_DIP] or more is enough for rule 1b, which also needs the light clearly
+                // brighter and still after it (1.5.22: 24 Nov 4:40 AM and 22 Nov 5:00 AM, kahraba at night
+                // with dips of 12.8% and ~13%). Only a deeper one ([SWITCH_DIP]) is a switch moment for the
+                // other rules: with 12%, rule 1c called a 13.6% moteur dip kahraba (22 Nov, 2:05 PM).
                 switchFlickerMs = dipAtMs
-                lastDipMs = dipAtMs
-                lastSwitchMs = dipAtMs
-                lastSwitchBlink = false
-                lastSwitchCutMs = -1L
+                if (dipLow < dipRef * (1 - SWITCH_DIP)) {
+                    lastDipMs = dipAtMs
+                    lastSwitchMs = dipAtMs
+                    lastSwitchBlink = false
+                    lastSwitchCutMs = -1L
+                }
                 dipAtMs = -1L
             }
+            else -> dipLow = minOf(dipLow, lux)
         }
     }
 
@@ -1079,6 +1089,8 @@ class PowerDetector(
         val LONG_KEEP_MS = maxOf(BUSY_KEEP_MS, QUIET_MS + QUIET_REF_MS + 60_000L)
         /** Switch-over flicker: the light dips at least this much (fraction)… */
         const val SWITCH_DIP = 0.15
+        /** The smallest dip rule 1b takes as a switch-over flicker (1.5.22; [SWITCH_DIP] for the other rules). */
+        const val SMALL_DIP = 0.12
         /** …and is back within this long. */
         const val SWITCH_DIP_MS = 1_500L
         /** Then still and at least this much brighter (%) than the 3 minutes before. */

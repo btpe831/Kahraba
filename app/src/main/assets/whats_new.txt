@@ -1,6 +1,9 @@
 # What's new in each version: shown in the app after an update, and on the download page.
 # Plain words about what's improved; no dates or times. Newest first.
 
+## 1.5.22
+- Kahraba that arrives quietly at night, with only a small flicker of the light, is now caught.
+
 ## 1.5.21
 - At a glance has a new Darkest brightness, below Night, for phones whose Night is still too bright: it also dims the card and words.
 - A phone getting alerts from another now hears about a power cut the moment it happens, with its own sound: three low notes falling, unlike any other alert. Its screen says "Power off" until the power is back. The Always-on phone stays quiet.
